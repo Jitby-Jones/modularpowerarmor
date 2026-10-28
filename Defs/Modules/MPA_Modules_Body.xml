@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Body-armor-only modifications. -->
+<Defs>
+
+	<!-- ===================== Biogel servo replacement ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_BiogelServos</defName>
+		<label>biogel servo replacement</label>
+		<description>Swaps the armor's hydraulic actuators for bundles of biogel-filled artificial muscle that respond as quickly as the wearer's own. Improves manipulation and movement speed.\n\nFits body armor only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/BiogelServos</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>4</Mass>
+			<WorkToMake>15000</WorkToMake>
+			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Plasteel>30</Plasteel>
+			<ComponentSpacer>2</ComponentSpacer>
+			<MedicineIndustrial>3</MedicineIndustrial>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+				</slots>
+				<wearerCapacityModifiers>
+					<li>
+						<capacity>Manipulation</capacity>
+						<postFactor>1.15</postFactor>
+					</li>
+				</wearerCapacityModifiers>
+				<wearerStatFactors>
+					<MoveSpeed>1.05</MoveSpeed>
+				</wearerStatFactors>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA biogel servos (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/BiogelServos</texPath>
+						<layerFraction>0.3</layerFraction>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Load-bearing exoframe ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_Exoframe</defName>
+		<label>load-bearing exoframe</label>
+		<description>An external spine, hip frame and leg struts that carry the weight of the wearer's gear and put extra force behind their blows. Improves carrying capacity and melee damage.\n\nFits body armor only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/Exoframe</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>150</MaxHitPoints>
+			<Mass>8</Mass>
+			<WorkToMake>12000</WorkToMake>
+			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Steel>60</Steel>
+			<Plasteel>20</Plasteel>
+			<ComponentIndustrial>4</ComponentIndustrial>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>5</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+				</slots>
+				<wearerStatFactors>
+					<CarryingCapacity>1.25</CarryingCapacity>
+					<MeleeDamageFactor>1.10</MeleeDamageFactor>
+				</wearerStatFactors>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA exoframe (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/Exoframe</texPath>
+						<layerFraction>0.6</layerFraction>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+</Defs>

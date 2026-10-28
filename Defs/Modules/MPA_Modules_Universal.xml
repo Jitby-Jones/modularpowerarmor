@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Universal modifications: fit both body armor and helmets. -->
+<Defs>
+
+	<!-- ===================== Additional plating ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_AdditionalPlating</defName>
+		<label>additional plating</label>
+		<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds roughly 4mm RHA of protection to the piece it is mounted on.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/AdditionalPlating</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>150</MaxHitPoints>
+			<Mass>5</Mass>
+			<WorkToMake>12000</WorkToMake>
+			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Plasteel>45</Plasteel>
+			<Uranium>15</Uranium>
+		</costList>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<!-- 4mm RHA is about 20% sharp armor on marine armor (106% vanilla / 20mm RHA in Combat Extended). -->
+				<armorStatOffsets>
+					<ArmorRating_Sharp>0.20</ArmorRating_Sharp>
+					<ArmorRating_Blunt>0.09</ArmorRating_Blunt>
+				</armorStatOffsets>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA additional plating (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/Plating</texPath>
+						<layerFraction>0.2</layerFraction>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA additional plating (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/Plating</texPath>
+						<layerFraction>0.2</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Bionic synchronization ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_BionicSynchronization</defName>
+		<label>bionic synchronization</label>
+		<description>A neural handshake suite that lets the armor's control systems talk directly to the wearer's bionic and implanted parts. Every other modification on the same armor piece becomes 2% more effective for each bionic-grade (spacer tech or better) implant or replacement part in the wearer.\n\nDoesn't affect computational load bonuses.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/BionicSynchronization</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>1</Mass>
+			<WorkToMake>15000</WorkToMake>
+			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<ComponentSpacer>2</ComponentSpacer>
+			<Gold>15</Gold>
+			<Plasteel>15</Plasteel>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<bionicSyncPerImplant>0.02</bionicSyncPerImplant>
+				<bionicSyncMinTechLevel>Spacer</bionicSyncMinTechLevel>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA neural link (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/NeuralLink</texPath>
+						<layerFraction>0.6</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Thermal regulation unit ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_ThermalRegulator</defName>
+		<label>thermal regulation unit</label>
+		<description>Back-mounted heat exchangers and a micro-coolant loop that keep the wearer comfortable across a much wider range of temperatures.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/ThermalRegulator</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>3</Mass>
+			<WorkToMake>8000</WorkToMake>
+			<MPA_ComputationalLoadCost>1</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Steel>40</Steel>
+			<ComponentIndustrial>3</ComponentIndustrial>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>5</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<wearerStatOffsets>
+					<ComfyTemperatureMin>-8</ComfyTemperatureMin>
+					<ComfyTemperatureMax>8</ComfyTemperatureMax>
+				</wearerStatOffsets>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA thermal fins (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/ThermalFins</texPath>
+						<layerFraction>0.4</layerFraction>
+						<visibleFacing>
+							<li>North</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Ablative heat shielding ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_AblativeShielding</defName>
+		<label>ablative heat shielding</label>
+		<description>Heat-resistant ceramic tiles over a layer of fire-retardant gel. Improves the heat armor of the piece it is mounted on and makes it much harder to set alight.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/AblativeShielding</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>3</Mass>
+			<WorkToMake>8000</WorkToMake>
+			<MPA_ComputationalLoadCost>1</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Plasteel>25</Plasteel>
+			<Silver>20</Silver>
+		</costList>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<armorStatOffsets>
+					<ArmorRating_Heat>0.15</ArmorRating_Heat>
+				</armorStatOffsets>
+				<armorStatFactors>
+					<Flammability>0.5</Flammability>
+				</armorStatFactors>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Trauma response suite ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_TraumaSuite</defName>
+		<label>trauma response suite</label>
+		<description>Automatic tourniquets, coagulant injectors and a localized nerve dampener that kick in the moment the wearer is hurt. Reduces bleeding and the pain of injuries.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/TraumaSuite</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>2</Mass>
+			<WorkToMake>10000</WorkToMake>
+			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<MedicineIndustrial>4</MedicineIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
+			<Plasteel>15</Plasteel>
+		</costList>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<wearerBleedFactor>0.75</wearerBleedFactor>
+				<wearerPainFactor>0.85</wearerPainFactor>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA trauma suite (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/TraumaSuite</texPath>
+						<layerFraction>0.5</layerFraction>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Auxiliary co-processor ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_CoProcessor</defName>
+		<label>auxiliary co-processor</label>
+		<description>A self-contained processing core that takes over housekeeping tasks from the armor's main computer. Raises the computational load of the piece it is installed in, and uses none itself.\n\nCan't be removed if the remaining modifications would no longer fit.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/CoProcessor</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>2</Mass>
+			<WorkToMake>12000</WorkToMake>
+			<MPA_ComputationalLoadCost>0</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<ComponentSpacer>3</ComponentSpacer>
+			<Gold>10</Gold>
+			<Plasteel>10</Plasteel>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<computationalLoadBonus>3</computationalLoadBonus>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA co-processor pack (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/CoProcessor</texPath>
+						<layerFraction>0.7</layerFraction>
+						<visibleFacing>
+							<li>North</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+						<bodyTypeAdjustments>
+							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
+							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
+							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
+							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
+						</bodyTypeAdjustments>
+					</li>
+				</bodyRenderNodes>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA co-processor (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/CoProcessor</texPath>
+						<layerFraction>0.5</layerFraction>
+						<visibleFacing>
+							<li>North</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Neural stress dampener ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_StressDampener</defName>
+		<label>neural stress dampener</label>
+		<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/StressDampener</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>1</Mass>
+			<WorkToMake>9000</WorkToMake>
+			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<ComponentSpacer>1</ComponentSpacer>
+			<Gold>10</Gold>
+			<Plasteel>10</Plasteel>
+		</costList>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<wearerStatOffsets>
+					<MentalBreakThreshold>-0.04</MentalBreakThreshold>
+				</wearerStatOffsets>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA stress dampener circlet (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/StressDampener</texPath>
+						<layerFraction>0.3</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+</Defs>

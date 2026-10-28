@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+	<StatCategoryDef>
+		<defName>MPA_ArmorModification</defName>
+		<label>armor modification</label>
+		<displayOrder>12</displayOrder>
+	</StatCategoryDef>
+
+	<!-- On modular armor pieces. Set per armor in Defs/Targets; co-processor modules add to it. -->
+	<StatDef>
+		<defName>MPA_ComputationalLoad</defName>
+		<label>computational load</label>
+		<description>How much processing power this armor's onboard computer can devote to modifications. Every installed modification uses part of it, and the total computational load cost of a piece's modifications can never exceed this value.\n\nHelmets and body armor have separate computers, so each piece has its own computational load.</description>
+		<category>Apparel</category>
+		<defaultBaseValue>0</defaultBaseValue>
+		<minValue>0</minValue>
+		<toStringStyle>FloatMaxOne</toStringStyle>
+		<showIfUndefined>false</showIfUndefined>
+		<displayPriorityInCategory>3002</displayPriorityInCategory>
+	</StatDef>
+
+	<!-- On modification items. -->
+	<StatDef>
+		<defName>MPA_ComputationalLoadCost</defName>
+		<label>computational load cost</label>
+		<description>How much of a power armor piece's computational load this modification uses while installed.</description>
+		<category>MPA_ArmorModification</category>
+		<defaultBaseValue>0</defaultBaseValue>
+		<minValue>0</minValue>
+		<toStringStyle>FloatMaxOne</toStringStyle>
+		<showIfUndefined>false</showIfUndefined>
+		<showOnDefaultValue>true</showOnDefaultValue>
+		<displayPriorityInCategory>5010</displayPriorityInCategory>
+	</StatDef>
+
+</Defs>

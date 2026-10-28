@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	Combat Extended compatibility. This folder is only loaded when Combat Extended is active (see LoadFolders.xml).
+
+	CE measures sharp armor in mm RHA and blunt armor in MPa, so armor bonuses are converted here.
+	Modifications apply their armor bonus to the armor piece's own stat, which CE reads through
+	GetStatValue, so CE's partial armor multipliers (for hands, neck and so on) still apply on top.
+
+	Night vision isn't touched: CE caches apparel night vision per armor type and quality, so a
+	per-item bonus wouldn't apply reliably. The multispectral visor's Sight bonus works the same in CE.
+-->
+<Patch>
+
+	<!-- ===== Inventory bulk for every modification (individual modules override below) ===== -->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[@Name="MPA_ModuleBase"]/statBases</xpath>
+		<value>
+			<Bulk>2</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_AdditionalPlating"]/statBases</xpath>
+		<value>
+			<Bulk>6</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_Exoframe"]/statBases</xpath>
+		<value>
+			<Bulk>8</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_BiogelServos"]/statBases</xpath>
+		<value>
+			<Bulk>4</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_ThermalRegulator" or defName="MPA_Module_AblativeShielding"]/statBases</xpath>
+		<value>
+			<Bulk>3</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_BionicSynchronization" or defName="MPA_Module_StressDampener" or defName="MPA_Module_TargetingUplink" or defName="MPA_Module_MultispectralVisor"]/statBases</xpath>
+		<value>
+			<Bulk>1</Bulk>
+		</value>
+	</Operation>
+
+	<!-- ===== Additional plating: +4mm RHA sharp, +9 MPa blunt (CE marine armor is 20mm / 45 MPa) ===== -->
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_AdditionalPlating"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]/armorStatOffsets</xpath>
+		<value>
+			<armorStatOffsets>
+				<ArmorRating_Sharp>4</ArmorRating_Sharp>
+				<ArmorRating_Blunt>9</ArmorRating_Blunt>
+			</armorStatOffsets>
+		</value>
+	</Operation>
+
+	<!-- ===== Neural stress dampener: also makes the wearer harder to suppress ===== -->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_StressDampener"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]</xpath>
+		<value>
+			<wearerStatFactors>
+				<Suppressability>0.85</Suppressability>
+			</wearerStatFactors>
+		</value>
+	</Operation>
+
+	<!-- ===== Targeting uplink: better lead and range estimation ===== -->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_TargetingUplink"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]</xpath>
+		<value>
+			<wearerStatOffsets>
+				<AimingAccuracy>0.10</AimingAccuracy>
+			</wearerStatOffsets>
+		</value>
+	</Operation>
+
+	<!-- ===== Load-bearing exoframe: CE inventory capacity on top of hauling capacity ===== -->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_Exoframe"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]</xpath>
+		<value>
+			<wearerStatOffsets>
+				<CarryWeight>25</CarryWeight>
+				<CarryBulk>5</CarryBulk>
+			</wearerStatOffsets>
+		</value>
+	</Operation>
+
+	<!-- ===== Descriptions ===== -->
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_AdditionalPlating"]/description</xpath>
+		<value>
+			<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds 4mm RHA of sharp protection and 9 MPa of blunt protection to the piece it is mounted on.\n\nFits body armor and helmets.</description>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_StressDampener"]/description</xpath>
+		<value>
+			<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold and makes them harder to suppress.\n\nFits body armor and helmets.</description>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_TargetingUplink"]/description</xpath>
+		<value>
+			<description>A helmet-mounted ballistic computer and laser rangefinder that feeds firing solutions straight to the wearer's visor. Speeds up aiming and improves aiming accuracy.\n\nFits helmets only.</description>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_Exoframe"]/description</xpath>
+		<value>
+			<description>An external spine, hip frame and leg struts that carry the weight of the wearer's gear and put extra force behind their blows. Improves carrying capacity, inventory weight and bulk limits, and melee damage.\n\nFits body armor only.</description>
+		</value>
+	</Operation>
+
+</Patch>

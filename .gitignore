@@ -1,0 +1,7 @@
+Source/ModularPowerArmor/obj/
+Source/ModularPowerArmor/bin/
+*.user
+*.suo
+.vs/
+.idea/
+__pycache__/

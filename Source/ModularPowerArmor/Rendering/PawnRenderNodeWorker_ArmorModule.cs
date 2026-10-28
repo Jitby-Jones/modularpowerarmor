@@ -1,0 +1,107 @@
+using System.Collections.Generic;
+using UnityEngine;
+using Verse;
+
+namespace ModularPowerArmor
+{
+    /// <summary>
+    /// Shows a module overlay whenever its armor piece would be shown, and layers it just
+    /// above that piece, below whatever apparel layer comes next.
+    /// </summary>
+    /// <remarks>Called from the parallel pawn rendering pass, so it only reads state.</remarks>
+    public class PawnRenderNodeWorker_ArmorModule : PawnRenderNodeWorker
+    {
+        public override bool CanDrawNow(PawnRenderNode node, PawnDrawParms parms)
+        {
+            if (!base.CanDrawNow(node, parms) || !ArmorModuleUtility.Settings.renderModuleGraphics)
+            {
+                return false;
+            }
+            List<Rot4> facings = node.Props.visibleFacing;
+            if (!facings.NullOrEmpty() && !facings.Contains(parms.facing))
+            {
+                return false;
+            }
+            if (node is PawnRenderNode_ArmorModule moduleNode && moduleNode.slot == ArmorSlot.Helmet)
+            {
+                return parms.flags.FlagSet(PawnRenderFlags.Headgear) && PawnRenderNodeWorker_Apparel_Head.HeadgearVisible(parms);
+            }
+            return parms.flags.FlagSet(PawnRenderFlags.Clothes);
+        }
+
+        public override float LayerFor(PawnRenderNode node, PawnDrawParms parms)
+        {
+            PawnRenderNode hostNode = FindHostNode(node);
+            if (hostNode == null)
+            {
+                return base.LayerFor(node, parms);
+            }
+            float hostLayer = hostNode.Worker.LayerFor(hostNode, parms);
+            float nextLayer = float.MaxValue;
+            PawnRenderNode[] siblings = node.parent.children;
+            for (int i = 0; i < siblings.Length; i++)
+            {
+                PawnRenderNode sibling = siblings[i];
+                if (sibling == hostNode || sibling is PawnRenderNode_ArmorModule)
+                {
+                    continue;
+                }
+                float layer = sibling.Worker.LayerFor(sibling, parms);
+                if (layer > hostLayer && layer < nextLayer)
+                {
+                    nextLayer = layer;
+                }
+            }
+            float gap = nextLayer == float.MaxValue ? 1f : nextLayer - hostLayer;
+            float fraction = Mathf.Clamp((node.Props as PawnRenderNodeProperties_ArmorModule)?.layerFraction ?? 0.5f, 0.01f, 0.99f);
+            return hostLayer + gap * fraction;
+        }
+
+        public override Vector3 OffsetFor(PawnRenderNode node, PawnDrawParms parms, out Vector3 pivot)
+        {
+            Vector3 offset = base.OffsetFor(node, parms, out pivot);
+            BodyTypeAdjustment adjustment = AdjustmentFor(node, parms);
+            if (adjustment != null)
+            {
+                offset += adjustment.OffsetFor(parms.facing);
+            }
+            return offset;
+        }
+
+        public override Vector3 ScaleFor(PawnRenderNode node, PawnDrawParms parms)
+        {
+            Vector3 scale = base.ScaleFor(node, parms);
+            BodyTypeAdjustment adjustment = AdjustmentFor(node, parms);
+            if (adjustment != null)
+            {
+                scale.x *= adjustment.scale.x;
+                scale.z *= adjustment.scale.y;
+            }
+            return scale;
+        }
+
+        private static BodyTypeAdjustment AdjustmentFor(PawnRenderNode node, PawnDrawParms parms)
+        {
+            return (node.Props as PawnRenderNodeProperties_ArmorModule)?.AdjustmentFor(parms.pawn?.story?.bodyType);
+        }
+
+        /// <summary>The vanilla apparel node drawing the armor piece this module is installed in.</summary>
+        private static PawnRenderNode FindHostNode(PawnRenderNode node)
+        {
+            PawnRenderNode[] siblings = node.parent?.children;
+            if (siblings == null || node.apparel == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < siblings.Length; i++)
+            {
+                PawnRenderNode sibling = siblings[i];
+                if (sibling != node && sibling.apparel == node.apparel && !(sibling is PawnRenderNode_ArmorModule))
+                {
+                    return sibling;
+                }
+            }
+            return null;
+        }
+    }
+}

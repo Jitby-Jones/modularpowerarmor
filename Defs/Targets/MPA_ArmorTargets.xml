@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	Armor that accepts modifications. Entries are looked up by defName when the game starts,
+	so armor from DLCs or mods that aren't loaded is skipped without errors.
+
+	slot: Body or Helmet (Auto works it out from the apparel's layers).
+	computationalLoad: how much modification load the piece supports. Prestige pieces get a little more.
+
+	To support another armor, add a ModularArmorTargetDef like these in your own mod. For example,
+	Royalty's grenadier armor isn't included by default but could be added with:
+		<li><defName>Apparel_ArmorMarineGrenadier</defName><slot>Body</slot><computationalLoad>10</computationalLoad></li>
+-->
+<Defs>
+
+	<ModularPowerArmor.ModularArmorTargetDef>
+		<defName>MPA_Targets_Core</defName>
+		<label>core power armor</label>
+		<targets>
+			<!-- Marine -->
+			<li><defName>Apparel_PowerArmor</defName><slot>Body</slot><computationalLoad>10</computationalLoad></li>
+			<li><defName>Apparel_PowerArmorHelmet</defName><slot>Helmet</slot><computationalLoad>6</computationalLoad></li>
+			<!-- Recon -->
+			<li><defName>Apparel_ArmorRecon</defName><slot>Body</slot><computationalLoad>12</computationalLoad></li>
+			<li><defName>Apparel_ArmorHelmetRecon</defName><slot>Helmet</slot><computationalLoad>7</computationalLoad></li>
+		</targets>
+	</ModularPowerArmor.ModularArmorTargetDef>
+
+	<ModularPowerArmor.ModularArmorTargetDef>
+		<defName>MPA_Targets_Royalty</defName>
+		<label>Royalty power armor</label>
+		<targets>
+			<!-- Cataphract -->
+			<li><defName>Apparel_ArmorCataphract</defName><slot>Body</slot><computationalLoad>9</computationalLoad></li>
+			<li><defName>Apparel_ArmorHelmetCataphract</defName><slot>Helmet</slot><computationalLoad>6</computationalLoad></li>
+			<!-- Locust (recon variant, uses the recon helmet) -->
+			<li><defName>Apparel_ArmorLocust</defName><slot>Body</slot><computationalLoad>11</computationalLoad></li>
+			<!-- Phoenix (cataphract variant, uses the cataphract helmet) -->
+			<li><defName>Apparel_ArmorCataphractPhoenix</defName><slot>Body</slot><computationalLoad>9</computationalLoad></li>
+			<!-- Prestige -->
+			<li><defName>Apparel_ArmorMarinePrestige</defName><slot>Body</slot><computationalLoad>12</computationalLoad></li>
+			<li><defName>Apparel_ArmorMarineHelmetPrestige</defName><slot>Helmet</slot><computationalLoad>7</computationalLoad></li>
+			<li><defName>Apparel_ArmorReconPrestige</defName><slot>Body</slot><computationalLoad>14</computationalLoad></li>
+			<li><defName>Apparel_ArmorHelmetReconPrestige</defName><slot>Helmet</slot><computationalLoad>8</computationalLoad></li>
+			<li><defName>Apparel_ArmorCataphractPrestige</defName><slot>Body</slot><computationalLoad>11</computationalLoad></li>
+			<li><defName>Apparel_ArmorHelmetCataphractPrestige</defName><slot>Helmet</slot><computationalLoad>7</computationalLoad></li>
+		</targets>
+	</ModularPowerArmor.ModularArmorTargetDef>
+
+	<!-- Prestige locust and phoenix come from "Vanilla Prestige Specialist Armours Reworked" or "Prestige Specialist Armor". -->
+	<ModularPowerArmor.ModularArmorTargetDef>
+		<defName>MPA_Targets_PrestigeSpecialist</defName>
+		<label>prestige specialist armor</label>
+		<targets>
+			<li><defName>Apparel_ArmorLocustPrestige</defName><slot>Body</slot><computationalLoad>13</computationalLoad></li>
+			<li><defName>Apparel_ArmorPhoenixPrestige</defName><slot>Body</slot><computationalLoad>11</computationalLoad></li>
+		</targets>
+	</ModularPowerArmor.ModularArmorTargetDef>
+
+	<!-- Vanilla Armour Expanded -->
+	<ModularPowerArmor.ModularArmorTargetDef>
+		<defName>MPA_Targets_VanillaArmourExpanded</defName>
+		<label>Vanilla Armour Expanded power armor</label>
+		<targets>
+			<!-- Siegebreaker -->
+			<li><defName>VAE_Apparel_HeavyMarineArmor</defName><slot>Body</slot><computationalLoad>9</computationalLoad></li>
+			<li><defName>VAE_Headgear_HeavyMarineHelmet</defName><slot>Helmet</slot><computationalLoad>6</computationalLoad></li>
+			<li><defName>VAE_Apparel_RoyalSiegeArmor</defName><slot>Body</slot><computationalLoad>11</computationalLoad></li>
+			<li><defName>VAE_Headgear_RoyalSiegeHelmet</defName><slot>Helmet</slot><computationalLoad>7</computationalLoad></li>
+			<!-- Trooper -->
+			<li><defName>VAE_Apparel_TrooperArmor</defName><slot>Body</slot><computationalLoad>10</computationalLoad></li>
+			<li><defName>VAE_Headgear_TrooperHelmet</defName><slot>Helmet</slot><computationalLoad>6</computationalLoad></li>
+			<li><defName>VAE_Apparel_RoyalTrooperArmor</defName><slot>Body</slot><computationalLoad>12</computationalLoad></li>
+			<li><defName>VAE_Headgear_RoyalTrooperHelmet</defName><slot>Helmet</slot><computationalLoad>7</computationalLoad></li>
+		</targets>
+	</ModularPowerArmor.ModularArmorTargetDef>
+
+	<!-- Vanilla Factions Expanded - Pirates -->
+	<ModularPowerArmor.ModularArmorTargetDef>
+		<defName>MPA_Targets_VFEPirates</defName>
+		<label>Vanilla Factions Expanded - Pirates power armor</label>
+		<targets>
+			<li><defName>VFEP_Apparel_Privateer</defName><slot>Body</slot><computationalLoad>10</computationalLoad></li>
+		</targets>
+	</ModularPowerArmor.ModularArmorTargetDef>
+
+</Defs>

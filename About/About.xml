@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>Modular Power Armor</name>
+	<author>Jitby-Jones</author>
+	<packageId>JitbyJones.ModularPowerArmor</packageId>
+	<url>https://github.com/Jitby-Jones/modularpowerarmor</url>
+	<supportedVersions>
+		<li>1.5</li>
+		<li>1.6</li>
+	</supportedVersions>
+	<description>Install modifications into power armor the way you install bionics into pawns.
+
+Every supported armor piece and helmet has a Computational Load stat. Each modification consumes some of that load, so you have to choose what each suit is built for. Modifications are crafted items with quality: every tier above or below Normal changes their effects by 15%.
+
+Supported armor (each with its helmet and prestige version where one exists):
+ - Marine, recon (Core)
+ - Cataphract, locust, phoenix (Royalty)
+ - Siegebreaker, trooper (Vanilla Armour Expanded)
+ - Privateer (Vanilla Factions Expanded - Pirates)
+Armor from mods you don't have is skipped automatically.
+
+11 modifications are included: 7 universal, 2 helmet-only and 2 body-only. Many of them show up on the pawn wearing them.
+
+To install or remove a modification, use the "Modify armor" button on a colonist wearing modular armor, right-click a modification with a colonist selected, or right-click armor lying on the ground.
+
+Combat Extended is fully supported: armor bonuses switch to mm RHA / MPa and some modifications gain CE-specific effects.
+
+No Harmony required.</description>
+	<loadAfter>
+		<li>Ludeon.RimWorld</li>
+		<li>Ludeon.RimWorld.Royalty</li>
+		<li>Ludeon.RimWorld.Ideology</li>
+		<li>Ludeon.RimWorld.Biotech</li>
+		<li>Ludeon.RimWorld.Anomaly</li>
+		<li>Ludeon.RimWorld.Odyssey</li>
+		<li>CETeam.CombatExtended</li>
+		<li>VanillaExpanded.VARME</li>
+		<li>OskarPotocki.VFE.Pirates</li>
+		<li>PrestigeSpecialistArmours.Final</li>
+		<li>PrestigePhoenix.maltum</li>
+	</loadAfter>
+</ModMetaData>

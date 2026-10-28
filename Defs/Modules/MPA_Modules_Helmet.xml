@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Helmet-only modifications. -->
+<Defs>
+
+	<!-- ===================== Targeting uplink ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_TargetingUplink</defName>
+		<label>targeting uplink</label>
+		<description>A helmet-mounted ballistic computer and laser rangefinder that feeds firing solutions straight to the wearer's visor. Speeds up aiming.\n\nFits helmets only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/TargetingUplink</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>1</Mass>
+			<WorkToMake>14000</WorkToMake>
+			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<ComponentSpacer>2</ComponentSpacer>
+			<Plasteel>20</Plasteel>
+			<Gold>5</Gold>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>7</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Helmet</li>
+				</slots>
+				<wearerStatFactors>
+					<AimingDelayFactor>0.85</AimingDelayFactor>
+				</wearerStatFactors>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA targeting uplink (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/TargetingUplink</texPath>
+						<layerFraction>0.7</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Multispectral visor ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_MultispectralVisor</defName>
+		<label>multispectral visor</label>
+		<description>Replaces the standard visor with a combined thermal, low-light and motion-tracking display. Improves the wearer's sight.\n\nFits helmets only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/MultispectralVisor</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>1</Mass>
+			<WorkToMake>12000</WorkToMake>
+			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<ComponentSpacer>1</ComponentSpacer>
+			<Plasteel>15</Plasteel>
+			<Silver>25</Silver>
+		</costList>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Helmet</li>
+				</slots>
+				<wearerCapacityModifiers>
+					<li>
+						<capacity>Sight</capacity>
+						<postFactor>1.10</postFactor>
+					</li>
+				</wearerCapacityModifiers>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA multispectral visor (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/Visor</texPath>
+						<layerFraction>0.5</layerFraction>
+						<visibleFacing>
+							<li>South</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+</Defs>
