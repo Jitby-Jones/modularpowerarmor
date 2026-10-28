@@ -2,14 +2,17 @@
 
   <!--
     Builds one assembly per supported RimWorld version.
+      dotnet build -c Release -p:RimWorldVersion=1.7
       dotnet build -c Release -p:RimWorldVersion=1.6
       dotnet build -c Release -p:RimWorldVersion=1.5
     Each build references the matching Krafs.Rimworld.Ref package and writes to
-    <mod root>/<version>/Assemblies. See build.sh for the full pipeline.
+    <mod root>/<version>/Assemblies. RimWorld 1.7 runs on .NET 10 (net10.0, needs the .NET 10 SDK);
+    1.5 and 1.6 run on Mono (net472). See build.sh for the full pipeline.
   -->
   <PropertyGroup>
     <RimWorldVersion Condition="'$(RimWorldVersion)' == ''">1.6</RimWorldVersion>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework Condition="'$(RimWorldVersion)' == '1.7'">net10.0</TargetFramework>
+    <TargetFramework Condition="'$(RimWorldVersion)' != '1.7'">net472</TargetFramework>
     <LangVersion>latest</LangVersion>
     <RootNamespace>ModularPowerArmor</RootNamespace>
     <AssemblyName>ModularPowerArmor</AssemblyName>
@@ -24,6 +27,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Per-version intermediate folders (obj/1.5, obj/1.6) must not be compiled into each other. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
@@ -39,8 +43,16 @@
     <RimWorldRefVersion>1.6.4871</RimWorldRefVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(RimWorldVersion)' == '1.7'">
+    <DefineConstants>$(DefineConstants);RW_1_7</DefineConstants>
+    <RimWorldRefVersion>1.7.4990-unstable</RimWorldRefVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref" Version="$(RimWorldRefVersion)" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 

@@ -38,7 +38,7 @@ namespace ModularPowerArmor
                         Log.Warning($"[Modular Power Armor] {def.defName} is listed in {targetDef.defName} but isn't apparel; skipping it.");
                         continue;
                     }
-                    MakeModular(def, target.slot, target.computationalLoad);
+                    MakeModular(def, target.slot, target.computationalLoad, target.fit);
                     enabled++;
                 }
             }
@@ -67,7 +67,7 @@ namespace ModularPowerArmor
             Log.Message($"[Modular Power Armor] Enabled modular systems on {enabled} armor pieces with {ArmorModuleUtility.AllModuleDefs.Count} modifications available.");
         }
 
-        private static void MakeModular(ThingDef def, ArmorSlot slot, float computationalLoad)
+        private static void MakeModular(ThingDef def, ArmorSlot slot, float computationalLoad, string fit)
         {
             if (def.comps == null)
             {
@@ -76,9 +76,13 @@ namespace ModularPowerArmor
             CompProperties_ModularArmor props = def.GetCompProperties<CompProperties_ModularArmor>();
             if (props == null)
             {
-                props = new CompProperties_ModularArmor { slot = slot };
+                props = new CompProperties_ModularArmor { slot = slot, fit = fit };
                 def.comps.Add(props);
                 props.ResolveReferences(def);
+            }
+            else if (props.fit.NullOrEmpty())
+            {
+                props.fit = fit;
             }
             StatUtility.SetStatValueInList(ref def.statBases, MPA_DefOf.MPA_ComputationalLoad, computationalLoad);
         }

@@ -31,6 +31,9 @@ namespace ModularPowerArmor
 
         public ArmorSlot Slot => Props.slot;
 
+        /// <summary>Which armor's module art to draw on this piece (fills {fit} in module texture paths).</summary>
+        public string Fit => Props.fit.NullOrEmpty() ? ArmorModuleArt.DefaultFit : Props.fit;
+
         public Apparel Apparel => parent as Apparel;
 
         public Pawn Wearer => Apparel?.Wearer;

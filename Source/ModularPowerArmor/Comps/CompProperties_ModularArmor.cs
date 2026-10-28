@@ -13,6 +13,9 @@ namespace ModularPowerArmor
         /// <summary>Used only when the def has no MPA_ComputationalLoad stat base of its own.</summary>
         public float defaultComputationalLoad = 8f;
 
+        /// <summary>Which armor's module art to use; see <see cref="ModularArmorTarget.fit"/>.</summary>
+        public string fit;
+
         public CompProperties_ModularArmor()
         {
             compClass = typeof(CompModularArmor);

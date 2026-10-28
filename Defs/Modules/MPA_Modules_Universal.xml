@@ -34,21 +34,21 @@
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA additional plating (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/Plating</texPath>
+						<texPath>ModularPowerArmor/Worn/Body/Plating_{fit}/Plating_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.2</layerFraction>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
 					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA additional plating (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/Plating</texPath>
+						<texPath>ModularPowerArmor/Worn/Head/Plating_{fit}/Plating_{fit}</texPath>
 						<layerFraction>0.2</layerFraction>
+						<visibleFacing>
+							<li>South</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -89,8 +89,13 @@
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA neural link (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/NeuralLink</texPath>
+						<texPath>ModularPowerArmor/Worn/Head/NeuralLink_{fit}/NeuralLink_{fit}</texPath>
 						<layerFraction>0.6</layerFraction>
+						<visibleFacing>
+							<li>North</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -131,20 +136,15 @@
 				</wearerStatOffsets>
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA thermal fins (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/ThermalFins</texPath>
+						<debugLabel>MPA thermal regulator (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/ThermalFins_{fit}/ThermalFins_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.4</layerFraction>
 						<visibleFacing>
 							<li>North</li>
 							<li>East</li>
 							<li>West</li>
 						</visibleFacing>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
 					</li>
 				</bodyRenderNodes>
 			</li>
@@ -213,14 +213,14 @@
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA trauma suite (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/TraumaSuite</texPath>
+						<texPath>ModularPowerArmor/Worn/Body/TraumaSuite_{fit}/TraumaSuite_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.5</layerFraction>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
+						<visibleFacing>
+							<li>South</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
 					</li>
 				</bodyRenderNodes>
 			</li>
@@ -259,26 +259,21 @@
 				<computationalLoadBonus>3</computationalLoadBonus>
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA co-processor pack (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/CoProcessor</texPath>
+						<debugLabel>MPA co-processor (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/CoProcessor_{fit}/CoProcessor_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.7</layerFraction>
 						<visibleFacing>
 							<li>North</li>
 							<li>East</li>
 							<li>West</li>
 						</visibleFacing>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
 					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA co-processor (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/CoProcessor</texPath>
+						<texPath>ModularPowerArmor/Worn/Head/CoProcessor_{fit}/CoProcessor_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
 						<visibleFacing>
 							<li>North</li>
@@ -320,8 +315,8 @@
 				</wearerStatOffsets>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA stress dampener circlet (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/StressDampener</texPath>
+						<debugLabel>MPA stress dampener (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/StressDampener_{fit}/StressDampener_{fit}</texPath>
 						<layerFraction>0.3</layerFraction>
 					</li>
 				</helmetRenderNodes>

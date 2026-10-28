@@ -7,7 +7,7 @@
 	GetStatValue, so CE's partial armor multipliers (for hands, neck and so on) still apply on top.
 
 	Night vision isn't touched: CE caches apparel night vision per armor type and quality, so a
-	per-item bonus wouldn't apply reliably. The multispectral visor's Sight bonus works the same in CE.
+	per-item bonus wouldn't apply reliably. The multispectral sensor array's Sight bonus works the same in CE.
 -->
 <Patch>
 

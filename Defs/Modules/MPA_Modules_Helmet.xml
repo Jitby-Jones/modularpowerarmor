@@ -36,7 +36,7 @@
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA targeting uplink (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/TargetingUplink</texPath>
+						<texPath>ModularPowerArmor/Worn/Head/TargetingUplink_{fit}/TargetingUplink_{fit}</texPath>
 						<layerFraction>0.7</layerFraction>
 					</li>
 				</helmetRenderNodes>
@@ -44,13 +44,13 @@
 		</comps>
 	</ThingDef>
 
-	<!-- ===================== Multispectral visor ===================== -->
+	<!-- ===================== Multispectral sensor array (defName kept from the old visor for saves) ===================== -->
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_MultispectralVisor</defName>
-		<label>multispectral visor</label>
-		<description>Replaces the standard visor with a combined thermal, low-light and motion-tracking display. Improves the wearer's sight.\n\nFits helmets only.</description>
+		<label>multispectral sensor array</label>
+		<description>A sensor pod for the side of a helmet: thermal, low-light and motion-tracking sensors that feed straight to the wearer's display. Improves the wearer's sight.\n\nFits helmets only.</description>
 		<graphicData>
-			<texPath>ModularPowerArmor/Items/MultispectralVisor</texPath>
+			<texPath>ModularPowerArmor/Items/SensorArray</texPath>
 		</graphicData>
 		<statBases>
 			<Mass>1</Mass>
@@ -75,14 +75,9 @@
 				</wearerCapacityModifiers>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA multispectral visor (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/Visor</texPath>
+						<debugLabel>MPA sensor array (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/SensorArray_{fit}/SensorArray_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
-						<visibleFacing>
-							<li>South</li>
-							<li>East</li>
-							<li>West</li>
-						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>

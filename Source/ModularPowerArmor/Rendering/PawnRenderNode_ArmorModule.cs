@@ -30,21 +30,23 @@ namespace ModularPowerArmor
 
         public override Graphic GraphicFor(Pawn pawn)
         {
-            string path = Props.texPath;
-            if (path.NullOrEmpty())
+            PawnRenderNodeProperties_ArmorModule moduleProps = ModuleProps;
+            string bodyType = null;
+            if (moduleProps != null && moduleProps.bodyTypeTextures && slot == ArmorSlot.Body)
+            {
+                bodyType = pawn.story?.bodyType?.defName ?? "Male";
+            }
+            string path = ArmorModuleArt.Resolve(Props.texPath, host?.Fit, bodyType);
+            if (path == null)
             {
                 return null;
             }
-            PawnRenderNodeProperties_ArmorModule moduleProps = ModuleProps;
-            if (moduleProps != null && moduleProps.bodyTypeTextures && slot == ArmorSlot.Body && pawn.story?.bodyType != null)
-            {
-                path += "_" + pawn.story.bodyType.defName;
-            }
-            bool tinted = moduleProps != null && moduleProps.useArmorColor && apparel != null;
+            // Module art is white and unmasked, like vanilla power armor, so Cutout multiplies it by
+            // the armor's color and it is dyed together with the armor.
+            bool tinted = (moduleProps == null || moduleProps.useArmorColor) && apparel != null;
             Color color = tinted ? apparel.DrawColor : Color.white;
             Color colorTwo = tinted ? apparel.DrawColorTwo : Color.white;
-            // Transparent by default so soft glows (visors, status lights) aren't clipped like they would be by Cutout.
-            Shader shader = Props.shaderTypeDef?.Shader ?? (tinted ? ShaderDatabase.CutoutComplex : ShaderDatabase.Transparent);
+            Shader shader = Props.shaderTypeDef?.Shader ?? ShaderDatabase.Cutout;
             return GraphicDatabase.Get<Graphic_Multi>(path, shader, Vector2.one, color, colorTwo);
         }
 

@@ -21,6 +21,13 @@ namespace ModularPowerArmor
         public string defName;
         public ArmorSlot slot = ArmorSlot.Auto;
         public float computationalLoad = 8f;
+
+        /// <summary>
+        /// Which armor the module art is drawn for (Marine, Recon, Cataphract, ...): fills the {fit}
+        /// token in module texture paths. Armor without its own art uses the closest shape, and
+        /// anything unknown falls back to Marine.
+        /// </summary>
+        public string fit;
     }
 
     /// <summary>

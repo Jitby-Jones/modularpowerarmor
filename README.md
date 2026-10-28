@@ -1,6 +1,6 @@
 # Modular Power Armor
 
-A RimWorld mod (1.5 and 1.6) that lets you install modifications into power armor the way you install bionics into pawns. Each armor piece has a **Computational Load** budget. Every modification costs some of it, comes in qualities like weapons and armor, and many of them show up on the pawn wearing them.
+A RimWorld mod (1.5, 1.6 and 1.7) that lets you install modifications into power armor the way you install bionics into pawns. Each armor piece has a **Computational Load** budget. Every modification costs some of it, comes in qualities like weapons and armor, and many of them show up on the pawn wearing them.
 
 No Harmony required. Combat Extended is fully supported.
 
@@ -17,11 +17,13 @@ Armor from DLCs or mods you don't have is skipped automatically, with no errors.
 | Cataphract | `Apparel_ArmorCataphract` / `Apparel_ArmorHelmetCataphract` | Royalty | 9 / 6 |
 | Locust | `Apparel_ArmorLocust` (uses the recon helmet) | Royalty | 11 |
 | Phoenix | `Apparel_ArmorCataphractPhoenix` (uses the cataphract helmet) | Royalty | 9 |
+| Grenadier | `Apparel_ArmorMarineGrenadier` (uses the marine helmet) | Royalty | 10 |
 | Prestige marine | `Apparel_ArmorMarinePrestige` / `Apparel_ArmorMarineHelmetPrestige` | Royalty | 12 / 7 |
 | Prestige recon | `Apparel_ArmorReconPrestige` / `Apparel_ArmorHelmetReconPrestige` | Royalty | 14 / 8 |
 | Prestige cataphract | `Apparel_ArmorCataphractPrestige` / `Apparel_ArmorHelmetCataphractPrestige` | Royalty | 11 / 7 |
 | Prestige locust | `Apparel_ArmorLocustPrestige` | Vanilla Prestige Specialist Armours Reworked / Prestige Specialist Armor | 13 |
 | Prestige phoenix | `Apparel_ArmorPhoenixPrestige` | Vanilla Prestige Specialist Armours Reworked / Prestige Specialist Armor | 11 |
+| Prestige grenadier | `Apparel_ArmorGrenadierPrestige` | Vanilla Prestige Specialist Armours Reworked / Prestige Specialist Armor | 12 |
 | Siegebreaker | `VAE_Apparel_HeavyMarineArmor` / `VAE_Headgear_HeavyMarineHelmet` | Vanilla Armour Expanded | 9 / 6 |
 | Prestige siegebreaker | `VAE_Apparel_RoyalSiegeArmor` / `VAE_Headgear_RoyalSiegeHelmet` | Vanilla Armour Expanded + Royalty | 11 / 7 |
 | Trooper | `VAE_Apparel_TrooperArmor` / `VAE_Headgear_TrooperHelmet` | Vanilla Armour Expanded | 10 / 6 |
@@ -51,7 +53,7 @@ Values are at Normal quality.
 | Auxiliary co-processor | Body + helmet | 0 | Piece: +3 computational load | Same |
 | Neural stress dampener | Body + helmet | 2 | Wearer: -4% mental break threshold | Also x85% suppressability |
 | Targeting uplink | Helmet | 3 | Wearer: x85% aiming time | Also +10% aiming accuracy |
-| Multispectral visor | Helmet | 2 | Wearer: x110% sight | Same |
+| Multispectral sensor array | Helmet | 2 | Wearer: x110% sight | Same |
 | Biogel servo replacement | Body | 3 | Wearer: x115% manipulation, x105% move speed | Same |
 | Load-bearing exoframe | Body | 2 | Wearer: x125% carrying capacity, x110% melee damage | Also +25 kg carry weight, +5 bulk |
 
@@ -90,19 +92,36 @@ Wearer effects are applied through an **armor modifications** health condition, 
 
 ## Visuals
 
-Modifications with a visual are drawn on the pawn through RimWorld's render tree, so they also show in portraits and the colonist bar. These modifications have one:
+Modifications with a visual are drawn on the pawn through RimWorld's render tree, so they also show in portraits and the colonist bar:
 
-- **Body:** plating, thermal fins, trauma canister, co-processor pack, biogel tubes, exoframe.
-- **Helmet:** brow plate, neural link node, co-processor, stress-dampener circlet, targeting optic and antenna, glowing visor.
+| Piece | Modification | Where it goes |
+|---|---|---|
+| Body | Additional plating | A raised plate over the chest and plates over the shoulders, where the armor's own features leave room |
+| Body | Biogel servo replacement | Servo housings over both elbows |
+| Body | Trauma response suite | A med unit clipped over the belt buckle |
+| Body | Load-bearing exoframe | Actuators on the hips and struts down the thighs |
+| Body | Auxiliary co-processor | A processing box with a heat sink on the upper back |
+| Body | Thermal regulation unit | A radiator on the lower back |
+| Helmet | Additional plating | A brow plate |
+| Helmet | Targeting uplink | A rangefinder box and antenna on one side |
+| Helmet | Multispectral sensor array | A sensor pod with a stack of lenses on the other side |
+| Helmet | Auxiliary co-processor | A box on the back of the helmet |
+| Helmet | Bionic synchronization | A neural link port at the nape |
+| Helmet | Neural stress dampener | A stimulator node on the crown |
+
+- **The art is drawn for each armor.** Every armor has its own set (14 body armors x 5 body types x 3 facings, 10 helmets x 3 facings), placed using measurements of that armor's own worn textures. Modules move clear of launchers, wings, jump packs, gold trim, horns and antennas, and they hug slim armor like the trooper's as closely as the bulky siegebreaker.
+- **Any combination fits.** Each modification has its own spot on each armor, and the spots never overlap, so all of them can be installed at once without clipping.
+- **It is dyed with the armor.** The art is white and unmasked, like vanilla power armor, and is drawn in the armor's own color.
 
 Each visual is drawn just above the armor piece it's installed in and below the next apparel layer. You can turn visuals off in the mod settings.
 
-**The included art is generated placeholder art** ([`Source/Textures/generate_textures.py`](Source/Textures/generate_textures.py)). To replace it, drop in PNGs at the same paths under `Textures/ModularPowerArmor/Worn/`:
+The art is generated with [rwtexturegen](https://github.com/Jitby-Jones/rwtexturegen) from the specs in [`Source/TextureSpecs`](Source/TextureSpecs):
 
-- They use the vanilla apparel canvas: 128x128 with `_north`, `_south` and `_east` versions; west mirrors east unless you add `_west`.
-- Body overlays are centered on the body and helmet overlays on the head.
-- Overlays are drawn once for the male body and scaled for the other body types (`bodyTypeAdjustments`). Set `bodyTypeTextures` to `true` on a render node to use per-body-type files (`_Male`, `_Female`, `_Thin`, `_Fat`, `_Hulk`) instead.
-- Set `useArmorColor` to `true` and add `_m` mask textures to tint an overlay with the armor's color.
+- `modules.py` draws the worn art.
+- `module_icons.py` draws the item and UI icons.
+- `armor_profiles.json` holds the measured silhouettes. These are numbers only: no art from RimWorld or other mods is included. `measure_profiles.py` regenerates the file from your own copies of the armor textures.
+
+For your own art, set a render node's `texPath` with a `{fit}` token. It is replaced by the armor's fit, and Marine is used if that fit has no art. Body nodes use `bodyTypeTextures` (`_Male`, `_Female`, `_Thin`, `_Fat`, `_Hulk`), and all files are 128x128 with `_north`, `_south` and `_east` versions. Nodes use the Cutout shader in the armor's color by default. Set `useArmorColor` to `false`, or give a `shaderTypeDef`, for art that keeps its own colors.
 
 ## Combat Extended
 
@@ -122,10 +141,12 @@ To support more armor, add a `ModularArmorTargetDef` in your own mod (no C# need
   <defName>MyMod_ModularTargets</defName>
   <label>my armor</label>
   <targets>
-    <li><defName>Apparel_ArmorMarineGrenadier</defName><slot>Body</slot><computationalLoad>10</computationalLoad></li>
+    <li><defName>MyArmor</defName><slot>Body</slot><computationalLoad>10</computationalLoad><fit>Marine</fit></li>
   </targets>
 </ModularPowerArmor.ModularArmorTargetDef>
 ```
+
+`fit` picks the module art drawn on that armor. Use the closest of the shapes listed in [`MPA_ArmorTargets.xml`](Defs/Targets/MPA_ArmorTargets.xml); Marine is the default.
 
 A modification is any `ThingDef` with `CompQuality`, an `MPA_ComputationalLoadCost` stat and a `ModularPowerArmor.CompProperties_ArmorModule` comp; see [`Defs/Modules`](Defs/Modules) for examples. Available fields:
 
@@ -143,12 +164,16 @@ A modification is any `ThingDef` with `CompQuality`, an `MPA_ComputationalLoadCo
 Source/build.sh
 ```
 
-This needs the .NET SDK. It builds `1.5/Assemblies` and `1.6/Assemblies` against the `Krafs.Rimworld.Ref` packages, so no RimWorld install is required. To regenerate the placeholder textures (and optionally an alignment preview sheet), run:
+This builds `1.5/Assemblies`, `1.6/Assemblies` and `1.7/Assemblies` against the `Krafs.Rimworld.Ref` packages, so no RimWorld install is required. RimWorld 1.7 runs on .NET 10, so you need the .NET 10 SDK; it also builds the .NET Framework 4.7.2 assemblies for 1.5 and 1.6.
+
+To regenerate the textures, install [rwtexturegen](https://github.com/Jitby-Jones/rwtexturegen) (`pip install -e <path>`) and run:
 
 ```bash
-python3 Source/Textures/generate_textures.py --preview /tmp/overlay_preview.png
+cd Source/TextureSpecs
+rwtex build modules.py --out /tmp/mpa-art --mod ../..
+rwtex build module_icons.py --out /tmp/mpa-icons --mod ../..
 ```
 
 ## Status
 
-The code compiles against the RimWorld 1.5 and 1.6 reference assemblies. All XML was checked for field names, enum values, cross-references, textures, translation keys and CE patch targets. It hasn't been play-tested in the game yet. In particular, the placeholder overlay positions may need nudging against the real armor textures.
+The code compiles against the RimWorld 1.5, 1.6 and 1.7 reference assemblies. All XML was checked for field names (against each version's game code), enum values, cross-references, textures (every armor fit, body type and facing), translation keys and CE patch targets. The module art was checked by compositing it over each supported armor's own textures, for every body type and facing, both one module at a time and all of them together. The mod hasn't been play-tested in the game yet.

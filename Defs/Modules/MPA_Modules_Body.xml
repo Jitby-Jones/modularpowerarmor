@@ -42,14 +42,9 @@
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA biogel servos (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/BiogelServos</texPath>
+						<texPath>ModularPowerArmor/Worn/Body/BiogelServos_{fit}/BiogelServos_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.3</layerFraction>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
 					</li>
 				</bodyRenderNodes>
 			</li>
@@ -92,14 +87,9 @@
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA exoframe (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/Exoframe</texPath>
+						<texPath>ModularPowerArmor/Worn/Body/Exoframe_{fit}/Exoframe_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.6</layerFraction>
-						<bodyTypeAdjustments>
-							<li><bodyType>Female</bodyType><scale>(0.92, 0.97)</scale></li>
-							<li><bodyType>Thin</bodyType><scale>(0.85, 0.97)</scale></li>
-							<li><bodyType>Fat</bodyType><scale>(1.15, 1.0)</scale></li>
-							<li><bodyType>Hulk</bodyType><scale>(1.15, 1.08)</scale></li>
-						</bodyTypeAdjustments>
 					</li>
 				</bodyRenderNodes>
 			</li>

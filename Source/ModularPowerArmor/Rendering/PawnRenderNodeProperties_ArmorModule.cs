@@ -7,15 +7,20 @@ namespace ModularPowerArmor
 {
     /// <summary>
     /// Render node settings for a modification's visual. Everything from vanilla
-    /// PawnRenderNodeProperties (texPath, drawData, visibleFacing, ...) works as usual.
+    /// PawnRenderNodeProperties (texPath, drawData, visibleFacing, shaderTypeDef, ...) works as usual.
+    /// A {fit} token in texPath is replaced by the fit of the armor piece the module is installed
+    /// in (see ModularArmorTarget.fit), falling back to Marine.
     /// </summary>
     public class PawnRenderNodeProperties_ArmorModule : PawnRenderNodeProperties
     {
         /// <summary>Append _Male, _Female, _Thin, _Fat or _Hulk to texPath, like body apparel textures.</summary>
         public bool bodyTypeTextures;
 
-        /// <summary>Use the CutoutComplex shader with a _m mask so the overlay takes the armor's colors.</summary>
-        public bool useArmorColor;
+        /// <summary>
+        /// Draw the overlay in the armor's color (Cutout shader by default), so white art is dyed
+        /// together with the armor. Turn off for art that keeps its own colors.
+        /// </summary>
+        public bool useArmorColor = true;
 
         /// <summary>
         /// Where to draw between the host armor's layer (0) and the next apparel layer above it (1).
