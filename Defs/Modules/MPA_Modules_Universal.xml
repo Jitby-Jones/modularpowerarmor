@@ -293,6 +293,10 @@
 						<debugLabel>MPA subpersona (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/Subpersona_{fit}/Subpersona_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
+						<visibleFacing>
+							<li>South</li>
+							<li>North</li>
+						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>

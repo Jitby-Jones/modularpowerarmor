@@ -90,16 +90,23 @@ def icon_bionic_sync():
     return s
 
 
-def icon_coprocessor():
-    s = scene('CoProcessor')
-    mast = part(s, 'mast', G.rounded(G.rect(45, 4, 49, 20), 1.5), 1, mat=DARK, shading=[Bevel(0.6, 0.6)])
-    tip = part(s, 'tip', G.rounded(G.rect(43, 3, 51, 9), 2), 1.1)
-    body = part(s, 'body', G.chamfer(G.rect(9, 16, 55, 57), 5), 2)
-    body.fill(G.rounded(G.rect(17, 24, 47, 48), 1.5), 'undersuit.base')
-    for y in (29, 36, 43):
-        body.line([(20, y), (44, y)], 1.6, 'undersuit.light')
-    bolt(body, 13.5, 21)
-    bolt(body, 50.5, 52)
+def icon_subpersona():
+    s = scene('AuxiliarySubpersona')
+    # three subcore cartridges slotted into the housing from above
+    for i, (x, top) in enumerate(((19, 13), (32, 8), (45, 13))):
+        cart = part(s, f'cartridge{i}', G.chamfer(G.rect(x - 5.5, top, x + 5.5, 34), 1.8), 1 + 0.01 * i,
+                    tone='shade' if i != 1 else 'base', shading=[Bevel(0.8, 0.9, shade_tone='deep')])
+        cart.fill(G.rect(x - 3.2, top + 3.2, x + 3.2, top + 9.5), 'undersuit.base')
+        cart.fill(G.rect(x - 3.2, top + 3.2, x + 3.2, top + 4.6), 'undersuit.light')
+    body = part(s, 'body', G.chamfer(G.rect(7, 28, 57, 57), 5), 2)
+    body.fill(G.rect(7, 28, 57, 33.5), 'shade')
+    for x in (19, 32, 45):
+        body.fill(G.rect(x - 6.0, 28, x + 6.0, 31.5), 'undersuit.base')
+    body.fill(G.rounded(G.rect(14, 40, 50, 49), 1.5), 'undersuit.base')
+    for x in (20, 27, 34):
+        body.fill(G.rect(x - 1.6, 43, x + 1.6, 46), 'undersuit.light')
+    bolt(body, 11.5, 52.5)
+    bolt(body, 52.5, 52.5)
     return s
 
 
@@ -170,19 +177,126 @@ def icon_thermal():
     return s
 
 
-def icon_trauma():
-    s = scene('TraumaSuite')
-    clip = part(s, 'clip', G.chamfer(G.rect(22, 5, 42, 15), 2), 1, tone='shade',
-                shading=[Bevel(0.9, 1.0, light_tone='base', shade_tone='deep')])
-    clip.fill(G.rect(27, 8, 37, 11), 'undersuit.base')
-    body = part(s, 'body', G.rounded(G.rect(8, 12, 56, 56), 7), 2)
-    body.fill(G.rect(28, 20, 36, 46), 'undersuit.base')
-    body.fill(G.rect(19, 29, 45, 37), 'undersuit.base')
+def icon_regenerators():
+    s = scene('NeuromemeticRegenerators')
+    # a mounting plate with two canisters on it, splayed a little
+    plate_ = part(s, 'plate', G.chamfer(G.poly([(14, 46), (50, 46), (54, 58), (10, 58)]), 2.5), 1, tone='shade',
+                  shading=[Bevel(0.9, 1.0, light_tone='base', shade_tone='deep')])
+    bolt(plate_, 16, 53)
+    bolt(plate_, 48, 53)
+    for i, (cx, ang) in enumerate(((21.5, -7), (42.5, 7))):
+        body = G.rotate(G.rounded(G.rect(cx - 8, 8, cx + 8, 50), 4.5), ang, cx, 48)
+        c = part(s, f'canister{i}', body, 2 + i * 0.01)
+        detail = [
+            (G.rect(cx - 8, 8, cx + 8, 13), 'shade'),
+            (G.rect(cx - 8, 43, cx + 8, 50), 'undersuit.base'),
+            (G.rounded(G.rect(cx - 3.2, 19, cx + 3.2, 37), 1.2), 'undersuit.base'),
+            (G.rect(cx - 2.0, 21, cx + 0.2, 26), 'undersuit.light'),
+            (G.rect(cx + 4.5, 13, cx + 8, 43), 'shade'),
+        ]
+        for ring, tone in detail:
+            c.fill(G.rotate(ring, ang, cx, 48), tone)
+        cap = part(s, f'cap{i}', G.rotate(G.ellipse(cx, 8.5, 6.5, 3.2), ang, cx, 48), 3 + i * 0.01, tone='light',
+                   shading=[Bevel(0.6, 0.7)])
+        cap.fill(G.rotate(G.ellipse(cx, 8.5, 2.4, 1.2), ang, cx, 48), 'undersuit.base')
     return s
 
 
-ICONS = [icon_plating, icon_ablative, icon_servos, icon_bionic_sync, icon_coprocessor, icon_exoframe, icon_sensor_array,
-         icon_stress_dampener, icon_uplink, icon_thermal, icon_trauma]
+def icon_uranium():
+    s = scene('UraniumPlating')
+    back = part(s, 'back', G.chamfer(G.poly([(16, 6), (54, 6), (58, 18), (54, 32), (18, 32)]), 3), 1, tone='shade',
+                shading=[Bevel(1.0, 1.1, light_tone='base', shade_tone='deep')])
+    back.line([(36, 8), (36, 30)], 1.2, 'undersuit.base')
+    bolt(back, 50, 11)
+    front = G.chamfer(G.poly([(6, 18), (48, 18), (53, 30), (48, 56), (10, 56), (4, 30)]), 3)
+    f = part(s, 'front', front, 2)
+    f.fill(G.poly([(6, 18), (19, 18), (19, 56), (10, 56), (4, 30)]), 'shade')
+    f.fill(G.poly([(35, 18), (48, 18), (53, 30), (48, 56), (35, 56)]), 'shade')
+    f.fill(G.rect(4, 49, 53, 56), 'deep')
+    for x in (19, 35):
+        f.line([(x, 19), (x, 49)], 1.6, 'undersuit.base')
+    f.line([(5, 30), (52, 30)], 1.2, 'undersuit.base')
+    for x, y in ((11.5, 24), (42, 24), (11.5, 43), (42, 43)):
+        bolt(f, x, y, 1.4)
+    return s
+
+
+def icon_rigidity():
+    s = scene('RigidityMatrix')
+    # a lattice brace: two cross-braced bays between heavy rails, pinned at both ends
+    p = part(s, 'frame', G.chamfer(G.rect(16, 4, 48, 60), 3), 1)
+    for y0, y1 in ((10, 31), (33, 54)):
+        ym = (y0 + y1) / 2
+        for h in (G.poly([(21, y0 + 2), (43, y0 + 2), (32, ym - 1.5)]), G.poly([(21, y1 - 2), (43, y1 - 2), (32, ym + 1.5)]),
+                  G.poly([(21, y0 + 5), (29, ym), (21, y1 - 5)]), G.poly([(43, y0 + 5), (35, ym), (43, y1 - 5)])):
+            p.fill(G.chamfer(h, 0.8), 'undersuit.base')
+    p.fill(G.rect(43, 4, 48, 60), 'shade')
+    p.fill(G.rect(16, 30.5, 48, 33.5), 'shade')
+    for y in (7, 57):
+        p.fill(G.rect(16, y - 3, 48, y + 3), 'shade')
+    for name, y in (('pin_top', 7), ('pin_bottom', 57)):
+        pin = part(s, name, G.rounded(G.rect(8, y - 3.5, 56, y + 3.5), 3), 2, tone='shade',
+                   shading=[Bevel(0.7, 0.8, light_tone='base', shade_tone='deep')])
+        bolt(pin, 12, y, 1.5)
+        bolt(pin, 52, y, 1.5)
+    return s
+
+
+def icon_second_heart():
+    s = scene('SecondHeart')
+    for i, x in enumerate((24, 40)):
+        tube = part(s, f'tube{i}', G.rounded(G.rect(x - 3.5, 4.5, x + 3.5, 16), 1.5), 1, mat=DARK, shading=[Bevel(0.7, 0.7)])
+        tube.line([(x - 1.2, 6.5), (x - 1.2, 14)], 0.9, 'light')
+    body = part(s, 'body', G.rounded(G.rect(13, 11, 51, 59), 9), 2)
+    body.fill(G.rect(13, 11, 51, 17), 'shade')
+    body.fill(G.rect(13, 52, 51, 59), 'shade')
+    body.fill(G.rect(43, 17, 51, 52), 'shade')
+    body.fill(G.circle(32, 35, 11.5), 'deep')
+    body.fill(G.circle(32, 35, 9.0), 'undersuit.base')
+    heart = [(32, 42), (24.5, 34.5), (24.5, 30.5), (27.5, 28), (32, 31), (36.5, 28), (39.5, 30.5), (39.5, 34.5)]
+    body.fill(G.rounded(G.poly(heart), 1.6), 'light')
+    return s
+
+
+def icon_second_mind():
+    s = scene('SecondMind')
+    for i, y in enumerate((14, 23, 32, 41)):
+        fin = part(s, f'fin{i}', G.rounded(G.rect(4, y, 60, y + 5), 1.5), 1 + i * 0.01, tone='shade',
+                   shading=[Bevel(0.6, 0.7, shade_tone='deep')])
+    body = part(s, 'body', G.chamfer(G.rect(11, 6, 53, 56), 7), 2)
+    body.fill(G.rect(46, 6, 53, 56), 'shade')
+    body.fill(G.circle(31, 30, 14), 'deep')
+    body.fill(G.circle(31, 30, 11), 'undersuit.base')
+    body.fill(G.circle(31, 30, 6.8), 'light')
+    body.fill(G.circle(31, 30, 3.4), 'undersuit.base')
+    body.fill(G.circle(28.5, 27.5, 1.3), 'light')
+    body.fill(G.rect(17, 49, 45, 52), 'undersuit.base')
+    return s
+
+
+def icon_longjump():
+    s = scene('LongjumpHydraulics')
+    # two hydraulic pistons side by side, each a cylinder over a polished rod with pivot eyes
+    for i, (x, ang) in enumerate(((22, -10), (42, 10))):
+        rod = part(s, f'rod{i}', G.rotate(G.rect(x - 2.6, 30, x + 2.6, 54), ang, x, 32), 1 + i * 0.01, mat='steel_bright',
+                   shading=[Bevel(0.6, 0.6)])
+        rod.line([G.rotate(G.P((x - 0.8, 32)), ang, x, 32)[0], G.rotate(G.P((x - 0.8, 52)), ang, x, 32)[0]], 0.8, 'light')
+        eye = part(s, f'eye_low{i}', G.rotate(G.circle(x, 55, 4.4), ang, x, 32), 1.2 + i * 0.01, tone='shade',
+                   shading=[Bevel(0.6, 0.6)])
+        eye.fill(G.rotate(G.circle(x, 55, 1.8), ang, x, 32), 'undersuit.base')
+        cyl = part(s, f'cylinder{i}', G.rotate(G.rounded(G.rect(x - 7, 11, x + 7, 36), 3), ang, x, 32), 2 + i * 0.01)
+        for ring, tone in ((G.rect(x + 3.5, 12, x + 7, 33), 'shade'), (G.rect(x - 7, 31, x + 7, 36), 'undersuit.base'),
+                           (G.rect(x - 7, 15, x + 7, 17), 'shade')):
+            cyl.fill(G.rotate(ring, ang, x, 32), tone)
+        eye_t = part(s, f'eye_top{i}', G.rotate(G.circle(x, 9, 4.6), ang, x, 32), 2.5 + i * 0.01, tone='shade',
+                     shading=[Bevel(0.6, 0.6)])
+        eye_t.fill(G.rotate(G.circle(x, 9, 2.0), ang, x, 32), 'undersuit.base')
+    return s
+
+
+ICONS = [icon_plating, icon_ablative, icon_servos, icon_bionic_sync, icon_subpersona, icon_exoframe, icon_sensor_array,
+         icon_stress_dampener, icon_uplink, icon_thermal, icon_regenerators, icon_uranium, icon_rigidity, icon_second_heart,
+         icon_second_mind, icon_longjump]
 
 
 # ----------------------------------------------------------------------------- UI icons

@@ -1,6 +1,7 @@
-"""Draws About/Preview.png: an rwtexturegen marine suit wearing every module, plus the item icons.
+"""Draws About/Preview.png: an rwtexturegen marine suit wearing every module, the Armor Modulus
+and the item icons.
 
-    python3 make_preview.py        (after building modules.py and module_icons.py into the mod)
+    python3 make_preview.py        (after building modules.py, module_icons.py and armor_modulus.py into the mod)
 
 No RimWorld art is used: the pawn, armor and helmet are drawn by rwtexturegen.
 """
@@ -13,10 +14,12 @@ import rwtex.archetypes.armor3d  # noqa: F401  (registers the marine designs)
 
 MOD = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 TEX = os.path.join(MOD, 'Textures')
-BODY = ['Plating', 'BiogelServos', 'TraumaSuite', 'Exoframe', 'CoProcessor', 'ThermalFins']
-HEAD = ['Plating', 'TargetingUplink', 'SensorArray', 'CoProcessor', 'NeuralLink', 'StressDampener']
-ICONS = ['AdditionalPlating', 'BiogelServos', 'TraumaSuite', 'Exoframe', 'CoProcessor', 'ThermalRegulator', 'TargetingUplink',
-         'SensorArray', 'BionicSynchronization', 'StressDampener', 'AblativeShielding']
+BODY = ['Plating', 'BiogelServos', 'Regenerators', 'Exoframe', 'Subpersona', 'ThermalFins', 'RigidityMatrix', 'SecondHeart',
+        'LongjumpHydraulics']
+HEAD = ['Plating', 'TargetingUplink', 'SensorArray', 'Subpersona', 'NeuralLink', 'StressDampener', 'Regenerators', 'SecondMind']
+ICONS = ['AdditionalPlating', 'UraniumPlating', 'BiogelServos', 'NeuromemeticRegenerators', 'Exoframe', 'AuxiliarySubpersona',
+         'ThermalRegulator', 'RigidityMatrix', 'SecondHeart', 'LongjumpHydraulics', 'TargetingUplink', 'SensorArray', 'SecondMind',
+         'BionicSynchronization', 'StressDampener', 'AblativeShielding']
 
 
 def load(p):
@@ -59,22 +62,27 @@ d.text((64, 44), 'Modular Power Armor', font=ImageFont.truetype(font, 64), fill=
 d.text((68, 124), 'Install modifications into power armor like bionics into pawns.', font=ImageFont.truetype(font2, 26),
        fill=(150, 200, 225))
 # pawns: plain, then dyed, every module installed
-cols = [(1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (0.78, 0.36, 0.32), (0.42, 0.55, 0.78)]
-dirs = ['south', 'east', 'north', 'south', 'south']
-x0 = 40
+cols = [(1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (0.78, 0.36, 0.32)]
+dirs = ['south', 'east', 'north', 'south']
 for i, (dr, col) in enumerate(zip(dirs, cols)):
     p = pawn(dr, col)
     p = p.crop((14, 14, 114, 150)).resize((180, 245), Image.NEAREST)
-    img.paste(p, (x0 + 20 + i * 236, 172), p)
-d.text((68, 434), 'Every module drawn to fit 14 armors and 10 helmets, dyed with the armor. Any combination fits.',
+    img.paste(p, (40 + i * 196, 172), p)
+# the Armor Modulus
+bench = load(f'{TEX}/ModularPowerArmor/Things/ArmorModulus/ArmorModulus_north.png')
+img.paste(bench, (858, 166), bench)
+d.text((862, 428), 'Armor Modulus', font=ImageFont.truetype(font, 20), fill=(205, 212, 218))
+d.text((68, 434), 'Every module is drawn to fit 14 armors and 10 helmets, dyed with the armor.',
        font=ImageFont.truetype(font2, 20), fill=(175, 182, 190))
 # icons
 for i, n in enumerate(ICONS):
-    ic = load(f'{TEX}/ModularPowerArmor/Items/{n}.png').resize((80, 80), Image.NEAREST)
-    x = 64 + i * 106
-    d.rounded_rectangle([x - 8, 490, x + 88, 586], 12, fill=(44, 49, 56), outline=(78, 86, 96), width=2)
-    img.paste(ic, (x, 498), ic)
-d.text((68, 620), 'Quality on every module  ·  Computational Load budgets  ·  Combat Extended  ·  RimWorld 1.5 / 1.6 / 1.7',
+    ic = load(f'{TEX}/ModularPowerArmor/Items/{n}.png').resize((60, 60), Image.NEAREST)
+    x = 46 + i * 75
+    d.rounded_rectangle([x - 6, 490, x + 66, 562], 10, fill=(44, 49, 56), outline=(78, 86, 96), width=2)
+    img.paste(ic, (x, 496), ic)
+d.text((68, 590), 'Install at the Armor Modulus: bills refit armor in bulk, and colonists can refit what they wear.',
+       font=ImageFont.truetype(font2, 20), fill=(150, 200, 225))
+d.text((68, 630), 'Quality on every module  ·  Computational Load budgets  ·  Combat Extended  ·  RimWorld 1.5 / 1.6 / 1.7',
        font=ImageFont.truetype(font2, 20), fill=(150, 160, 170))
 img.save(os.path.join(MOD, 'About', 'Preview.png'))
 print('wrote About/Preview.png')

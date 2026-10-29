@@ -140,20 +140,28 @@ Modifications with a visual are drawn on the pawn through RimWorld's render tree
 | Piece | Modification | Where it goes |
 |---|---|---|
 | Body | Additional plating | A raised plate over the chest and plates over the shoulders, where the armor's own features leave room |
+| Body | Uranium composite plating | The same places, heavier: a three-block chest slab and two-layer shoulder plates |
 | Body | Biogel servo replacement | Servo housings over both elbows |
-| Body | Trauma response suite | A med unit clipped over the belt buckle |
+| Body | Neuromemetic regenerators | Two canisters poking out of the upper back, angled down |
+| Body | Second heart | A pump between the regenerator canisters on the back |
+| Body | Auxiliary subpersona | A housing with subcore cartridges over the belt buckle |
 | Body | Load-bearing exoframe | Actuators on the hips and struts down the thighs |
-| Body | Auxiliary co-processor | A processing box with a heat sink on the upper back |
+| Body | Rigidity matrix | Lattice braces on the front of the thighs (beside the belt on fat bodies) |
 | Body | Thermal regulation unit | A radiator on the lower back |
+| Body | Longjump hydraulics | Pistons on the backs of the calves |
 | Helmet | Additional plating | A brow plate |
+| Helmet | Uranium composite plating | A heavier three-block brow plate |
 | Helmet | Targeting uplink | A rangefinder box and antenna on one side |
-| Helmet | Multispectral sensor array | A sensor pod with a stack of lenses on the other side |
-| Helmet | Auxiliary co-processor | A box on the back of the helmet |
+| Helmet | Multispectral sensor array | A sensor pod directly under the targeting uplink |
+| Helmet | Second mind | A persona core housing on the other side |
+| Helmet | Auxiliary subpersona | A box under the second mind |
+| Helmet | Neuromemetic regenerators | Two canisters on the back of the helmet, angled up |
 | Helmet | Bionic synchronization | A neural link port at the nape |
 | Helmet | Neural stress dampener | A stimulator node on the crown |
 
 - **The art is drawn for each armor.** Every armor has its own set (14 body armors x 5 body types x 3 facings, 10 helmets x 3 facings), placed using measurements of that armor's own worn textures. Modules move clear of launchers, wings, jump packs, gold trim, horns and antennas, and they hug slim armor like the trooper's as closely as the bulky siegebreaker.
-- **Any combination fits.** Each modification has its own spot on each armor, and the spots never overlap, so all of them can be installed at once without clipping.
+- **Any combination fits.** Each modification has its own spot on each armor, and the spots never overlap, so all of them can be installed at once without clipping. Where an armor has no room for one in a view (a narrow back, thin legs, a backpack), it is left out of that view rather than clipping: the second heart only shows on wider backs, and the rigidity matrix only where the exoframe struts leave room.
+- **Only while the armor shows.** A modification is drawn only while the armor piece it is installed in is drawn, so hidden headgear and mods that hide apparel hide its modifications too.
 - **It is dyed with the armor.** The art is white and unmasked, like vanilla power armor, and is drawn in the armor's own color.
 
 Each visual is drawn just above the armor piece it's installed in and below the next apparel layer. You can turn visuals off in the mod settings.
@@ -162,6 +170,7 @@ The art is generated with [rwtexturegen](https://github.com/Jitby-Jones/rwtextur
 
 - `modules.py` draws the worn art.
 - `module_icons.py` draws the item and UI icons.
+- `armor_modulus.py` draws the Armor Modulus.
 - `armor_profiles.json` holds the measured silhouettes. These are numbers only: no art from RimWorld or other mods is included. `measure_profiles.py` regenerates the file from your own copies of the armor textures.
 
 For your own art, set a render node's `texPath` with a `{fit}` token. It is replaced by the armor's fit, and Marine is used if that fit has no art. Body nodes use `bodyTypeTextures` (`_Male`, `_Female`, `_Thin`, `_Fat`, `_Hulk`), and all files are 128x128 with `_north`, `_south` and `_east` versions. Nodes use the Cutout shader in the armor's color by default. Set `useArmorColor` to `false`, or give a `shaderTypeDef`, for art that keeps its own colors.
@@ -234,8 +243,9 @@ To regenerate the textures, install [rwtexturegen](https://github.com/Jitby-Jone
 cd Source/TextureSpecs
 rwtex build modules.py --out /tmp/mpa-art --mod ../..
 rwtex build module_icons.py --out /tmp/mpa-icons --mod ../..
+rwtex build armor_modulus.py --out /tmp/mpa-bench --mod ../..
 ```
 
 ## Status
 
-The code compiles against the RimWorld 1.5, 1.6 and 1.7 reference assemblies. All XML was checked for field names (against each version's game code), enum values, cross-references, textures (every armor fit, body type and facing), translation keys and CE patch targets. The module art was checked by compositing it over each supported armor's own textures, for every body type and facing, both one module at a time and all of them together. The mod hasn't been play-tested in the game yet.
+The code compiles against the RimWorld 1.5, 1.6 and 1.7 reference assemblies, and every API it calls or patches was checked against all three. All XML was checked for field names (against each version's game code), enum values, cross-references, textures (every armor fit, body type and facing), translation keys, patch targets and the Armor Modulus bills. The module art was checked by compositing it over each supported armor's own textures, for every body type and facing, both one module at a time and all of them together. The mod hasn't been play-tested in the game yet.

@@ -126,6 +126,10 @@
 						<debugLabel>MPA second mind (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SecondMind_{fit}/SecondMind_{fit}</texPath>
 						<layerFraction>0.4</layerFraction>
+						<visibleFacing>
+							<li>South</li>
+							<li>North</li>
+						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>
