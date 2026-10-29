@@ -169,29 +169,30 @@ Modifications with a visual are drawn on the pawn through RimWorld's render tree
 |---|---|---|
 | Body | Additional plating | A thick appliqué slab with a raised keel clamped over the chest, and layered pauldrons over the shoulders where the armor's own features leave room |
 | Body | Uranium composite plating | The same places, heavier: dark uranium-ceramic slabs in dyed trim, a trefoil on the chest |
-| Body | Biogel servo replacement | Servo motors on the outside of both elbows driving biogel muscle sleeves along the arms |
-| Body | Neuromemetic regenerators | Two long canisters out of the upper back, angled down and outwards in a clamped cradle |
-| Body | Second heart | An armored life-support drum on the upper back, the heart behind a porthole, arterial hoses into the armor |
-| Body | Auxiliary subpersona | A processor case across the belt with three subcore cartridges and data cables up into the chest |
-| Body | Load-bearing exoframe | A whole-body exoskeleton: shoulder and hip actuators, struts and rams down the outside of the arms and legs, elbow and knee joints, and on the back a segmented spine, a yoke to the shoulders and a hip frame |
-| Body | Rigidity matrix | Lattice guard plates over the thighs, locked together across the hips, with dampers from the belt |
-| Body | Thermal regulation unit | A finned radiator with two fans on the lower back, coolant lines into the armor |
-| Body | Longjump hydraulics | A heavy ram down the back of each leg, fed by an accumulator on the lower back |
+| Body | Biogel servo replacement | Rounded servo housings over the outside of both elbows, with a window onto the biogel |
+| Body | Neuromemetic regenerators | Two canisters out of the upper back, angled down and outwards, with a window onto the gel |
+| Body | Second heart | An armored housing in the middle of the upper back, the heart behind a porthole |
+| Body | Auxiliary subpersona | A case over the belt buckle with three subcore cartridges slotted into it |
+| Body | Load-bearing exoframe | A frame that carries the whole armor: a spine on the back with a yoke over the shoulders and a hip belt, big actuators on the hips, and struts down the outside of the legs to the knees and feet |
+| Body | Rigidity matrix | A braced plate over each thigh: a cross strut in a lattice window, with a lock bar across the top |
+| Body | Thermal regulation unit | A radiator plate with vent slits across the lower back |
+| Body | Longjump hydraulics | A heavy ram down the back of each leg, from under the lower back to a pivot at the heel |
 | Helmet | Additional plating | A brow guard: a thick visor hood across the upper face |
 | Helmet | Uranium composite plating | A heavier, dark brow guard in dyed trim |
-| Helmet | Targeting uplink | A laser rangefinder with a whip antenna high on one side |
-| Helmet | Multispectral sensor array | A pod under the uplink with three stacked optics: thermal, visible and ultraviolet |
-| Helmet | Second mind | A persona core housing at the other temple |
-| Helmet | Auxiliary subpersona | A subcore housing under the second mind |
-| Helmet | Neuromemetic regenerators | Two canisters rising from a cradle on the back of the helmet |
-| Helmet | Bionic synchronization | A spinal interface socket at the nape with three plugged-in cables |
+| Helmet | Targeting uplink | A rangefinder housing with a whip antenna high on one side |
+| Helmet | Multispectral sensor array | A pod built out of the side of the helmet under the uplink, three cameras stacked in its window: thermal, visible and ultraviolet |
+| Helmet | Second mind | A persona core housing at the other temple, the core behind a round port |
+| Helmet | Auxiliary subpersona | A housing under the second mind with three subcore cartridges |
+| Helmet | Neuromemetic regenerators | Two canisters on the back of the helmet, angled up and apart |
+| Helmet | Bionic synchronization | A spinal interface socket at the nape with three plugs seated in it |
 | Helmet | Neural stress dampener | A low emitter dome with three stub antennas on the crown |
 
+- **Built like the armor.** Apart from the plating, every module is drawn the way the vanilla armor is: a few big plates with flat faces, chamfered edges, dark recesses and black outlines, so the pawn stays readable with many modules installed.
 - **The art is drawn for each armor.** Every armor has its own set (14 body armors x 5 body types x 3 facings, 10 helmets x 3 facings) at 256x256, double vanilla's resolution, placed using measurements of that armor's own worn textures. Modules move clear of launchers, wings, jump packs, gold trim, horns and antennas, and they hug slim armor like the trooper's as closely as the bulky siegebreaker.
-- **It is drawn as one 3D object.** Every module is placed on a 3D model of the pawn, so it is in the same place in every view: the exoframe's struts run down the outside of the limbs and show edge-on from the front, its joints are round only from the side, where their axles face you, and a pair of canisters seen from the side shows as one.
-- **Modules layer, they don't clip.** Each module has its place and a fixed drawing order, so where two meet (a servo over the exoframe's arm strut, the subpersona over the rigidity matrix) the upper one covers the lower one cleanly, and any combination can be installed at once. Where an armor's own features take a module's place in one view, the module is left out of that view, or, for the exoframe, its shoulder goes under the wing or pauldron.
+- **It is drawn as one 3D object.** Every module is placed on a 3D model of the pawn, so it is in the same place in every view: the exoframe's frame runs down the back and its struts down the outside of the legs, its hip and knee joints are round only from the side, where their axles face you, and a pair of canisters seen from the side shows as one.
+- **Modules layer, they don't clip.** Each module has its place and a fixed drawing order, so where two meet (the subpersona over the rigidity matrix, the longjump rams over the exoframe's hip belt) the upper one covers the lower one cleanly, and any combination can be installed at once. Where an armor's own features take a module's place in one view, the module is left out of that view, or, for the exoframe, its shoulder goes under the wing or pauldron.
 - **Only while the armor shows.** A modification is drawn only while the armor piece it is installed in is drawn, so hidden headgear and mods that hide apparel hide its modifications too.
-- **Its plates are dyed with the armor.** The art comes with CutoutComplex masks: the parts built like the armor's shell take the armor's color, while frames, rams, hoses, optics and lamps keep their own gunmetal, rubber and glass.
+- **Its plates are dyed with the armor.** The art comes with CutoutComplex masks: the parts built like the armor's shell take the armor's color, while frame members, rods, recesses and optics keep their own grey, black and glass.
 
 Each visual is drawn just above the armor piece it's installed in and below the next apparel layer. You can turn visuals off in the mod settings.
 

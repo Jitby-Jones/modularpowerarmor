@@ -21,18 +21,18 @@ draws them in a fixed order, low to high:
     helmet  plating / uranium plating, neural link, stress dampener, subpersona, second mind,
             regenerators, sensor array, targeting uplink
 
-Rotary joints are drawn the way their axis faces each view (Kit.joint): the exoframe's
-shoulder, elbow, hip and knee pivots, the elbow servos and the piston pins turn about the
-pawn's left-right axis, so they are round only from the side and barrels from the front and
-back.
+Apart from the plating, every module is built like the vanilla armor itself (see vanilla-style
+parts below): a few big plates with flat faces, chamfers, dark recesses and black outlines.
+Joints are drawn the way their axis faces each view: the exoframe's hip and knee pivots, the
+elbow servos and the longjump rams' heel pivots turn about the pawn's left-right axis, so they
+are round caps only from the side, and housings or barrels from the front and back.
 """
 import math
 
 import numpy as np
 
 import mpa_fit as F
-from mpa_kit import (AMBER, CYAN, DARK, FRAME, GEL, GLASS, HOSE, IRON, RED, SHELL, STEEL, VIOLET, Kit, _mat, perp, quad,
-                     render, render_mask, setup, unit)
+from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
 from rwtex import geom as G
 from rwtex.archetypes.apparel import armor, helmet
 from rwtex.render import Line
@@ -219,79 +219,6 @@ def back_rows(c, fit):
 
 # ============================================================================= shared parts
 
-def strut(K, name, a, b, w, z, mat=FRAME, holes=True):
-    """Box-section strut from a to b: gunmetal bar with a lit top edge, a dark lower edge and
-    lightening holes."""
-    k = K.k
-    a, b = np.asarray(a, float), np.asarray(b, float)
-    p = K.block(name, quad(a, b, w), z, mat, bevel=0.0)
-    if p is None:
-        return p
-    ax = unit(b - a)
-    n = perp(ax)
-    if n[1] > 0:
-        n = -n                       # n points up/left (toward the light)
-    L = float(np.hypot(*(b - a)))
-    p.fill(G.poly([a + n * w, b + n * w, b + n * w * 0.45, a + n * w * 0.45]), 'light')
-    p.fill(G.poly([a - n * w, b - n * w, b - n * w * 0.5, a - n * w * 0.5]), 'shade')
-    if holes and L > 10.0 * k:
-        m = int(L / (5.0 * k))
-        for i in range(1, m):
-            q = a + ax * L * i / m
-            p.fill(G.rounded(G.poly([q - ax * 1.2 * k + n * w * 0.3, q + ax * 1.2 * k + n * w * 0.3,
-                                     q + ax * 1.2 * k - n * w * 0.3, q - ax * 1.2 * k - n * w * 0.3]), 0.5 * k),
-                   f'{DARK.name}.base', mask=None)
-    return p
-
-
-def actuator(K, c, name, x, y, R, z, tone='base', lamp=True):
-    """Shell actuator housing round a joint drive that turns about the pawn's left-right axis:
-    the drive's hub shows from the side, its barrel through the housing from the front and back."""
-    k = c.k
-    p = K.block(name, G.chamfer(G.rect(x - R, y - R, x + R, y + R), R * 0.45), z, SHELL, bevel=1.2, tone=tone)
-    if p is None:
-        return p
-    p.fill(G.rect(x - R, y + R * 0.5, x + R, y + R), 'shade' if tone == 'base' else 'deep')
-    if c.dir == 'east':
-        K.hinge(name + '_hub', x, y - R * 0.05, R * 0.58, z + 0.05, FRAME)
-    else:
-        K.knuckle(name + '_hub', x, y + R * 0.1, R * 1.05, R * 0.42, z + 0.05, FRAME)
-    if lamp:
-        K.lamp(p, x + R * 0.62, y - R * 0.62, 1.1 * k, 1.0 * k)
-    return p
-
-
-def spine(K, c, lay, y0, y1, w=4.6):
-    """Segmented spine column down the middle of the back (north)."""
-    k = c.k
-    cx = F.body_ext(c, F.vy(c, (y0 + y1) / 2))[0]
-    hw = w * k * lay['sq']
-    K.block('spine', G.chamfer(G.rect(cx - hw * 0.55, y0, cx + hw * 0.55, y1), 1.0 * k), 1.6, IRON, bevel=0.6)
-    n = max(4, int((y1 - y0) / (5.0 * k)))
-    for i in range(n):
-        yy = y0 + (y1 - y0) * (i + 0.5) / n
-        v = K.block(f'vert{i}', G.chamfer(G.rect(cx - hw, yy - 1.7 * k, cx + hw, yy + 1.7 * k), 1.0 * k), 1.7 + i * 0.001, FRAME,
-                    bevel=0.7)
-        if v is not None:
-            K.bolt(v, cx - hw * 0.55, yy, 0.6 * k)
-            K.bolt(v, cx + hw * 0.55, yy, 0.6 * k)
-
-
-def spine_east(K, c, xs, y0, y1):
-    """The spine seen from the side: vertebrae standing out from the back."""
-    k = c.k
-    x0, x1 = xs
-    K.block('spine', G.chamfer(G.poly([(x0 - 1.4 * k, y0), (x0 + 1.4 * k, y0), (x1 + 1.4 * k, y1), (x1 - 1.4 * k, y1)]), 0.8 * k), 1.6,
-            IRON, bevel=0.6)
-    n = max(4, int((y1 - y0) / (5.0 * k)))
-    for i in range(n):
-        t = (i + 0.5) / n
-        yy = y0 + (y1 - y0) * t
-        xx = x0 + (x1 - x0) * t
-        K.block(f'vert{i}', G.chamfer(G.rect(xx - 3.2 * k, yy - 1.6 * k, xx + 1.8 * k, yy + 1.6 * k), 0.9 * k), 1.7 + i * 0.001, FRAME,
-                bevel=0.7)
-
-
 def bracket_over(K, c, name, x, y_top, h, z, w=2.2):
     """A gunmetal hook bracket clamping a plate's top edge to the armor."""
     k = c.k
@@ -312,177 +239,228 @@ def trefoil(K, p, x, y, R):
     p.fill(G.circle(x, y, R * 0.26), f'{DARK.name}.base', mask=None)
 
 
-def canister(K, name, base, tip, hw, z, mat=SHELL, fluid=GEL, window=True, tone='base'):
-    """Regenerator canister from its mount (base) to its cap (tip): cylinder body with a glass
-    window showing the fluid, a collar at the mount and a cap."""
-    k = K.k
+# ============================================================================= vanilla-style parts
+#
+# Everything but the plating is built like vanilla power armor: a few big plates with flat faces
+# (white, #ccc on the back), chamfer facets, dark recesses and black outlines - no small hardware.
+
+GREY = _mat('mpa_grey', '#a3a3a3', light='#bababa', shade='#848484', deep='#626262', line='#3c3c3c')
+
+
+def plate_tone(c):
+    """Face tone of a plate turned to the camera: white, but #ccc for the whole back view."""
+    return 'shade' if c.dir == 'north' else 'base'
+
+
+def vplate(K, c, name, ring, z, mat=SHELL, tone=None, bevel=1.3):
+    return K.block(name, ring, z, mat, tone=tone or plate_tone(c), bevel=bevel)
+
+
+def side_face(p, ring_pts_outer, ring_pts_inner, tone='shade'):
+    """Fill the band between two edges of a strip (its side face)."""
+    p.fill(G.poly(list(ring_pts_outer) + list(ring_pts_inner)[::-1]), tone)
+
+
+def recess(p, ring):
+    p.fill(ring, f'{DARK.name}.base', mask=None)
+
+
+def strip(K, c, name, pts, w, sgn, z, mat=SHELL, side=0.4):
+    """A plate strip along the edge of the silhouette: ``pts`` is its outer edge (top to
+    bottom), the strip is ``w`` wide inward (screen sign ``-sgn``); its outer ``side`` share is
+    the side face, turned away from the camera."""
+    inner = [(x - sgn * w, y) for x, y in pts]
+    p = vplate(K, c, name, G.chamfer(G.poly(list(pts) + inner[::-1]), min(1.4 * c.k, w * 0.35)), z, mat)
+    if p is not None and side > 0:
+        mid = [(x - sgn * w * side, y) for x, y in pts]
+        side_face(p, pts, mid, 'deep' if c.dir == 'north' else 'shade')
+    return p
+
+
+def path_strip(K, c, name, pts, w, z, mat=GREY):
+    """A strip of width ``w`` along a polyline (a frame member seen from the side)."""
+    P = np.asarray(pts, float)
+    left, right = [], []
+    for i in range(len(P)):
+        if i == 0:
+            t = P[1] - P[0]
+        elif i == len(P) - 1:
+            t = P[-1] - P[-2]
+        else:
+            t = unit(P[i + 1] - P[i]) + unit(P[i] - P[i - 1])
+        n = perp(unit(t))
+        left.append(P[i] + n * w / 2)
+        right.append(P[i] - n * w / 2)
+    p = vplate(K, c, name, G.chamfer(G.poly(left + right[::-1]), w * 0.3), z, mat)
+    if p is not None:
+        # lower half of the member in shade
+        lo = [q for q in (left if left[0][1] > right[0][1] else right)]
+        mid = [(a + b) / 2 for a, b in zip(left, right)]
+        side_face(p, lo, mid, 'shade')
+    return p
+
+
+def hub_cap(K, c, name, x, y, r, z, mat=SHELL):
+    """A joint cap seen end-on (from the side): round plate, dark ring, small centre."""
+    p = K.block(name, G.circle(x, y, r), z, mat, tone=plate_tone(c), bevel=1.0)
+    if p is not None:
+        p.fill(G.circle(x, y, r * 0.62), f'{DARK.name}.base', mask=None)
+        p.fill(G.circle(x, y, r * 0.36), f'{GREY.name}.base', mask=None)
+    return p
+
+
+def simple_canister(K, c, name, base, tip, r, z, window=True):
+    """A canister: a white cylinder with its far side in shade, a dark collar at the mount and a
+    window onto the fluid."""
+    k = c.k
     base, tip = np.asarray(base, float), np.asarray(tip, float)
     ax = unit(tip - base)
-    nrm = perp(ax)
+    n = perp(ax)
+    if n[0] < 0:
+        n = -n
     L = float(np.hypot(*(tip - base)))
-    body = K.cylinder(name, base + ax * 1.5 * k, tip - ax * 1.0 * k, hw, z, mat, tone=tone)
-    if body is not None and window:
-        a, b = base + ax * L * 0.3, tip - ax * L * 0.25
-        body.fill(G.poly([a + nrm * hw * 0.42, b + nrm * hw * 0.42, b - nrm * hw * 0.42, a - nrm * hw * 0.42]), f'{DARK.name}.deep',
-                  mask=None)
-        a2, b2 = a + ax * 0.8 * k, b - ax * 0.8 * k
-        body.fill(G.poly([a2 + nrm * hw * 0.26, b2 + nrm * hw * 0.26, b2 - nrm * hw * 0.26, a2 - nrm * hw * 0.26]), f'{fluid.name}.base',
-                  mask=None)
-        body.fill(G.poly([a2 + nrm * hw * 0.26, b2 + nrm * hw * 0.26, b2 + nrm * hw * 0.04, a2 + nrm * hw * 0.04]), f'{fluid.name}.light',
-                  mask=None)
-    K.cylinder(name + '_collar', base - ax * 0.5 * k, base + ax * 2.2 * k, hw * 1.15, z + 0.01, FRAME)
-    K.cylinder(name + '_cap', tip - ax * 2.0 * k, tip + ax * 0.6 * k, hw * 0.9, z + 0.02, FRAME)
-    return body
-
-
-def damper(K, name, top, bot, r, z):
-    """Telescopic shock damper: gunmetal outer tube over a bright inner rod, end caps."""
-    k = K.k
-    top, bot = np.asarray(top, float), np.asarray(bot, float)
-    ax = unit(bot - top)
-    L = float(np.hypot(*(bot - top)))
-    K.cylinder(name + '_rod', top + ax * L * 0.45, bot, r * 0.55, z, STEEL)
-    K.cylinder(name + '_tube', top, top + ax * L * 0.58, r, z + 0.01, FRAME)
-    K.cylinder(name + '_cap0', top - ax * 1.0 * k, top + ax * 1.2 * k, r * 1.25, z + 0.02, IRON)
-    K.cylinder(name + '_cap1', bot - ax * 1.2 * k, bot + ax * 0.6 * k, r * 1.1, z + 0.02, IRON)
-
-
-def lattice(K, p, x0, y0, x1, y1, cell=None):
-    """A recessed dark window with a gunmetal diamond lattice in it."""
-    k = K.k
-    cell = cell or 3.2 * k
-    p.fill(G.chamfer(G.rect(x0, y0, x1, y1), 0.8 * k), f'{DARK.name}.deep', mask=None)
-    w = x1 - x0
-    n = max(2, int(round((y1 - y0) / cell)))
-    for i in range(-n, 2 * n):
-        ya = y0 + i * cell
-        p.line([(x0, ya), (x1, ya + w)], 0.9 * k, f'{FRAME.name}.base', mask=None)
-        p.line([(x1, ya), (x0, ya + w)], 0.9 * k, f'{FRAME.name}.base', mask=None)
-    p.details.append(Line(G.chamfer(G.rect(x0, y0, x1, y1), 0.8 * k), 1.2 * k, f'{FRAME.name}.light', closed=True, mask=None))
+    ring = G.rounded(G.poly([base - n * r, tip - n * r, tip + n * r, base + n * r]), [0.6 * k, r * 0.9, r * 0.9, 0.6 * k])
+    p = vplate(K, c, name, ring, z, bevel=0.0)
+    if p is None:
+        return p
+    p.fill(G.poly([base + n * r * 0.35, tip + n * r * 0.35, tip + n * r * 1.2, base + n * r * 1.2]), 'deep' if c.dir == 'north' else 'shade')
+    p.fill(G.poly([base - n * r * 1.2 - ax * k, base + ax * 3.0 * k - n * r * 1.2, base + ax * 3.0 * k + n * r * 1.2, base + n * r * 1.2 - ax * k]),
+           f'{DARK.name}.base', mask=None)
+    if window:
+        a, b = base + ax * L * 0.36, base + ax * L * 0.78
+        p.fill(G.poly([a - n * r * 0.38, b - n * r * 0.38, b + n * r * 0.28, a + n * r * 0.28]), f'{DARK.name}.deep', mask=None)
+        p.fill(G.poly([a + ax * 1.0 * k - n * r * 0.22, b - ax * 1.0 * k - n * r * 0.22, b - ax * 1.0 * k + n * r * 0.1,
+                       a + ax * 1.0 * k + n * r * 0.1]), f'{GEL.name}.base', mask=None)
+    return p
 
 
 # ============================================================================= body: exoframe
 
 @register('Exoframe', 'body', layer=0.08)
 def exoframe(K, c, fit):
-    """Load-bearing exoskeleton over the whole suit. The frame runs down the outside of the
-    limbs - shoulder and hip actuators on the outer side of those joints, struts down the
-    outside of the arms and legs, elbow and knee joints - with a segmented spine on the back, a
-    yoke from it to the shoulders and a hip frame wrapping round the back to the hip actuators.
-    Seen from the front and back, the outside of the limbs is the silhouette's edge: the struts
-    show edge-on there and the joints, whose axles point out of the body's side, as barrels
-    sticking out sideways; the spine, yoke and hip frame only show from behind and the side."""
+    """Load-bearing exoframe, built like the armor: a frame on the back with a yoke over the
+    shoulders and a hip belt, big actuators on the hips, and struts down the outside of the
+    legs to the knees and feet, so the load goes into the ground. From the front only the yoke's
+    ends on the shoulders, the hip actuators and the leg struts show; the back frame shows from
+    behind and, edge-on, from the side."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    y_sh = f.top + 17.0 * k
-    y_el = lay['y_elbow']
-    y_hip = lay['y_belt'] + 1.5 * k
-    y_bot = f.bot - 2.5 * k
-    y_knee = y_hip + (y_bot - y_hip) * 0.6
+    sq = lay['sq']
+    y_hip = lay['y_belt'] + 2.5 * k
+    y_bot = f.bot - 2.0 * k
+    y_knee = y_hip + (y_bot - y_hip) * 0.55
     if c.dir == 'east':
-        _exoframe_east(K, c, fit, lay, y_sh, y_el, y_hip, y_knee, y_bot)
+        _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot)
         return
     back = c.dir == 'north'
     hi = edge_hi(fit)
     under = opts(fit, 'Exoframe', under={})['under']
-    act = {}
+    hips, caps = {}, {}
     for side, s in front_sides(c):
         sgn = -1 if side == 'l' else 1
 
         def ex(y, lift):
             return X(c, fit, y, side, lift=lift, hi=hi)
-        xsh = ex(y_sh, 1.4)
-        xel = ex(y_el, 1.4)
-        xwr = ex(y_hip - 6.0 * k, 1.2)
-        xhp = ex(y_hip, 1.2)
-        xkn = ex(y_knee, 0.8)
-        xft = ex(y_bot - 1.0 * k, 0.4)
-        act[side] = (xsh, xhp)
-        # under a wing, launcher or big pauldron the shoulder is hidden: the strut comes out below
-        y_top = y_sh
-        if s in under:
-            y_top = min(f.y(under[s]), y_el - 3.0 * k)
-        x_top = ex(y_top, 1.4)
-        if y_top < y_el - 3.0 * k:
-            strut(K, f'uarm{side}', (x_top, y_top), (xel, y_el), 1.25 * k, 2, holes=False)
-        strut(K, f'farm{side}', (xel, y_el), (xwr, y_hip - 6.0 * k), 1.15 * k, 2, holes=False)
-        strut(K, f'thigh{side}', (xhp, y_hip), (xkn, y_knee), 1.35 * k, 2, holes=False)
-        strut(K, f'shin{side}', (xkn, y_knee), (xft, y_bot), 1.25 * k, 2, holes=False)
-        K.block(f'cuff{side}', quad((xwr, y_hip - 9.0 * k), (xwr, y_hip - 5.0 * k), 2.2 * k), 2.1, FRAME, bevel=0.6)
-        for nm, (x, y, R) in {'elbow': (xel, y_el, 2.5 * k), 'knee': (xkn, y_knee, 2.6 * k)}.items():
-            K.knuckle(f'{nm}{side}', x + sgn * R * 0.35, y, R * 0.95, R * 0.8, 4, FRAME)
-        K.block(f'foot{side}', G.chamfer(G.rect(xft - 2.4 * k, y_bot - 1.4 * k, xft + 2.4 * k, y_bot + 1.4 * k), 0.7 * k), 4, FRAME, bevel=0.6)
-        if s in under:
-            K.block(f'emerge{side}', quad((x_top, y_top - 0.5 * k), (x_top, y_top + 3.0 * k), 2.0 * k), 2.05, FRAME, bevel=0.5)
-        else:
-            _side_actuator(K, c, f'shoulder{side}', xsh, y_sh, sgn, 4.2 * k, 5, back)
-        _side_actuator(K, c, f'hip{side}', xhp, y_hip, sgn, 4.2 * k, 5, back)
+        # leg strut from the hip actuator down to the foot, along the outside of the leg
+        strip(K, c, f'strut{side}', [(ex(y, 1.0), y) for y in np.linspace(y_hip, y_bot - 1.0 * k, 6)], 4.0 * k, sgn, 2, GREY)
+        fx0, fx1 = sorted((ex(y_bot, 1.0) + sgn * 0.6 * k, ex(y_bot, 1.0) - sgn * 7.0 * k))
+        vplate(K, c, f'foot{side}', G.chamfer(G.rect(fx0, y_bot - 1.6 * k, fx1, y_bot + 1.6 * k), 0.8 * k), 2.2, GREY)
+        _housing(K, c, f'knee{side}', ex(y_knee, 1.0), y_knee, sgn, 6.0 * k, 6.0 * k, 3)
+        hips[side] = _housing(K, c, f'hip{side}', ex(y_hip, 1.0), y_hip, sgn, 8.5 * k * sq ** 0.5, 11.0 * k, 4)
+        # the yoke's end over the shoulder (hidden under a wing or a pauldron)
+        if s not in under:
+            caps[side] = _yoke_cap(K, c, fit, side, sgn, 4.5)
     if not back:
         return
-    cx = F.body_ext(c, F.vy(c, y_sh))[0]
-    spine(K, c, lay, y_sh - 10.0 * k, y_hip - 1.0 * k)
-    for side, s in front_sides(c):
-        if s not in under:
-            strut(K, f'yoke{side}', (cx, y_sh - 3.0 * k), (act[side][0], y_sh), 1.7 * k, 1.55, holes=False)
-    _hip_frame(K, c, fit, y_hip, hi)
+    cx = F.body_ext(c, F.vy(c, (lay['top'] + y_hip) / 2))[0]
+    y_sh = yoke_y(c) + 2.0 * k
+    # back frame: a spine column from the yoke to the hip belt
+    hw = 4.0 * k * sq
+    sp = vplate(K, c, 'spine', G.chamfer(G.rect(cx - hw, y_sh - 2.0 * k, cx + hw, y_hip - 2.0 * k), 1.6 * k), 2.6)
+    if sp is not None:
+        sp.fill(G.rect(cx + hw * 0.4, y_sh - 2.0 * k, cx + hw, y_hip - 2.0 * k), 'deep')
+        for t in (0.25, 0.5, 0.75):
+            y = y_sh + (y_hip - y_sh - 4.0 * k) * t
+            recess(sp, G.rect(cx - hw + 1.0 * k, y - 0.7 * k, cx + hw - 1.0 * k, y + 0.7 * k))
+    xl, xr = caps.get('l'), caps.get('r')
+    xl = xl if xl is not None else cx - hw
+    xr = xr if xr is not None else cx + hw
+    yoke = vplate(K, c, 'yoke', G.chamfer(G.rect(xl, y_sh - 2.4 * k, xr, y_sh + 2.4 * k), 0.8 * k), 2.4, GREY)
+    if yoke is not None:
+        yoke.fill(G.rect(xl, y_sh + 0.6 * k, xr, y_sh + 2.4 * k), 'shade')
+    belt = vplate(K, c, 'hipbelt', G.chamfer(G.rect(hips['l'], y_hip - 2.6 * k, hips['r'], y_hip + 2.6 * k), 0.8 * k), 2.5, GREY)
+    if belt is not None:
+        belt.fill(G.rect(hips['l'], y_hip + 0.8 * k, hips['r'], y_hip + 2.6 * k), 'shade')
 
 
-def _side_actuator(K, c, name, x, y, sgn, R, z, back):
-    """Joint drive on the outer side of a shoulder or hip, seen from the front or back: the
-    housing's narrow front face on the silhouette's edge and its drive barrel sticking out."""
+def yoke_y(c):
+    """Screen row just below the helmet, where the back frame's yoke runs across the shoulders."""
+    return max(c.form.top + 0.22 * c.form.H, 60.0 * c.k)
+
+
+def _yoke_cap(K, c, fit, side, sgn, z):
+    """The end of the shoulder yoke, a plate over the top of the shoulder. Returns its inner x."""
     k = c.k
-    x0, x1 = sorted((x - sgn * R * 0.55, x + sgn * R * 0.6))
-    p = K.block(name, G.chamfer(G.rect(x0, y - R, x1, y + R), R * 0.3), z, SHELL, bevel=1.1, tone='shade' if back else 'base')
+    lay = F.layout(c, fit)
+    yt = max(F.shoulder_top(c, fit, side), yoke_y(c) - 6.0 * k)
+    xo = X(c, fit, yt + 6.0 * k, side, lift=0.8, hi=edge_hi(fit))
+    w = 8.5 * k * lay['sq'] ** 0.5
+    xi = xo - sgn * w
+    x0, x1 = sorted((xo, xi))
+    y0, y1 = yt + 0.5 * k, yt + 10.5 * k
+    p = vplate(K, c, f'yokecap{side}', G.chamfer(G.rect(x0, y0, x1, y1), [2.4 * k, 2.4 * k, 1.0 * k, 1.0 * k]), z)
     if p is not None:
-        p.fill(G.rect(x0, y + R * 0.55, x1, y + R), 'deep' if back else 'shade')
-        K.seam(p, [(x0 + 0.6 * k, y - R * 0.35), (x1 - 0.6 * k, y - R * 0.35)])
-    K.knuckle(name + '_drive', x + sgn * R * 0.75, y + R * 0.05, R * 0.55, R * 0.55, z + 0.05, FRAME)
+        p.fill(G.rect(x0, y1 - 2.6 * k, x1, y1 + 1), 'deep' if c.dir == 'north' else 'shade')
+        recess(p, G.rect(x0 + 1.4 * k, y0 + 3.0 * k, x1 - 1.4 * k, y0 + 4.2 * k))
+    return xi
 
 
-def _hip_frame(K, c, fit, y_hip, hi):
-    """The hip frame across the back between the hip actuators (north)."""
+def _housing(K, c, name, xe, y, sgn, w, h, z):
+    """A joint housing straddling the silhouette's edge at (xe, y): a chamfered shell block with
+    its outer side face in shade and the joint's axle recess across it. Returns the x of its
+    inner edge."""
     k = c.k
-    xl = X(c, fit, y_hip, 'l', lift=1.2, hi=hi)
-    xr = X(c, fit, y_hip, 'r', lift=1.2, hi=hi)
-    wb = K.block('hipframe', G.chamfer(G.rect(xl, y_hip - 2.2 * k, xr, y_hip + 2.2 * k), 0.8 * k), 1.5, FRAME, bevel=0.0)
-    if wb is not None:
-        wb.fill(G.rect(xl, y_hip - 2.2 * k, xr, y_hip - 1.0 * k), 'light')
-        wb.fill(G.rect(xl, y_hip + 1.0 * k, xr, y_hip + 2.2 * k), 'shade')
-        for t in np.linspace(0.12, 0.88, 6):
-            K.bolt(wb, xl + (xr - xl) * t, y_hip, 0.75 * k)
+    x_out = xe + sgn * w * 0.3
+    x_in = x_out - sgn * w
+    x0, x1 = sorted((x_out, x_in))
+    p = vplate(K, c, name, G.chamfer(G.rect(x0, y - h / 2, x1, y + h / 2), min(w, h) * 0.3), z)
+    if p is not None:
+        xs = x_out - sgn * w * 0.32
+        p.fill(G.rect(min(x_out, xs), y - h / 2, max(x_out, xs), y + h / 2), 'deep' if c.dir == 'north' else 'shade')
+        recess(p, G.rect(x0 + 0.8 * k, y - 0.8 * k, x1 - 0.8 * k, y + 0.8 * k))
+    return x_in
 
-
-def _exoframe_east(K, c, fit, lay, y_sh, y_el, y_hip, y_knee, y_bot):
-    """From the side the frame faces the viewer: the struts show their full width, the joints
-    their hubs, the spine stands out from the back and the hip frame wraps round to the hip."""
+def _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot):
+    """The exoframe from the side: the back frame edge-on, the yoke over the shoulder, the hip
+    belt round to the hip actuator (its cap facing us), the leg strut, the knee and the foot."""
     k = c.k
     f = c.form
     sq = lay['sq']
-    xb_sh = X(c, fit, y_sh - 6.0 * k, 'l', lift=0.5) + 2.6 * k
-    xb_hp = X(c, fit, y_hip, 'l', lift=0.5) + 2.6 * k
-    spine_east(K, c, (xb_sh, xb_hp), y_sh - 10.0 * k, y_hip)
-    cx_el = f.d(F.vy(c, y_el))[0]
-    xsh = f.d(F.vy(c, y_sh))[0] - 2.0 * k
-    xel = cx_el + 1.0 * k
-    xwr = cx_el + 6.0 * k
-    xhp = f.d(F.vy(c, y_hip))[0] - 2.0 * k
-    xkn = xhp + 3.0 * k
+    under = opts(fit, 'Exoframe', under={})['under']
+    y_sh = yoke_y(c) + 2.0 * k
+    xhp = f.d(F.vy(c, y_hip))[0] - 1.0 * k
+    xkn = xhp + 2.5 * k
     xft = xhp
-    strut(K, 'yoke', (xb_sh, y_sh - 6.0 * k), (xsh, y_sh), 1.8 * k, 1.55, holes=False)
-    strut(K, 'uarm', (xsh, y_sh), (xel, y_el), 2.0 * k, 2)
-    strut(K, 'farm', (xel, y_el), (xwr, y_hip - 6.0 * k), 1.8 * k, 2, holes=False)
-    strut(K, 'thigh', (xhp, y_hip), (xkn, y_knee), 2.2 * k, 2)
-    strut(K, 'shin', (xkn, y_knee), (xft, y_bot), 2.0 * k, 2, holes=False)
-    strut(K, 'hipframe', (xb_hp, y_hip), (xhp, y_hip), 2.2 * k, 1.5, holes=False)
-    K.piston('ram_arm', (xsh - 3.4 * k, y_sh + 4.0 * k), (xel - 3.2 * k, y_el - 3.0 * k), 1.4 * k, 0.7 * k, 3, eyes=False)
-    K.piston('ram_leg', (xhp + 4.2 * k, y_hip + 5.0 * k), (xkn + 3.8 * k, y_knee - 2.5 * k), 1.6 * k, 0.8 * k, 3, eyes=False)
-    K.hinge('elbow', xel, y_el, 3.0 * k, 4, FRAME)
-    K.hinge('knee', xkn, y_knee, 3.2 * k, 4, FRAME)
-    K.block('foot', G.chamfer(G.rect(xft - 3.5 * k, y_bot - 1.5 * k, xft + 4.0 * k, y_bot + 1.5 * k), 0.8 * k), 4, FRAME, bevel=0.6)
-    if 1 not in opts(fit, 'Exoframe', under={})['under']:
-        actuator(K, c, 'shoulder', xsh, y_sh, 5.0 * k * sq ** 0.5, 5, lamp=False)
-    actuator(K, c, 'hip', xhp, y_hip, 5.2 * k * sq ** 0.5, 5, lamp=False)
+    xb0 = X(c, fit, y_sh, 'l', lift=0.4) + 0.5 * k
+    xb1 = X(c, fit, y_hip - 3.0 * k, 'l', lift=0.4) + 0.5 * k
+    # the back frame, standing off the back
+    vplate(K, c, 'spine', G.chamfer(G.poly([(xb0 - 3.0 * k, y_sh - 2.0 * k), (xb0 + 2.0 * k, y_sh - 2.0 * k), (xb1 + 2.0 * k, y_hip - 2.0 * k),
+                                            (xb1 - 3.0 * k, y_hip - 2.0 * k)]), 1.2 * k), 1.5, tone='shade')
+    path_strip(K, c, 'hipbelt', [(xb1, y_hip), (xhp, y_hip)], 4.4 * k, 2)
+    path_strip(K, c, 'strut', [(xhp, y_hip), (xkn, y_knee), (xft, y_bot - 1.0 * k)], 4.2 * k, 2)
+    vplate(K, c, 'foot', G.chamfer(G.rect(xft - 4.0 * k, y_bot - 1.6 * k, xft + 5.0 * k, y_bot + 1.6 * k), 0.8 * k), 2.2, GREY)
+    if 1 not in under:
+        yt = max(F.shoulder_top(c, fit), yoke_y(c) - 6.0 * k)
+        cx_sh, dd = f.d(F.vy(c, yt + 6.0 * k))
+        path_strip(K, c, 'yoke', [(xb0, y_sh), (cx_sh - dd * 0.3, yt + 4.0 * k)], 4.4 * k, 2.4)
+        cap = vplate(K, c, 'yokecap', G.chamfer(G.rect(cx_sh - dd * 0.5, yt + 0.5 * k, cx_sh + dd * 0.3, yt + 10.5 * k),
+                                                [2.4 * k, 2.4 * k, 1.0 * k, 1.0 * k]), 4.5)
+        if cap is not None:
+            cap.fill(G.rect(cx_sh - dd * 0.5, yt + 8.0 * k, cx_sh + dd * 0.3, yt + 10.5 * k + 1), 'shade')
+            recess(cap, G.rect(cx_sh - dd * 0.5 + 1.4 * k, yt + 3.6 * k, cx_sh + dd * 0.3 - 1.4 * k, yt + 4.8 * k))
+    hub_cap(K, c, 'knee', xkn, y_knee, 4.0 * k, 3)
+    hub_cap(K, c, 'hip', xhp, y_hip, 6.4 * k * sq ** 0.5, 4)
 
 
 # ============================================================================= body: plating
@@ -733,120 +711,70 @@ def uranium_plating(K, c, fit):
         _uranium_chest(K, c, fit)
     _uranium_pauldrons(K, c, fit, o['caps'])
 
-
-# ============================================================================= body: biogel servos
-
-def _gel_sleeve(K, c, name, a, b, hw, z):
-    """Translucent biogel muscle sleeve: a green glass tube with dark fibre bands and clamp rings."""
-    k = c.k
-    p = K.cylinder(name, a, b, hw, z, GEL)
-    if p is None:
-        return
-    a, b = np.asarray(a, float), np.asarray(b, float)
-    ax = unit(b - a)
-    L = float(np.hypot(*(b - a)))
-    n = perp(ax)
-    for t in np.linspace(0.2, 0.8, 4):
-        q = a + ax * L * t
-        p.line([q + n * hw * 0.9, q - n * hw * 0.9], 0.6 * k, f'{GEL.name}.deep')
-    for t in (0.0, 1.0):
-        q = a + ax * L * t
-        K.cylinder(name + f'_clamp{int(t)}', q - ax * 1.2 * k, q + ax * 1.2 * k, hw * 1.25, z + 0.01, FRAME)
-
-def _servo_drum(K, c, name, x, y, R, z, sgn=1, back=False):
-    """Elbow servo motor on the outside of the elbow. It turns about the elbow's (left-right)
-    axis, so from the side it is a finned drum with its drive hub facing the viewer, and from
-    the front and back a finned barrel sticking out of the elbow's side (``sgn`` outward)."""
-    k = c.k
-    if c.dir != 'east':
-        a, b = x - sgn * R * 0.4, x + sgn * R * 1.3
-        p = K.cylinder(name, (min(a, b), y), (max(a, b), y), R * 0.78, z, SHELL, tone='shade' if back else 'base')
-        if p is None:
-            return
-        for i in range(4):
-            xx = min(a, b) + (abs(b - a)) * (0.2 + 0.2 * i)
-            p.line([(xx, y - R * 0.78), (xx, y + R * 0.78)], 0.9 * k, f'{DARK.name}.base', mask=None)
-        xe = b
-        K.cylinder(name + '_cap', (xe - sgn * 0.8 * k, y), (xe + sgn * 1.2 * k, y), R * 0.55, z + 0.01, FRAME)
-        return
-    p = K.block(name, G.chamfer(G.rect(x - R, y - R, x + R, y + R), R * 0.38), z, SHELL, bevel=1.1)
-    if p is None:
-        return
-    for i in range(4):
-        a = math.radians(45 + 90 * i)
-        p.line([(x + math.cos(a) * R * 0.78, y + math.sin(a) * R * 0.78), (x + math.cos(a) * R * 1.1, y + math.sin(a) * R * 1.1)], 1.0 * k,
-               f'{DARK.name}.base', mask=None)
-    K.hinge(name + '_hub', x, y, R * 0.62, z + 0.1, FRAME)
-    p.fill(G.rect(x - R, y + R * 0.55, x + R, y + R), 'shade')
-
-
 @register('BiogelServos', 'body', layer=0.28)
 def biogel_servos(K, c, fit):
-    """Servo motors on the outside of both elbows driving biogel muscle sleeves: one down the
-    front of the upper arm and forearm (seen from the front and the side), one down the back of
-    the upper arm (seen from behind and the side)."""
+    """Biogel servo housings over both elbows: a rounded armored housing on the outside of each
+    elbow with a window onto the biogel; from the side, a round housing over the joint."""
     k = c.k
     lay = F.layout(c, fit)
     y = lay['y_elbow']
+    sq = lay['sq']
     if c.dir == 'east':
         x = c.form.d(F.vy(c, y))[0] + 1.0 * k
-        _gel_sleeve(K, c, 'sleeve_front', (x + 2.0 * k, y - 21.0 * k), (x + 3.0 * k, y - 4.0 * k), 2.0 * k, 1)
-        _gel_sleeve(K, c, 'sleeve_back', (x - 4.0 * k, y - 20.0 * k), (x - 3.5 * k, y - 4.0 * k), 1.8 * k, 0.9)
-        _gel_sleeve(K, c, 'sleeve_fore', (x + 3.0 * k, y + 4.0 * k), (x + 6.0 * k, y + 16.0 * k), 1.9 * k, 1)
-        _servo_drum(K, c, 'servo', x, y, 4.8 * k, 2)
+        r = 5.6 * k * sq ** 0.5
+        p = K.block('servo', G.circle(x, y, r), 2, SHELL, tone='base', bevel=1.2)
+        if p is not None:
+            p.fill(G.poly([(x - r, y + r * 0.35), (x + r, y + r * 0.35), (x + r, y + r), (x - r, y + r)]), 'shade')
+            p.fill(G.circle(x, y, r * 0.6), f'{DARK.name}.base', mask=None)
+            p.fill(G.circle(x, y, r * 0.38), f'{GEL.name}.base', mask=None)
+            p.fill(G.circle(x - r * 0.1, y - r * 0.12, r * 0.14), f'{GEL.name}.light', mask=None)
         return
-    back = c.dir == 'north'
     for side, s in front_sides(c):
         sgn = -1 if side == 'l' else 1
-        xe = X(c, fit, y, side, lift=0.4, hi=edge_hi(fit))
-        xs = xe - sgn * 4.2 * k                     # on the arm's front (or back) face, near its outer edge
-        _gel_sleeve(K, c, f'sleeve_up{side}', (xs + sgn * 0.6 * k, y - 21.0 * k), (xs, y - 4.0 * k), 2.0 * k, 1)
-        if not back:
-            _gel_sleeve(K, c, f'sleeve_lo{side}', (xs, y + 4.0 * k), (xs - sgn * 1.0 * k, y + 15.0 * k), 1.8 * k, 1)
-        _servo_drum(K, c, f'servo{side}', xe - sgn * 1.0 * k, y, 4.6 * k, 2, sgn, back)
+        xe = X(c, fit, y, side, lift=0.6, hi=edge_hi(fit))
+        w, h = 7.0 * k * sq ** 0.5, 13.0 * k
+        x_out = xe + sgn * w * 0.35
+        x_in = x_out - sgn * w
+        x0, x1 = sorted((x_out, x_in))
+        p = vplate(K, c, f'servo{side}', G.rounded(G.rect(x0, y - h / 2, x1, y + h / 2), min(w, h) * 0.45), 2)
+        if p is None:
+            continue
+        xs = x_out - sgn * w * 0.34
+        p.fill(G.rect(min(x_out, xs), y - h / 2, max(x_out, xs), y + h / 2), 'deep' if c.dir == 'north' else 'shade')
+        if c.dir == 'south':
+            xw = (x_in + xs) / 2
+            p.fill(G.rounded(G.rect(xw - 1.2 * k, y - 3.6 * k, xw + 1.2 * k, y + 3.6 * k), 1.0 * k), f'{DARK.name}.base', mask=None)
+            p.fill(G.rounded(G.rect(xw - 0.6 * k, y - 3.0 * k, xw + 0.6 * k, y + 3.0 * k), 0.5 * k), f'{GEL.name}.base', mask=None)
+        else:
+            recess(p, G.rect(x0 + 0.8 * k, y - 0.6 * k, x1 - 0.8 * k, y + 0.6 * k))
 
 
 # ============================================================================= body: regenerators
 
 @register('Regenerators', 'body', dirs=('east', 'north'), layer=0.6)
 def regenerators(K, c, fit):
-    """Neuromemetic regenerator canisters: two long tanks out of the upper back either side of
-    the spine, angled down and outwards, clamped into a cradle across the back and plumbed into
-    the armor, the regenerator fluid showing through their windows. From the side the near tank
-    hides the far one."""
+    """Neuromemetic regenerator canisters: two canisters out of the upper back either side of the
+    spine, angled down and outwards, a window onto the regenerator fluid in each. From the side
+    the near canister hides the far one."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
     sq = lay['sq']
     y_top = f.top + 0.16 * f.H
+    L = 24.0 * k * sq ** 0.5
+    r = 4.2 * k * sq ** 0.4
     if c.dir == 'east':
-        xb = X(c, fit, y_top + 8.0 * k, 'l', lift=0.0) + 5.0 * k
-        yb = y_top + 6.0 * k
-        cr = K.block('cradle', G.chamfer(G.rect(xb - 1.0 * k, yb - 5.0 * k, xb + 8.0 * k, yb + 9.0 * k), 1.6 * k), 1.5, FRAME, bevel=0.0)
-        if cr is not None:
-            cr.fill(G.rect(xb - 1.0 * k, yb - 5.0 * k, xb + 8.0 * k, yb - 3.6 * k), 'light')
-            K.bolts(cr, [(xb + 5.5 * k, yb - 1.5 * k), (xb + 5.5 * k, yb + 6.0 * k)], 0.8 * k)
-        L = 25.0 * k * sq ** 0.5
-        ang = math.radians(28)
-        b = np.array([xb + 1.0 * k, yb + 1.0 * k])
-        canister(K, 'can', b, b + np.array([-math.sin(ang), math.cos(ang)]) * L, 3.4 * k, 2)
-        K.hose('feed', [(xb + 6.0 * k, yb + 8.0 * k), (xb + 9.0 * k, yb + 13.0 * k), (xb + 9.5 * k, yb + 19.0 * k)], 2.4 * k, 1.6)
+        xb = X(c, fit, y_top + 6.0 * k, 'l', lift=0.0) + 4.0 * k
+        ang = math.radians(26)
+        b = np.array([xb, y_top + 2.0 * k])
+        simple_canister(K, c, 'can', b, b + np.array([-math.sin(ang), math.cos(ang)]) * L, r, 2)
         return
     cx, a_ = F.body_ext(c, F.vy(c, y_top + 10.0 * k))
-    hw = 3.6 * k * sq ** 0.4
     span = min(a_ * 0.42, 15.0 * k * sq)
-    cr = K.block('cradle', G.chamfer(G.rect(cx - span - 5.0 * k, y_top - 1.0 * k, cx + span + 5.0 * k, y_top + 6.0 * k), 1.6 * k), 1.5,
-                 FRAME, bevel=0.0)
-    if cr is not None:
-        cr.fill(G.rect(cx - span - 5.0 * k, y_top - 1.0 * k, cx + span + 5.0 * k, y_top + 0.6 * k), 'light')
-        cr.fill(G.rect(cx - span - 5.0 * k, y_top + 4.4 * k, cx + span + 5.0 * k, y_top + 6.0 * k), 'shade')
-    L = 26.0 * k * sq ** 0.5
-    ang = math.radians(16)
+    ang = math.radians(14)
     for s in (-1, 1):
-        b = np.array([cx + s * span, y_top + 2.0 * k])
-        canister(K, f'can{s}', b, b + np.array([s * math.sin(ang), math.cos(ang)]) * L, hw, 2, tone='shade')
-        K.hose(f'feed{s}', [b + np.array([-s * 2.0 * k, 3.0 * k]), b + np.array([-s * 5.0 * k, 8.0 * k]), b + np.array([-s * 6.0 * k, 14.0 * k])],
-               2.2 * k, 1.6)
+        b = np.array([cx + s * span, y_top])
+        simple_canister(K, c, f'can{s}', b, b + np.array([s * math.sin(ang), math.cos(ang)]) * L, r, 2)
 
 
 # ============================================================================= body: second heart
@@ -866,231 +794,194 @@ def _heart(p, x, y, r):
 
 @register('SecondHeart', 'body', dirs=('east', 'north'), layer=0.7)
 def second_heart(K, c, fit):
-    """Second heart: an armored life-support drum in the middle of the upper back. From behind,
-    its porthole shows the heart, dark red in fluid, with three high subcore cartridges in the
-    rim and ribbed arterial hoses into the armor; from the side, the drum stands out from the
-    back with its hoses looping down into it."""
+    """Second heart: an armored housing in the middle of the upper back with a porthole onto the
+    heart; from the side, the housing standing out of the back."""
     k = c.k
     y0, y1, lay = back_rows(c, fit)
     sq = lay['sq']
-    R = 8.0 * k * sq ** 0.5
+    w, h = 6.5 * k * sq ** 0.5, 8.0 * k * sq ** 0.5
+    cy = y0 + (y1 - y0) * 0.5
     if c.dir == 'east':
-        cy = y0 + (y1 - y0) * 0.5 + 1.0 * k
-        xb = X(c, fit, cy, 'l', lift=0.0) + 2.0 * k
-        d = 6.0 * k
-        K.hose('artery', [(xb - d + 1.5 * k, cy + R * 0.7), (xb - d - 1.0 * k, cy + R * 1.4), (xb - 1.0 * k, cy + R * 2.2)], 2.8 * k, 1.4)
-        drum = K.block('drum', G.chamfer(G.rect(xb - d, cy - R * 1.25, xb + 1.0 * k, cy + R * 1.05), [1.5 * k, 1.5 * k, 2.5 * k, 2.5 * k]),
-                       2, SHELL, bevel=1.1, tone='shade')
-        if drum is not None:
-            drum.fill(G.rect(xb - d, cy + R * 0.75, xb + 1.0 * k, cy + R * 1.05), 'deep')
-            # the porthole's rim, edge-on, on the drum's back face
-            drum.fill(G.rect(xb - d - 0.1 * k, cy - R * 0.7, xb - d + 1.4 * k, cy + R * 0.7), f'{FRAME.name}.base', mask=None)
-            K.notch(drum, xb - d + 1.5 * k, cy - R * 1.2, xb - 1.0 * k, cy - R * 0.85)
+        xb = X(c, fit, cy, 'l', lift=0.0) + 1.0 * k
+        p = vplate(K, c, 'housing', G.chamfer(G.rect(xb - 5.0 * k, cy - h, xb + 1.0 * k, cy + h), 1.6 * k), 2, tone='shade')
+        if p is not None:
+            p.fill(G.rect(xb - 5.0 * k, cy + h * 0.6, xb + 1.0 * k, cy + h), 'deep')
+            recess(p, G.rect(xb - 5.0 * k, cy - h * 0.5, xb - 3.6 * k, cy + h * 0.4))
         return
-    cx = F.body_ext(c, F.vy(c, (y0 + y1) / 2))[0]
-    cy = y0 + (y1 - y0) * 0.5 + 1.0 * k
-    for s in (-1, 1):
-        K.hose(f'artery{s}', [(cx + s * R * 0.7, cy + R * 0.6), (cx + s * R * 1.45, cy + R * 1.1), (cx + s * R * 1.6, cy + R * 2.2)], 2.8 * k,
-               1.4, mat=HOSE)
-    drum = K.block('drum', G.chamfer(G.rect(cx - R, cy - R * 1.25, cx + R, cy + R * 1.05), R * 0.42), 2, SHELL, bevel=1.3, tone='shade')
-    if drum is None:
+    cx = F.body_ext(c, F.vy(c, cy))[0]
+    p = vplate(K, c, 'housing', G.chamfer(G.rect(cx - w, cy - h, cx + w, cy + h), w * 0.45), 2)
+    if p is None:
         return
-    drum.fill(G.rect(cx - R, cy + R * 0.75, cx + R, cy + R * 1.05), 'deep')
-    # porthole
-    drum.fill(G.circle(cx, cy, R * 0.7), f'{FRAME.name}.base', mask=None)
-    drum.fill(G.circle(cx, cy, R * 0.56), f'{DARK.name}.deep', mask=None)
-    drum.fill(G.circle(cx, cy, R * 0.5), '#2e1214', mask=None)
-    _heart(drum, cx, cy + R * 0.02, R * 0.36)
-    drum.fill(G.ellipse(cx - R * 0.24, cy - R * 0.28, R * 0.12, R * 0.07), f'{GLASS.name}.light', mask=None)
-    for i in range(6):
-        a = math.radians(i * 60 + 30)
-        K.bolt(drum, cx + math.cos(a) * R * 0.63, cy + math.sin(a) * R * 0.63, 0.7 * k)
-    # three subcore cartridges in the top rim
-    for i, dx in enumerate((-0.55, 0.0, 0.55)):
-        xx = cx + dx * R
-        K.notch(drum, xx - 1.6 * k, cy - R * 1.2, xx + 1.6 * k, cy - R * 0.82)
-        drum.fill(G.rect(xx - 1.0 * k, cy - R * 1.15, xx + 1.0 * k, cy - R * 0.9), f'{IRON.name}.light', mask=None)
-    K.lamp(drum, cx + R * 0.55, cy - R * 0.86, 1.0 * k, 0.8 * k, AMBER)
+    p.fill(G.rect(cx - w, cy + h * 0.65, cx + w, cy + h), 'deep')
+    R = min(w, h) * 0.62
+    p.fill(G.circle(cx, cy - 0.5 * k, R), f'{GREY.name}.base', mask=None)
+    p.fill(G.circle(cx, cy - 0.5 * k, R * 0.78), f'{DARK.name}.deep', mask=None)
+    _heart(p, cx, cy - 0.3 * k, R * 0.5)
 
 
 # ============================================================================= body: subpersona
 
 @register('Subpersona', 'body', dirs=('south', 'east'), layer=0.8)
 def subpersona(K, c, fit):
-    """Auxiliary subpersona pack across the belt: an armored processor case with three subcore
-    cartridges racked in its face (pull tabs, amber lamps), a heat-sink grille on top and data
-    cables up into the chest."""
+    """Auxiliary subpersona: an armored case over the belt buckle with three subcore cartridges
+    slotted into its face."""
     k = c.k
     lay = F.layout(c, fit)
     sq = lay['sq']
-    y0 = lay['y_chest'] - 3.0 * k
-    y1 = lay['y_belt'] + 10.0 * k * lay['sv'] ** 0.5
+    y0 = lay['y_belt'] - 4.0 * k
+    y1 = lay['y_belt'] + 7.0 * k * lay['sv'] ** 0.5
     if c.dir == 'east':
-        xr = X(c, fit, (y0 + y1) / 2, 'r', lift=4.0)
-        d = 9.0 * k
-        p = K.block('case', G.chamfer(G.rect(xr - d, y0, xr, y1), [1.5 * k, 3.0 * k, 2.4 * k, 1.5 * k]), 7, SHELL, bevel=1.2)
-        if p is None:
-            return
-        p.fill(G.rect(xr - d, y0 - 1, xr + 1, y0 + 3.2 * k), 'light')
-        for i in range(4):
-            xx = xr - d + 1.6 * k + i * 1.8 * k
-            p.line([(xx, y0 + 0.6 * k), (xx, y0 + 2.8 * k)], 0.7 * k, 'deep')
-        p.fill(G.rect(xr - d, y1 - 2.8 * k, xr + 1, y1 + 1), 'shade')
-        # the cartridge ends at the case's front, seen edge-on
-        for i in range(3):
-            yy = y0 + 5.0 * k + i * (y1 - y0 - 9.0 * k) / 2
-            K.notch(p, xr - 2.4 * k, yy - 1.4 * k, xr - 0.4 * k, yy + 1.4 * k)
-            p.fill(G.rect(xr - 1.2 * k, yy - 1.0 * k, xr + 1.2 * k, yy + 1.0 * k), f'{STEEL.name}.base', mask=None)
-        K.hose('data', [(xr - d + 2.0 * k, y0 + 2.0 * k), (xr - d - 1.0 * k, y0 - 4.0 * k), (xr - d - 1.5 * k, y0 - 9.0 * k)], 2.0 * k, 6.5)
+        xr = X(c, fit, (y0 + y1) / 2, 'r', lift=3.0)
+        p = vplate(K, c, 'case', G.chamfer(G.rect(xr - 6.0 * k, y0, xr, y1), 1.4 * k), 7)
+        if p is not None:
+            p.fill(G.rect(xr - 6.0 * k, y1 - 2.4 * k, xr + 1, y1 + 1), 'shade')
+            for t in (0.25, 0.55):
+                yy = y0 + (y1 - y0) * t
+                recess(p, G.rect(xr - 1.6 * k, yy, xr + 1, yy + 2.0 * k))
         return
     cx = F.body_ext(c, F.vy(c, y0))[0]
-    W = 12.0 * k * sq
-    for s in (-1, 1):
-        K.hose(f'data{s}', [(cx + s * W * 0.7, y0 + 2.0 * k), (cx + s * W * 0.85, y0 - 4.0 * k), (cx + s * W * 0.8, y0 - 9.0 * k)], 2.0 * k, 6.5)
-    p = K.block('case', G.chamfer(G.rect(cx - W, y0, cx + W, y1), [3.0 * k, 3.0 * k, 2.0 * k, 2.0 * k]), 7, SHELL, bevel=1.3)
+    W = 10.0 * k * sq
+    p = vplate(K, c, 'case', G.chamfer(G.rect(cx - W, y0, cx + W, y1), 2.0 * k), 7)
     if p is None:
         return
-    p.fill(G.rect(cx - W, y0 - 1, cx + W, y0 + 3.8 * k), 'light')
-    for i in range(9):
-        xx = cx - W + 2.5 * k + i * (2 * W - 5.0 * k) / 8
-        p.line([(xx, y0 + 0.8 * k), (xx, y0 + 3.4 * k)], 0.8 * k, 'deep')
-    K.seam(p, [(cx - W + 1.0 * k, y0 + 3.8 * k), (cx + W - 1.0 * k, y0 + 3.8 * k)], 1.0)
-    p.fill(G.rect(cx - W, y1 - 3.0 * k, cx + W, y1 + 1), 'shade')
-    n = 3
-    cw = (2 * W - 4.0 * k) / n
-    for i in range(n):
-        xa = cx - W + 2.0 * k + i * cw
-        xb = xa + cw - 0.8 * k
-        K.notch(p, xa, y0 + 5.0 * k, xb, y1 - 4.0 * k)
-        p.fill(G.chamfer(G.rect(xa + 0.8 * k, y0 + 5.6 * k, xb - 0.8 * k, y1 - 4.6 * k), 0.6 * k), f'{IRON.name}.base', mask=None)
-        p.fill(G.rect(xa + 0.8 * k, y0 + 5.6 * k, xb - 0.8 * k, y0 + 7.0 * k), f'{IRON.name}.light', mask=None)
-        p.fill(G.rect((xa + xb) / 2 - 1.6 * k, y0 + 7.6 * k, (xa + xb) / 2 + 1.6 * k, y0 + 9.0 * k), f'{STEEL.name}.base', mask=None)
-        K.lamp(p, (xa + xb) / 2, y1 - 6.6 * k, 1.2 * k, 0.8 * k)
-    K.bolts(p, [(cx - W + 1.8 * k, y1 - 5.0 * k), (cx + W - 1.8 * k, y1 - 5.0 * k)], 0.9 * k)
+    p.fill(G.rect(cx - W, y1 - 2.6 * k, cx + W, y1 + 1), 'shade')
+    cw = 2 * W / 3
+    for i in range(3):
+        xm = cx - W + cw * (i + 0.5)
+        recess(p, G.rect(xm - cw * 0.26, y0 + 2.4 * k, xm + cw * 0.26, y1 - 3.6 * k))
+        p.fill(G.rect(xm - cw * 0.26, y0 + 2.4 * k, xm + cw * 0.26, y0 + 3.6 * k), f'{GREY.name}.base', mask=None)
 
 
 # ============================================================================= body: thermal regulator
 
 @register('ThermalFins', 'body', dirs=('east', 'north'), layer=0.36)
 def thermal_regulator(K, c, fit):
-    """Heat exchanger on the lower back: a finned radiator block with two fans and coolant
-    lines into the armor."""
+    """Thermal regulation unit: a radiator plate across the lower back with vent slits; from the
+    side, the plate standing out of the back."""
     k = c.k
     lay = F.layout(c, fit)
     y0 = lay['y_back'] + 1.0 * k
-    y1 = lay['y_belt_back'] + 6.0 * k * lay['sv']
+    y1 = min(lay['y_belt_back'] + 4.0 * k * lay['sv'], y0 + 14.0 * k)
     if c.dir == 'east':
-        xb = X(c, fit, (y0 + y1) / 2, 'l', lift=4.0)
-        p = K.block('radiator', G.chamfer(G.rect(xb, y0, xb + 8.0 * k, y1), 1.6 * k), 2, SHELL, bevel=1.0)
+        xb = X(c, fit, (y0 + y1) / 2, 'l', lift=3.0)
+        p = vplate(K, c, 'radiator', G.chamfer(G.rect(xb, y0, xb + 5.0 * k, y1), 1.2 * k), 2, tone='shade')
         if p is not None:
-            for i in range(5):
-                yy = y0 + 2.0 * k + i * (y1 - y0 - 4.0 * k) / 4
-                p.line([(xb - 1, yy), (xb + 4.0 * k, yy)], 1.0 * k, f'{DARK.name}.base', mask=None)
-            p.fill(G.rect(xb, y1 - 2.4 * k, xb + 8.0 * k, y1), 'shade')
-        K.hose('line', [(xb + 7.0 * k, y0 + 2.0 * k), (xb + 11.0 * k, y0 - 2.0 * k), (xb + 14.0 * k, y0 - 3.0 * k)], 2.2 * k, 1.6)
+            for i in range(3):
+                yy = y0 + (y1 - y0) * (i + 1) / 4
+                recess(p, G.rect(xb - 1, yy - 0.7 * k, xb + 2.4 * k, yy + 0.7 * k))
         return
     cx = F.body_ext(c, F.vy(c, (y0 + y1) / 2))[0]
-    W = 15.0 * k * lay['sq']
-    p = K.block('radiator', G.chamfer(G.rect(cx - W, y0, cx + W, y1), [2.0 * k, 2.0 * k, 3.0 * k, 3.0 * k]), 2, SHELL, bevel=1.1,
-                tone='shade')
+    W = 13.0 * k * lay['sq']
+    p = vplate(K, c, 'radiator', G.chamfer(G.rect(cx - W, y0, cx + W, y1), 2.0 * k), 2)
     if p is None:
         return
-    p.fill(G.rect(cx - W, y1 - 2.6 * k, cx + W, y1), 'deep')
-    # fin field in the middle, fans either side (they face the back: round from behind)
-    K.slots(p, cx - W * 0.3, y0 + 2.5 * k, cx + W * 0.3, y1 - 3.5 * k, 6, vertical=True)
-    for s in (-1, 1):
-        fx = cx + s * W * 0.66
-        fy = (y0 + y1) / 2 - 0.5 * k
-        R = min(W * 0.28, (y1 - y0) / 2 - 2.0 * k)
-        p.fill(G.circle(fx, fy, R), f'{DARK.name}.base', mask=None)
-        for j in range(5):
-            a = math.radians(j * 72 + 20)
-            p.fill(G.poly([(fx, fy), (fx + math.cos(a) * R * 0.9, fy + math.sin(a) * R * 0.9),
-                           (fx + math.cos(a + 0.7) * R * 0.85, fy + math.sin(a + 0.7) * R * 0.85)]), f'{FRAME.name}.base', mask=None)
-        p.fill(G.circle(fx, fy, R * 0.3), f'{STEEL.name}.base', mask=None)
-    for s in (-1, 1):
-        K.hose(f'line{s}', [(cx + s * W * 0.9, y0 + 2.0 * k), (cx + s * (W + 3.0 * k), y0 - 2.0 * k), (cx + s * (W + 4.0 * k), y0 - 7.0 * k)],
-               2.2 * k, 1.6)
+    p.fill(G.rect(cx - W, y1 - 2.4 * k, cx + W, y1 + 1), 'deep')
+    n = 3
+    for i in range(n):
+        yy = y0 + 2.0 * k + (y1 - y0 - 5.0 * k) * (i + 0.5) / n
+        recess(p, G.rect(cx - W + 2.4 * k, yy - 0.6 * k, cx + W - 2.4 * k, yy + 0.6 * k))
 
 
 # ============================================================================= body: rigidity matrix
 
 @register('RigidityMatrix', 'body', dirs=('south', 'east'), layer=0.14)
 def rigidity_matrix(K, c, fit):
-    """Rigidity matrix: a locking leg frame - lattice guard plates over both thighs joined by a
-    lock bar across the hips, with telescopic dampers from the belt and a hazard-striped lock
-    housing in the middle."""
+    """Rigidity matrix: a braced plate over the front of each thigh, a lattice window with a
+    cross strut in it and a lock bar across the top; from the side, the plate standing off the
+    front of the thigh."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
     sq = lay['sq']
-    yb = lay['y_belt']
-    y0 = yb + 2.0 * k
-    y1 = f.bot - 1.0 * k
+    y0 = lay['y_belt'] - 1.0 * k
+    y1 = f.bot - 2.0 * k
     if c.dir == 'east':
-        xf = X(c, fit, (y0 + y1) / 2, 'r', lift=3.0)
-        damper(K, 'damper', (xf - 3.0 * k, yb - 6.0 * k), (xf - 2.6 * k, y0 + 5.0 * k), 1.6 * k, 2.4)
-        p = K.block('plate', G.chamfer(G.poly([(xf - 7.5 * k, y0 + 3.0 * k), (xf, y0 + 3.0 * k), (xf + 0.6 * k, y1), (xf - 6.0 * k, y1)]),
-                                       [1.0 * k, 2.4 * k, 2.4 * k, 1.0 * k]), 2, SHELL, bevel=1.1)
+        xf = X(c, fit, (y0 + y1) / 2, 'r', lift=2.6)
+        p = vplate(K, c, 'plate', G.chamfer(G.rect(xf - 5.5 * k, y0, xf, y1), [1.0 * k, 1.8 * k, 1.8 * k, 1.0 * k]), 2)
         if p is not None:
-            p.fill(G.rect(xf - 7.5 * k, y1 - 2.6 * k, xf + 1, y1 + 1), 'shade')
-            lattice(K, p, xf - 6.0 * k, y0 + 6.0 * k, xf - 1.4 * k, y1 - 4.0 * k, 2.8 * k)
+            p.fill(G.rect(xf - 2.2 * k, y0, xf + 1, y1), 'shade')
+            p.fill(G.rect(xf - 5.5 * k, y1 - 2.4 * k, xf + 1, y1 + 1), 'shade')
+            p.fill(G.rect(xf - 5.5 * k - 1, y0 + 1.6 * k, xf + 1, y0 + 3.4 * k), f'{GREY.name}.base', mask=None)
         return
     cx, half = F.body_ext(c, F.vy(c, (y0 + y1) / 2))
-    xm_s = []
+    h0 = F.body_ext(c, F.vy(c, y0))[1] - 1.5 * k
+    h1 = F.body_ext(c, F.vy(c, y1 - 2.0 * k))[1] - 1.5 * k
     for s in (-1, 1):
-        xm = cx + s * min(10.0 * k * sq, half * 0.48)
-        w0 = min(6.0 * k * sq, half * 0.3)
-        xm_s.append(xm)
-        damper(K, f'damper{s}', (xm + s * w0 * 0.45, yb - 6.0 * k), (xm + s * w0 * 0.4, y0 + 4.5 * k), 1.5 * k, 2.4)
-        ring = G.chamfer(G.poly([(xm - w0, y0 + 3.0 * k), (xm + w0, y0 + 3.0 * k), (xm + w0 * 0.82, y1), (xm - w0 * 0.82, y1)]), 1.8 * k)
-        p = K.block(f'plate{s}', ring, 2, SHELL, bevel=1.3)
+        xm = s * min(9.5 * k * sq, half * 0.5)
+        w = min(7.0 * k * sq, half * 0.34)
+        # the plate's corners, kept inside the thigh as it tapers to the knee
+        xa0, xb0 = max(xm - w, -h0), min(xm + w, h0)
+        xa1, xb1 = max(xm - w * 0.85, -h1), min(xm + w * 0.85, h1)
+        if s > 0:
+            xa0, xa1 = max(xa0, 1.5 * k), max(xa1, 1.5 * k)
+        else:
+            xb0, xb1 = min(xb0, -1.5 * k), min(xb1, -1.5 * k)
+        pts = [(cx + xa0, y0), (cx + xb0, y0), (cx + xb1, y1), (cx + xa1, y1)]
+        p = vplate(K, c, f'plate{s}', G.chamfer(G.poly(pts), 1.6 * k), 2)
         if p is None:
             continue
-        p.fill(G.rect(xm - w0, y1 - 2.8 * k, xm + w0, y1 + 1), 'shade')
-        lattice(K, p, xm - w0 * 0.62, y0 + 6.2 * k, xm + w0 * 0.62, y1 - 4.4 * k, 3.4 * k)
-        K.bolts(p, [(xm - w0 * 0.72, y0 + 4.6 * k), (xm + w0 * 0.72, y0 + 4.6 * k)], 0.85 * k)
-    # lock bar across the hips and the lock housing
-    bar = K.block('lockbar', G.chamfer(G.rect(xm_s[0], y0 + 1.0 * k, xm_s[1], y0 + 4.4 * k), 0.8 * k), 2.6, FRAME, bevel=0.0)
-    if bar is not None:
-        bar.fill(G.rect(xm_s[0], y0 + 1.0 * k, xm_s[1], y0 + 2.0 * k), 'light')
-        bar.fill(G.rect(xm_s[0], y0 + 3.6 * k, xm_s[1], y0 + 4.4 * k), 'shade')
-    hs = K.block('lock', G.chamfer(G.rect(cx - 4.0 * k, y0 - 0.5 * k, cx + 4.0 * k, y0 + 6.5 * k), 1.2 * k), 2.7, FRAME, bevel=0.6)
-    if hs is not None:
-        for i in range(4):
-            xx = cx - 4.0 * k + i * 2.4 * k
-            hs.fill(G.poly([(xx, y0 + 6.5 * k), (xx + 1.2 * k, y0 + 6.5 * k), (xx + 2.6 * k, y0 + 4.2 * k), (xx + 1.4 * k, y0 + 4.2 * k)]),
-                    f'{AMBER.name}.shade', mask=None)
-        K.bolt(hs, cx, y0 + 1.8 * k, 0.9 * k)
+        x0, x1 = cx + min(xa0, xa1), cx + max(xb0, xb1)
+        p.fill(G.rect(x0 - 1, y1 - 2.4 * k, x1 + 1, y1 + 1), 'shade')
+        p.fill(G.rect(x0 - 1, y0 + 1.6 * k, x1 + 1, y0 + 3.4 * k), f'{GREY.name}.base', mask=None)
+        # the lattice window, a cross strut standing in it
+        a, b = y0 + 5.0 * k, y1 - 3.6 * k
+        if b - a < 3.0 * k:
+            continue
+        ta, tb = (a - y0) / (y1 - y0), (b - y0) / (y1 - y0)
+
+        def at(xt, xbm, t, inset):
+            return cx + xt + (xbm - xt) * t + inset
+        q = [(at(xa0, xa1, ta, 1.6 * k), a), (at(xb0, xb1, ta, -1.6 * k), a), (at(xb0, xb1, tb, -1.6 * k), b), (at(xa0, xa1, tb, 1.6 * k), b)]
+        if q[1][0] - q[0][0] < 3.0 * k:
+            continue
+        recess(p, G.chamfer(G.poly(q), 0.6 * k))
+        # (a detail that inherits the mask leaves the recess's black under it: dye it explicitly)
+        p.line([q[0], q[2]], 1.3 * k, 'base', mask=SHELL.mask)
+        p.line([q[1], q[3]], 1.3 * k, 'base', mask=SHELL.mask)
 
 
 # ============================================================================= body: longjump hydraulics
 
 @register('LongjumpHydraulics', 'body', dirs=('east', 'north'), layer=0.2)
 def longjump_hydraulics(K, c, fit):
-    """Jump hydraulics: a big ram down the back of each leg from the hip to the heel, fed by a
-    pressure accumulator on the lower back. The rams' pins turn about the left-right axis."""
+    """Longjump hydraulics: a heavy ram down the back of each leg from the hip to the heel; its
+    heel pivot turns about the pawn's left-right axis, so it is a round cap from the side and a
+    barrel from behind. From the side the near ram hides the far one."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    y0 = lay['y_belt_back'] - 2.0 * k
-    y1 = f.bot - 2.0 * k
+    sq = lay['sq']
+    y_bot = f.bot - 2.0 * k
+    y0 = lay['y_belt_back'] - 1.0 * k      # from under the lower back's edge
+    r = 4.0 * k * sq ** 0.4
     if c.dir == 'east':
-        xb = X(c, fit, (y0 + y1) / 2, 'l', lift=2.5) + 3.0 * k
-        K.piston('ram', (xb + 2.0 * k, y0), (xb, y1), 3.2 * k, 1.6 * k, 2, split=0.55, body=FRAME)
-        acc = K.block('accumulator', G.rounded(G.rect(xb - 1.0 * k, y0 - 10.0 * k, xb + 7.0 * k, y0 + 2.0 * k), 3.0 * k), 1.9, SHELL,
-                      bevel=1.0)
-        if acc is not None:
-            K.chevrons(acc, xb + 3.0 * k, y0 - 7.0 * k, 4.0 * k, 2.0 * k, 2)
+        xt = X(c, fit, y0 + 2.0 * k, 'l', lift=0.0) + r * 0.7
+        xb = X(c, fit, y_bot - 4.0 * k, 'l', lift=0.0) + r * 0.4
+        _ram(K, c, 'ram', xt, y0, xb, y_bot, r)
+        hub_cap(K, c, 'heel', xb, y_bot, 3.2 * k, 2.5, GREY)
         return
-    cx = F.body_ext(c, F.vy(c, (y0 + y1) / 2))[0]
+    cx = F.body_ext(c, F.vy(c, (y0 + y_bot) / 2))[0]
     for s in (-1, 1):
-        xa = cx + s * 9.0 * k * lay['sq']
-        K.piston(f'ram{s}', (xa, y0 + 1.0 * k), (xa + s * 1.0 * k, y1), 3.2 * k, 1.6 * k, 2, split=0.55, body=FRAME)
-    acc = K.block('accumulator', G.rounded(G.rect(cx - 6.0 * k, y0 - 7.0 * k, cx + 6.0 * k, y0 + 3.0 * k), 2.6 * k), 2.1, SHELL, bevel=1.0,
-                  tone='shade')
-    if acc is not None:
-        K.chevrons(acc, cx, y0 - 5.0 * k, 5.0 * k, 2.0 * k, 2)
+        xa = cx + s * 9.0 * k * sq
+        xb = xa + s * 1.0 * k
+        _ram(K, c, f'ram{s}', xa, y0, xb, y_bot, r)
+        bar = vplate(K, c, f'heel{s}', G.rounded(G.rect(xb - 4.0 * k, y_bot - 1.8 * k, xb + 4.0 * k, y_bot + 1.8 * k), 1.5 * k), 2.5, GREY)
+        if bar is not None:
+            recess(bar, G.rect(xb - 4.0 * k, y_bot - 0.4 * k, xb + 4.0 * k, y_bot + 0.4 * k))
+
+def _ram(K, c, name, x0, y0, x1, y1, r):
+    """A hydraulic ram from (x0, y0) to (x1, y1): a white cylinder body over the top 60% with its
+    far side in shade and a dark seal band at its foot, a grey rod below."""
+    k = c.k
+    ym = y0 + (y1 - y0) * 0.6
+    xm = x0 + (x1 - x0) * 0.6
+    vplate(K, c, name + '_rod', G.poly([(xm - r * 0.45, ym - 2.0 * k), (xm + r * 0.45, ym - 2.0 * k), (x1 + r * 0.45, y1), (x1 - r * 0.45, y1)]),
+           1.5, GREY, bevel=0.0)
+    body = vplate(K, c, name, G.rounded(G.poly([(x0 - r, y0), (x0 + r, y0), (xm + r, ym), (xm - r, ym)]), [r * 0.8, r * 0.8, 0.6 * k, 0.6 * k]),
+                  2, bevel=0.0)
+    if body is not None:
+        body.fill(G.poly([(x0 + r * 0.3, y0), (x0 + r, y0), (xm + r, ym), (xm + r * 0.3, ym)]), 'deep' if c.dir == 'north' else 'shade')
+        recess(body, G.rect(min(x0, xm) - r - 1, ym - 1.8 * k, max(x0, xm) + r + 1, ym))
 
 
 # ============================================================================= helmet helpers
@@ -1115,13 +1006,13 @@ def edge_curve(c, fit, s, ph0, ph1, n=7, out=0.0):
         pts.append((F.head_edge_x(c, fit, side, ph, r_side) + sgn * out * c.k, F.head_y(c, ph)))
     return pts, sgn
 
-
 def side_pod(K, c, fit, s, ph0, ph1, inner, outer, z, name, chamfer=2.2, east_x=(-4.0, 14.0)):
     """A housing built out of the helmet's side (pawn's right s=1 / left s=-1) between two
-    latitudes: ``inner`` px at 128 inside the helmet's edge, ``outer`` px out (south/north),
-    set into a shell flange on the helmet so it reads as built in. East view (right side only):
-    a housing on the side of the head over ``east_x`` (px at 128 from the head's centre).
-    Returns a dict (part, sgn, x_out, x_in, x_side, x0, x1, y0, y1) or None."""
+    latitudes: its inner side follows the helmet's edge ``inner`` px at 128 inside it, its outer
+    side stands ``outer`` px out (south/north). East view (right side only): a housing on the
+    side of the head over ``east_x`` (px at 128 from the head's centre). Built like the helmet:
+    a flat face, its outer side face and underside in shade. Returns a dict (part, sgn, x_out,
+    x_in, x_side, x0, x1, y0, y1) or None."""
     k = c.k
     hf = c.form
     y0, y1 = F.head_y(c, ph1), F.head_y(c, ph0)
@@ -1129,31 +1020,23 @@ def side_pod(K, c, fit, s, ph0, ph1, inner, outer, z, name, chamfer=2.2, east_x=
         if s < 0:
             return None
         x0, x1 = hf.cx + east_x[0] * k, hf.cx + east_x[1] * k
-        K.block(name + '_flange', G.chamfer(G.rect(x0 - 2.5 * k, y0 + 2.0 * k, x1 - 3.0 * k, y1 + 2.0 * k), 2.0 * k), z - 0.2, SHELL,
-                bevel=0.6, tone='shade')
-        p = K.block(name, G.chamfer(G.rect(x0, y0, x1, y1), [chamfer * k, chamfer * 1.6 * k, chamfer * 0.8 * k, chamfer * 0.8 * k]), z,
-                    SHELL, bevel=1.2)
+        p = vplate(K, c, name, G.chamfer(G.rect(x0, y0, x1, y1), [chamfer * k, chamfer * 1.4 * k, chamfer * 0.8 * k, chamfer * 0.8 * k]), z)
         if p is None:
             return None
-        p.fill(G.rect(x0 - 1, y0 - 1, x1 + 1, y0 + 2.8 * k), 'light')
-        K.seam(p, [(x0 + 1.5 * k, y0 + 2.8 * k), (x1 - 2.0 * k, y0 + 2.8 * k)])
-        p.fill(G.rect(x0 - 1, y1 - 2.8 * k, x1 + 1, y1 + 1), 'shade')
+        p.fill(G.rect(x0 - 1, y1 - 2.6 * k, x1 + 1, y1 + 1), 'shade')
         return dict(part=p, sgn=1, x_out=x1, x_in=x0, x_side=x1, y0=y0, y1=y1, x0=x0, x1=x1)
     pts_in, sgn = edge_curve(c, fit, s, ph0, ph1, 7, out=-inner)
     xe, _ = hside(c, fit, s, ph0, ph1)
     xo = xe + sgn * outer * k
-    fl_in, _ = edge_curve(c, fit, s, ph0 - 0.08, ph1 + 0.06, 7, out=-(inner + 2.2))
-    fl_out, _ = edge_curve(c, fit, s, ph0 - 0.08, ph1 + 0.06, 7, out=1.0)
-    K.block(name + '_flange', G.chamfer(G.poly(fl_in + fl_out[::-1]), 1.2 * k), z - 0.2, SHELL, bevel=0.6,
-            tone='shade' if c.dir == 'south' else 'deep')
     ring = G.chamfer(G.poly(pts_in + [(xo, pts_in[-1][1]), (xo, pts_in[0][1])]), chamfer * k)
-    p = K.block(name, ring, z, SHELL, bevel=1.2, tone='base' if c.dir == 'south' else 'shade')
+    p = vplate(K, c, name, ring, z)
     if p is None:
         return None
-    xs = xo - sgn * 2.6 * k
-    p.fill(G.rect(min(xo, xs), y0 - 1, max(xo, xs), y1 + 1), 'shade' if c.dir == 'south' else 'deep')
+    back = c.dir == 'north'
+    xs = xo - sgn * 2.4 * k
+    p.fill(G.rect(min(xo, xs), y0 - 1, max(xo, xs), y1 + 1), 'deep' if back else 'shade')
     xin = min(x for x, _ in pts_in) if sgn > 0 else max(x for x, _ in pts_in)
-    p.fill(G.rect(min(xo, xin) - 1, y1 - 2.6 * k, max(xo, xin) + 1, y1 + 1), 'shade' if c.dir == 'south' else 'deep')
+    p.fill(G.rect(min(xo, xin) - 1, y1 - 2.4 * k, max(xo, xin) + 1, y1 + 1), 'deep' if back else 'shade')
     return dict(part=p, sgn=sgn, x_out=xo, x_in=xin, x_side=xs, y0=y0, y1=y1, x0=min(xo, xin), x1=max(xo, xin))
 
 
@@ -1261,9 +1144,8 @@ def helm_uranium(K, c, fit):
 
 @register('TargetingUplink', 'head', layer=0.8)
 def targeting_uplink(K, c, fit):
-    """Laser rangefinder and data uplink high on the side of the helmet above the sensor array:
-    a compact housing with the rangefinder's dark lens in its front and a whip antenna rising
-    from its back on a sprung base."""
+    """Targeting uplink: a rangefinder housing high on the side of the helmet above the sensor
+    array, its lens looking forward, an antenna rising from its back."""
     k = c.k
     o = hopts(fit, 'TargetingUplink', phi=(0.5, 0.86), mast=True)
     s = column_side(fit, 'TargetingUplink')
@@ -1274,91 +1156,78 @@ def targeting_uplink(K, c, fit):
     p, sgn = pod['part'], pod['sgn']
     y0, y1 = pod['y0'], pod['y1']
     if o['mast']:
-        # the antenna stands on the housing's back end
         xa = pod['x0'] + 2.5 * k if c.dir == 'east' else (pod['x_side'] + pod['x_in']) / 2 + sgn * 1.0 * k
-        K.block('ant_base', G.chamfer(G.rect(xa - 1.6 * k, y0 - 2.4 * k, xa + 1.6 * k, y0 + 1.0 * k), 0.6 * k), 1.8, HOSE, bevel=0.4)
-        K.rod('whip', (xa, y0 - 2.0 * k), (xa, y0 - 15.0 * k), 0.55 * k, 1.7, IRON)
-        K.block('whip_tip', G.circle(xa, y0 - 15.2 * k, 0.9 * k), 1.75, HOSE, bevel=0.3)
+        K.flat('mast', G.rect(xa - 0.8 * k, y0 - 13.0 * k, xa + 0.8 * k, y0 + 1.0 * k), 1.7, DARK)
     if c.dir == 'north':
-        K.slots(p, pod['x0'] + 2.0 * k, y0 + 3.0 * k, pod['x1'] - 2.0 * k, y1 - 3.0 * k, 2)
+        recess(p, G.rect(pod['x0'] + 2.0 * k, (y0 + y1) / 2 - 0.7 * k, pod['x1'] - 2.0 * k, (y0 + y1) / 2 + 0.7 * k))
         return
     if c.dir == 'east':
-        ym = (y0 + y1) / 2 + 0.8 * k
-        K.cylinder('emitter', (pod['x1'] - 2.5 * k, ym), (pod['x1'] + 1.8 * k, ym), 1.5 * k, 3, FRAME)
-        g = K.flat('emit_glass', G.ellipse(pod['x1'] + 2.1 * k, ym, 0.8 * k, 1.35 * k), 3.2, GLASS)
-        if g is not None:
-            g.fill(G.ellipse(pod['x1'] + 2.3 * k, ym + 0.2 * k, 0.45 * k, 0.8 * k), f'{RED.name}.deep', mask=None)
-        K.slots(p, pod['x0'] + 2.0 * k, y0 + 3.6 * k, pod['x0'] + 6.0 * k, y1 - 3.0 * k, 2)
+        ym = (y0 + y1) / 2
+        recess(p, G.rect(pod['x1'] - 2.0 * k, ym - 1.6 * k, pod['x1'] + 1, ym + 1.6 * k))
         return
     xm = (pod['x_side'] + pod['x_in']) / 2
-    K.lens('emitter', xm, (y0 + y1) / 2 + 0.8 * k, 2.0 * k, 3, RED)
+    ym = (y0 + y1) / 2
+    p.fill(G.circle(xm, ym, 2.4 * k), f'{DARK.name}.base', mask=None)
+    p.fill(G.circle(xm, ym, 1.4 * k), f'{GLASS.name}.base', mask=None)
+    p.fill(G.circle(xm + 0.3 * k, ym + 0.3 * k, 0.7 * k), f'{RED.name}.deep', mask=None)
 
 
 # ============================================================================= helmet: sensor array
 
 @register('SensorArray', 'head', layer=0.7)
 def sensor_array(K, c, fit):
-    """Multispectral sensor array: a narrow pod built out of the side of the helmet under the
-    uplink and set into a flange, with three optics stacked in its front - thermal, visible and
-    ultraviolet - behind a hood. From the side the three lens barrels look forward; from behind,
-    the pod's heat sink and the loom back into the helmet."""
+    """Multispectral sensor array: a pod built out of the side of the helmet under the uplink,
+    with three cameras stacked in its dark front window - thermal, visible and ultraviolet; from
+    the side, the three lens barrels look forward."""
     k = c.k
     hf = c.form
     o = hopts(fit, 'SensorArray', phi=(-0.26, 0.4))
     s = column_side(fit, 'SensorArray')
     ph0, ph1 = o['phi']
-    lenses = ((0.22, 1.5, AMBER), (0.52, 2.0, CYAN), (0.82, 1.5, VIOLET))
+    lenses = ((0.2, 1.6, AMBER), (0.5, 2.1, CYAN), (0.8, 1.6, VIOLET))
     if c.dir == 'east':
         if s < 0:
             return
         y0, y1 = F.head_y(c, ph1), F.head_y(c, ph0)
-        x0, x1 = hf.cx - 3.0 * k, hf.cx + 9.0 * k
-        K.block('flange', G.chamfer(G.rect(x0 - 2.5 * k, y0 + 2.0 * k, x1 - 3.0 * k, y1 + 1.5 * k), 1.6 * k), 1.8, SHELL, bevel=0.6,
-                tone='shade')
-        K.hose('loom', [(x0 + 1.0 * k, y1 - 2.5 * k), (x0 - 4.0 * k, y1 + 1.0 * k), (x0 - 9.0 * k, y1 + 1.5 * k)], 2.2 * k, 1.9)
-        pod = K.block('pod', G.chamfer(G.rect(x0, y0, x1, y1), [2.0 * k, 3.2 * k, 1.6 * k, 1.6 * k]), 2, SHELL, bevel=1.2)
+        x0, x1 = hf.cx - 3.0 * k, hf.cx + 8.0 * k
+        pod = vplate(K, c, 'pod', G.chamfer(G.rect(x0, y0, x1, y1), [1.8 * k, 2.8 * k, 1.4 * k, 1.4 * k]), 2)
         if pod is None:
             return
-        pod.fill(G.rect(x0 - 1, y0 - 1, x1 + 1, y0 + 2.6 * k), 'light')
         pod.fill(G.rect(x0 - 1, y1 - 2.4 * k, x1 + 1, y1 + 1), 'shade')
-        K.slots(pod, x0 + 2.0 * k, y0 + 4.0 * k, x0 + 5.5 * k, y1 - 4.0 * k, 3)
-        K.bolt(pod, x0 + 8.0 * k, y1 - 4.5 * k, 0.8 * k)
         for i, (t, r, mat) in enumerate(lenses):
             yy = y0 + (y1 - y0) * t
-            bx0, bx1 = x1 - 3.0 * k, x1 + (1.8 if r > 1.8 else 1.0) * k
-            K.cylinder(f'barrel{i}', (bx0, yy), (bx1, yy), r * k, 3 + i * 0.01, FRAME)
-            g = K.flat(f'glass{i}', G.ellipse(bx1 + 0.6 * k, yy, 0.8 * k, r * k * 0.9), 3.5 + i * 0.01, GLASS)
-            if g is not None:
-                g.fill(G.ellipse(bx1 + 0.8 * k, yy + 0.3 * k, 0.45 * k, r * k * 0.5), f'{mat.name}.deep', mask=None)
+            K.flat(f'barrel{i}', G.rect(x1 - 2.0 * k, yy - r * k, x1 + 1.6 * k, yy + r * k), 3 + i * 0.01, GREY)
+            K.flat(f'glass{i}', G.rect(x1 + 1.0 * k, yy - r * k * 0.8, x1 + 2.2 * k, yy + r * k * 0.8), 3.5 + i * 0.01, GLASS)
         return
     pod = side_pod(K, c, fit, s, ph0, ph1, 4.0, 4.5, 2, 'pod', chamfer=2.0)
     if pod is None:
         return
-    p, sgn = pod['part'], pod['sgn']
+    p = pod['part']
     y0, y1 = pod['y0'], pod['y1']
     xa, xb = sorted((pod['x_side'], pod['x_in']))
     if c.dir == 'north':
-        K.slots(p, xa + 1.6 * k, y0 + 3.0 * k, xb - 1.6 * k, y0 + 11.0 * k, 3)
-        xm = (xa + xb) / 2
-        K.hose('loom', [(xm, y1 - 2.0 * k), (pod['x_in'] - sgn * 4.0 * k, y1 + 1.5 * k), (pod['x_in'] - sgn * 9.0 * k, y1 + 2.0 * k)], 2.2 * k,
-               1.9)
+        for t in (0.35, 0.6):
+            yy = y0 + (y1 - y0) * t
+            recess(p, G.rect(xa + 1.6 * k, yy - 0.6 * k, xb - 1.6 * k, yy + 0.6 * k))
         return
-    # hood over the optics, then the dark window with the three lenses stacked
-    p.fill(G.rect(xa - 1, y0 - 1, xb + 1, y0 + 2.8 * k), 'light')
-    wx0, wx1 = xa + 0.6 * k, xb - 0.6 * k
-    wy0, wy1 = y0 + 3.0 * k, y1 - 2.6 * k
+    wx0, wx1 = xa + 0.8 * k, xb - 0.8 * k
+    wy0, wy1 = y0 + 2.4 * k, y1 - 3.2 * k
     p.fill(G.chamfer(G.rect(wx0, wy0, wx1, wy1), 1.0 * k), f'{DARK.name}.base', mask=None)
     xm = (wx0 + wx1) / 2
     for i, (t, r, mat) in enumerate(lenses):
-        K.lens(f'lens{i}', xm, wy0 + (wy1 - wy0) * t, min(r * k, (wx1 - wx0) / 2 - 0.2 * k), 3 + i * 0.01, mat)
+        rr = min(r * k, (wx1 - wx0) / 2 - 0.2 * k)
+        yy = wy0 + (wy1 - wy0) * t
+        p.fill(G.circle(xm, yy, rr), f'{GREY.name}.base', mask=None)
+        p.fill(G.circle(xm, yy, rr * 0.7), f'{GLASS.name}.base', mask=None)
+        p.fill(G.circle(xm + rr * 0.15, yy + rr * 0.15, rr * 0.35), f'{mat.name}.deep', mask=None)
 
 
 # ============================================================================= helmet: subpersona
 
 @register('Subpersona', 'head', dirs=('south', 'north'), layer=0.5)
 def helm_subpersona(K, c, fit):
-    """Subcore housing low on the side of the helmet opposite the sensors: three subcore
-    cartridges slotted into its front, each with a pull tab, and one status lamp."""
+    """Subcore housing low on the side of the helmet opposite the sensors, three subcore
+    cartridges slotted into its front."""
     k = c.k
     o = hopts(fit, 'Subpersona', phi=(-0.4, 0.06))
     pod = side_pod(K, c, fit, column_side(fit, 'Subpersona'), o['phi'][0], o['phi'][1], 3.5, 3.5, 2, 'housing', chamfer=1.6)
@@ -1368,49 +1237,41 @@ def helm_subpersona(K, c, fit):
     y0, y1 = pod['y0'], pod['y1']
     xa, xb = sorted((pod['x_side'], pod['x_in']))
     if c.dir == 'north':
-        K.slots(p, xa + 1.4 * k, y0 + 3.0 * k, xb - 1.4 * k, y1 - 3.5 * k, 3)
+        recess(p, G.rect(xa + 1.4 * k, (y0 + y1) / 2 - 0.6 * k, xb - 1.4 * k, (y0 + y1) / 2 + 0.6 * k))
         return
     n = 3
     h = (y1 - y0 - 5.0 * k) / n
     for i in range(n):
         yy = y0 + 2.0 * k + h * i
-        K.notch(p, xa + 1.0 * k, yy, xb - 1.0 * k, yy + h - 1.0 * k)
-        p.fill(G.rect(xa + 1.4 * k, yy + 0.4 * k, xb - 2.6 * k, yy + 1.3 * k), f'{STEEL.name}.shade', mask=None)
-    K.lamp(p, xb - 1.8 * k, y1 - 2.0 * k, 0.9 * k, 0.7 * k)
+        recess(p, G.rect(xa + 1.0 * k, yy, xb - 1.0 * k, yy + h - 1.0 * k))
 
 
 # ============================================================================= helmet: second mind
 
 @register('SecondMind', 'head', dirs=('south', 'north'), layer=0.55)
 def second_mind(K, c, fit):
-    """Second mind: an armored persona core housing at the helmet's temple opposite the sensors,
-    the core showing dimly through a round port in its front, cooling slots above it; from
-    behind, its heat sink and a data cable into the helmet."""
+    """Second mind: an armored persona core housing at the helmet's temple opposite the
+    sensors, the core showing dimly through a round port in its front."""
     k = c.k
     o = hopts(fit, 'SecondMind', phi=(0.32, 0.86))
     ph0, ph1 = o['phi']
     pod = side_pod(K, c, fit, column_side(fit, 'SecondMind'), ph0, ph1, 4.5, 4.0, 2, 'housing', chamfer=2.4)
     if pod is None:
         return
-    p, sgn = pod['part'], pod['sgn']
+    p = pod['part']
     y0, y1 = pod['y0'], pod['y1']
     xa, xb = sorted((pod['x_side'], pod['x_in']))
     if c.dir == 'north':
-        K.slots(p, xa + 1.4 * k, y0 + 3.0 * k, xb - 1.4 * k, y1 - 3.5 * k, 3)
-        xm = (xa + xb) / 2
-        K.hose('data', [(xm, y1 - 1.5 * k), (pod['x_in'] - sgn * 4.0 * k, y1 + 2.0 * k), (pod['x_in'] - sgn * 8.0 * k, y1 + 2.5 * k)], 2.4 * k,
-               1.9)
+        for t in (0.35, 0.6):
+            yy = y0 + (y1 - y0) * t
+            recess(p, G.rect(xa + 1.4 * k, yy - 0.6 * k, xb - 1.4 * k, yy + 0.6 * k))
         return
-    p.fill(G.rect(xa - 1, y0 - 1, xb + 1, y0 + 2.6 * k), 'light')
-    K.slots(p, xa + 1.4 * k, y0 + 3.4 * k, xb - 1.4 * k, y0 + 6.4 * k, 2)
-    cx_, cy_ = (xa + xb) / 2, y0 + (y1 - y0) * 0.62
-    R = min((xb - xa) / 2 - 0.8 * k, (y1 - y0) * 0.26)
-    p.fill(G.circle(cx_, cy_, R + 0.9 * k), f'{FRAME.name}.base', mask=None)
-    p.fill(G.circle(cx_, cy_ - 0.3 * k, R + 0.3 * k), f'{FRAME.name}.light', mask=None)
+    cx_, cy_ = (xa + xb) / 2, y0 + (y1 - y0) * 0.5
+    R = min((xb - xa) / 2 - 0.8 * k, (y1 - y0) * 0.28)
+    p.fill(G.circle(cx_, cy_, R + 0.8 * k), f'{GREY.name}.base', mask=None)
     p.fill(G.circle(cx_, cy_, R), f'{DARK.name}.deep', mask=None)
-    p.fill(G.circle(cx_, cy_, R * 0.62), f'{CYAN.name}.deep', mask=None)
-    p.fill(G.circle(cx_, cy_, R * 0.34), f'{CYAN.name}.base', mask=None)
-    p.fill(G.ellipse(cx_ - R * 0.3, cy_ - R * 0.32, R * 0.16, R * 0.1), f'{GLASS.name}.light', mask=None)
+    p.fill(G.circle(cx_, cy_, R * 0.55), f'{CYAN.name}.deep', mask=None)
+    p.fill(G.circle(cx_, cy_, R * 0.3), f'{CYAN.name}.base', mask=None)
 
 
 # ============================================================================= helmet: neural link
@@ -1418,49 +1279,38 @@ def second_mind(K, c, fit):
 @register('NeuralLink', 'head', dirs=('east', 'north'), layer=0.3)
 def neural_link(K, c, fit):
     """Neural link (bionic synchronization): a spinal interface socket at the nape with three
-    armored plugs seated side by side, their cables bending down into the armor's collar. From
-    the side the socket is seen edge-on and the three cables lie behind one another as one
-    bundle."""
+    plugs seated in it; from the side, the socket edge-on."""
     k = c.k
     hf = c.form
     yb = F.helm_bottom_y(c, fit) + hopts(fit, 'NeuralLink', dy=0.0)['dy'] * k
     if c.dir == 'east':
         r_back = F.helm_side(fit, 'east', 'l', -0.9, -0.4, 0.6, 1.3)
         xo = F.head_edge_x(c, fit, 'l', -0.6, r_back) + 1.5 * k
-        y0, y1 = yb - 13.0 * k, yb - 3.0 * k
-        K.hose('cables', [(xo + 2.6 * k, y1 - 2.0 * k), (xo + 1.2 * k, y1 + 3.0 * k), (xo + 1.8 * k, y1 + 6.0 * k)], 3.0 * k, 1.8, ribs=1.8)
-        blk = K.block('socket', G.chamfer(G.rect(xo - 1.0 * k, y0, xo + 5.5 * k, y1), [1.2 * k, 1.8 * k, 1.2 * k, 1.2 * k]), 2, SHELL, bevel=1.0)
+        y0, y1 = yb - 12.0 * k, yb - 2.0 * k
+        blk = vplate(K, c, 'socket', G.chamfer(G.rect(xo - 1.0 * k, y0, xo + 5.0 * k, y1), [1.2 * k, 1.6 * k, 1.2 * k, 1.2 * k]), 2)
         if blk is not None:
-            blk.fill(G.rect(xo - 1.0 * k, y0 - 1, xo + 5.5 * k, y0 + 2.2 * k), 'light')
-            blk.fill(G.rect(xo - 1.0 * k, y1 - 2.2 * k, xo + 5.5 * k, y1 + 1), 'shade')
-            K.notch(blk, xo - 1.0 * k, y0 + 4.0 * k, xo + 0.6 * k, y1 - 3.6 * k)
+            blk.fill(G.rect(xo - 1.0 * k, y1 - 2.2 * k, xo + 5.0 * k, y1 + 1), 'shade')
+            recess(blk, G.rect(xo - 1.0 * k, y0 + 3.0 * k, xo + 0.6 * k, y1 - 3.4 * k))
         return
     cx = hf.cx
-    y0, y1 = yb - 15.0 * k, yb - 5.0 * k
-    for i, dx in enumerate((-3.6, 0.0, 3.6)):
-        K.hose(f'cable{i}', [(cx + dx * k, y1 - 2.0 * k), (cx + dx * 1.15 * k, y1 + 3.0 * k), (cx + dx * 1.25 * k, y1 + 6.0 * k)], 2.2 * k,
-               1.8 + i * 0.01, ribs=1.8)
-    blk = K.block('socket', G.chamfer(G.rect(cx - 7.0 * k, y0, cx + 7.0 * k, y1), [2.0 * k, 2.0 * k, 1.6 * k, 1.6 * k]), 2, SHELL, bevel=1.1,
-                  tone='shade')
+    y0, y1 = yb - 13.0 * k, yb - 3.0 * k
+    blk = vplate(K, c, 'socket', G.chamfer(G.rect(cx - 7.0 * k, y0, cx + 7.0 * k, y1), [2.0 * k, 2.0 * k, 1.6 * k, 1.6 * k]), 2)
     if blk is None:
         return
-    blk.fill(G.rect(cx - 7.0 * k, y0 - 1, cx + 7.0 * k, y0 + 2.2 * k), 'base')
     blk.fill(G.rect(cx - 7.0 * k, y1 - 2.2 * k, cx + 7.0 * k, y1 + 1), 'deep')
-    for dx in (-3.6, 0.0, 3.6):
+    for dx in (-3.8, 0.0, 3.8):
         xx = cx + dx * k
-        # round mil-spec plugs with knurled collars
-        blk.fill(G.circle(xx, (y0 + y1) / 2 - 0.4 * k, 1.8 * k), f'{DARK.name}.base', mask=None)
-        blk.fill(G.circle(xx, (y0 + y1) / 2 - 0.4 * k, 1.3 * k), f'{FRAME.name}.base', mask=None)
-        blk.fill(G.circle(xx - 0.3 * k, (y0 + y1) / 2 - 0.8 * k, 0.6 * k), f'{FRAME.name}.light', mask=None)
+        blk.fill(G.circle(xx, (y0 + y1) / 2 - 0.8 * k, 1.7 * k), f'{DARK.name}.base', mask=None)
+        blk.fill(G.circle(xx, (y0 + y1) / 2 - 0.8 * k, 1.0 * k), f'{GREY.name}.base', mask=None)
 
 
 # ============================================================================= helmet: stress dampener
 
 @register('StressDampener', 'head', layer=0.4)
 def stress_dampener(K, c, fit):
-    """Neural stress dampener: a low armored emitter dome on the crown (or, on crested helmets,
-    the back of the dome) with three short stub antennas round it - one at the front, two at
-    the back - placed in 3D so each view shows them where they stand."""
+    """Neural stress dampener: a low emitter dome on the crown (or, on crested helmets, the back
+    of the dome) with three short stub antennas round it, placed in 3D so each view shows them
+    where they stand."""
     k = c.k
     hf = c.form
     o = hopts(fit, 'StressDampener', at='crown')
@@ -1473,7 +1323,7 @@ def stress_dampener(K, c, fit):
         yt = F.helm_top_y(c, fit) + 3.0 * k
         x = hf.cx + (5.0 * k if c.dir == 'east' else 0.0)
     w, h = 7.0 * k, 3.6 * k
-    rp = 5.2 * k
+    rp = 5.0 * k
     prongs = []
     for az in (0.0, 120.0, 240.0):          # azimuth on the dome: 0 front, 90 the pawn's right
         a = math.radians(az)
@@ -1485,49 +1335,38 @@ def stress_dampener(K, c, fit):
             dx, dz = math.cos(a), math.sin(a)
         prongs.append((dz, x + dx * rp, yt - 0.6 * k + dz * 1.2 * k))
     prongs.sort()
-    K.block('base', G.chamfer(G.rect(x - w, yt - 0.8 * k, x + w, yt + 2.4 * k), 1.0 * k), 1.8, FRAME, bevel=0.6)
-    dome = K.block('dome', G.ellipse(x, yt - 0.8 * k, w * 0.66, h), 2, SHELL, bevel=1.1, tone='base' if c.dir != 'north' else 'shade')
+    dome = vplate(K, c, 'dome', G.poly([(x - w, yt + 1.6 * k)] + [(x + w * math.cos(t), yt + 1.6 * k - (h + 1.6 * k) * math.sin(t))
+                                                                   for t in np.linspace(math.pi, 0, 16)] + [(x + w, yt + 1.6 * k)]), 2)
+    if dome is not None:
+        dome.fill(G.rect(x - w, yt, x + w, yt + 1.6 * k + 1), 'deep' if c.dir == 'north' else 'shade')
+        if c.dir != 'north':
+            recess(dome, G.ellipse(x, yt - 1.4 * k, w * 0.28, h * 0.32))
     for i, (dz, xx, yy) in enumerate(prongs):
         z = 2.05 + (0.2 if dz > 0 else -0.3) + i * 0.01
-        top = yy - h - 3.2 * k
-        K.rod(f'stub{i}', (xx, yy - 1.0 * k), (xx, top), 0.6 * k, z, IRON)
-        K.block(f'stub_tip{i}', G.circle(xx, top, 0.9 * k), z + 0.005, HOSE, bevel=0.0)
-    if dome is not None and c.dir != 'north':
-        dome.fill(G.ellipse(x, yt - 1.2 * k, w * 0.3, h * 0.42), f'{DARK.name}.base', mask=None)
-        dome.fill(G.ellipse(x - w * 0.08, yt - 1.6 * k, w * 0.1, h * 0.14), f'{GLASS.name}.light', mask=None)
+        K.flat(f'stub{i}', G.rect(xx - 0.7 * k, yy - h - 3.4 * k, xx + 0.7 * k, yy - 1.0 * k), z, DARK)
 
 
 # ============================================================================= helmet: regenerators
 
 @register('Regenerators', 'head', dirs=('east', 'north'), layer=0.6)
 def helm_regenerators(K, c, fit):
-    """Two regenerator canisters rising from an armored cradle on the back of the helmet, angled
-    up and apart; from the side the near canister hides the far one."""
+    """Two regenerator canisters on the back of the helmet, angled up and apart; from the side
+    the near canister hides the far one."""
     k = c.k
     hf = c.form
     ph = hopts(fit, 'Regenerators', phi=-0.18)['phi']
-    # on helmets open at the back the nape is high: keep the cradle above the neural link's socket
-    ph = max(ph, _phi_at(c, F.helm_bottom_y(c, fit) - 19.0 * k))
+    # on helmets open at the back the nape is high: keep clear of the neural link's socket
+    ph = max(ph, _phi_at(c, F.helm_bottom_y(c, fit) - 16.0 * k))
     if c.dir == 'east':
         r_back = F.helm_side(fit, 'east', 'l', ph - 0.25, ph + 0.35, 0.8, 1.25)
-        xb = F.head_edge_x(c, fit, 'l', ph + 0.13, r_back) + 2.0 * k
+        xb = F.head_edge_x(c, fit, 'l', ph + 0.13, r_back) + 3.0 * k
         yb = F.head_y(c, ph + 0.13)
-        L = 13.0 * k
         ang = math.radians(28)
-        b = (xb + 1.0 * k, yb - 2.0 * k)
-        canister(K, 'can', b, (b[0] - L * math.sin(ang), b[1] - L * math.cos(ang)), 2.3 * k, 2)
-        cr = K.block('cradle', G.chamfer(G.rect(xb - 2.0 * k, yb - 3.0 * k, xb + 6.0 * k, yb + 5.0 * k), 1.4 * k), 2.1, SHELL, bevel=1.0)
-        if cr is not None:
-            cr.fill(G.rect(xb - 2.0 * k, yb + 2.6 * k, xb + 6.0 * k, yb + 5.0 * k), 'shade')
-            K.bolt(cr, xb + 3.5 * k, yb + 0.5 * k, 0.8 * k)
+        L = 13.0 * k
+        simple_canister(K, c, 'can', (xb, yb), (xb - L * math.sin(ang), yb - L * math.cos(ang)), 2.6 * k, 2)
         return
     yb = F.head_y(c, ph)
     for s in (-1, 1):
-        canister(K, f'can{s}', (hf.cx + s * 5.0 * k, yb - 1.0 * k), (hf.cx + s * 9.0 * k, yb - 15.0 * k), 2.4 * k, 2, tone='shade')
-    cr = K.block('cradle', G.chamfer(G.rect(hf.cx - 8.5 * k, yb - 3.0 * k, hf.cx + 8.5 * k, yb + 4.0 * k), 1.6 * k), 2.1, SHELL, bevel=1.0,
-                 tone='shade')
-    if cr is not None:
-        cr.fill(G.rect(hf.cx - 8.5 * k, yb + 1.8 * k, hf.cx + 8.5 * k, yb + 4.0 * k), 'deep')
-        K.bolts(cr, [(hf.cx - 5.0 * k, yb + 0.2 * k), (hf.cx + 5.0 * k, yb + 0.2 * k)], 0.8 * k)
+        simple_canister(K, c, f'can{s}', (hf.cx + s * 5.0 * k, yb), (hf.cx + s * 9.0 * k, yb - 14.0 * k), 2.6 * k, 2)
 
 
