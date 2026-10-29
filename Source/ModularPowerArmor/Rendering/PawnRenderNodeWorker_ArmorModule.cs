@@ -22,23 +22,45 @@ namespace ModularPowerArmor
             {
                 return false;
             }
-            if (node is PawnRenderNode_ArmorModule moduleNode && moduleNode.slot == ArmorSlot.Helmet)
+            if (!(node is PawnRenderNode_ArmorModule moduleNode))
             {
-                return parms.flags.FlagSet(PawnRenderFlags.Headgear) && PawnRenderNodeWorker_Apparel_Head.HeadgearVisible(parms);
+                return false;
             }
-            return parms.flags.FlagSet(PawnRenderFlags.Clothes);
+            if (moduleNode.slot == ArmorSlot.Helmet)
+            {
+                if (!parms.flags.FlagSet(PawnRenderFlags.Headgear) || !PawnRenderNodeWorker_Apparel_Head.HeadgearVisible(parms))
+                {
+                    return false;
+                }
+            }
+            else if (!parms.flags.FlagSet(PawnRenderFlags.Clothes))
+            {
+                return false;
+            }
+            // Only while the armor piece itself is drawn, so whatever hides it (hidden headgear,
+            // cosmetic and apparel-hiding mods) hides its modules too.
+            PawnRenderNode hostNode = moduleNode.HostNode;
+            if (hostNode == null || !hostNode.Worker.CanDrawNow(hostNode, parms))
+            {
+                return false;
+            }
+#if RW_1_5
+            return hostNode.Graphic != null;
+#else
+            return hostNode.PrimaryGraphic != null;
+#endif
         }
 
         public override float LayerFor(PawnRenderNode node, PawnDrawParms parms)
         {
-            PawnRenderNode hostNode = FindHostNode(node);
+            PawnRenderNode hostNode = (node as PawnRenderNode_ArmorModule)?.HostNode;
             if (hostNode == null)
             {
                 return base.LayerFor(node, parms);
             }
             float hostLayer = hostNode.Worker.LayerFor(hostNode, parms);
             float nextLayer = float.MaxValue;
-            PawnRenderNode[] siblings = node.parent.children;
+            PawnRenderNode[] siblings = hostNode.parent?.children ?? node.parent.children;
             for (int i = 0; i < siblings.Length; i++)
             {
                 PawnRenderNode sibling = siblings[i];
@@ -83,25 +105,6 @@ namespace ModularPowerArmor
         private static BodyTypeAdjustment AdjustmentFor(PawnRenderNode node, PawnDrawParms parms)
         {
             return (node.Props as PawnRenderNodeProperties_ArmorModule)?.AdjustmentFor(parms.pawn?.story?.bodyType);
-        }
-
-        /// <summary>The vanilla apparel node drawing the armor piece this module is installed in.</summary>
-        private static PawnRenderNode FindHostNode(PawnRenderNode node)
-        {
-            PawnRenderNode[] siblings = node.parent?.children;
-            if (siblings == null || node.apparel == null)
-            {
-                return null;
-            }
-            for (int i = 0; i < siblings.Length; i++)
-            {
-                PawnRenderNode sibling = siblings[i];
-                if (sibling != node && sibling.apparel == node.apparel && !(sibling is PawnRenderNode_ArmorModule))
-                {
-                    return sibling;
-                }
-            }
-            return null;
         }
     }
 }

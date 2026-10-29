@@ -14,12 +14,67 @@ namespace ModularPowerArmor
         public CompModularArmor host;
         public ArmorSlot slot = ArmorSlot.Body;
 
+        // The tree is rebuilt, module nodes included, whenever apparel changes, so this stays valid.
+        private PawnRenderNode hostNode;
+
         public PawnRenderNode_ArmorModule(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree)
             : base(pawn, props, tree)
         {
         }
 
         public PawnRenderNodeProperties_ArmorModule ModuleProps => Props as PawnRenderNodeProperties_ArmorModule;
+
+        /// <summary>
+        /// The apparel node drawing the armor piece this module is installed in: a sibling normally,
+        /// anywhere in the tree for armor that hangs its node elsewhere. Null when nothing draws the
+        /// piece (a mod that hides apparel by leaving its node out, for example).
+        /// </summary>
+        public PawnRenderNode HostNode
+        {
+            get
+            {
+                if (hostNode == null && apparel != null)
+                {
+                    hostNode = FindHost(parent?.children) ?? FindHostInTree(tree?.rootNode);
+                }
+                return hostNode;
+            }
+        }
+
+        private PawnRenderNode FindHost(PawnRenderNode[] nodes)
+        {
+            if (nodes == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                PawnRenderNode node = nodes[i];
+                if (node != this && node.apparel == apparel && !(node is PawnRenderNode_ArmorModule))
+                {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        private PawnRenderNode FindHostInTree(PawnRenderNode node)
+        {
+            if (node == null)
+            {
+                return null;
+            }
+            PawnRenderNode found = FindHost(node.children);
+            if (found != null || node.children == null)
+            {
+                return found;
+            }
+            for (int i = 0; i < node.children.Length && found == null; i++)
+            {
+                found = FindHostInTree(node.children[i]);
+            }
+            return found;
+        }
 
         public override GraphicMeshSet MeshSetFor(Pawn pawn)
         {

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace ModularPowerArmor
@@ -17,6 +18,8 @@ namespace ModularPowerArmor
 
         [Unsaved] private int syncBonusTick = -1;
         [Unsaved] private float syncBonusCached;
+        [Unsaved] private int overloadTick = -1;
+        [Unsaved] private bool overloadCached;
 
         // Worn armor that is destroyed by damage gets no map in PostDestroy, so remember who was wearing it.
         [Unsaved] private Pawn lastDamagedWearer;
@@ -81,6 +84,36 @@ namespace ModularPowerArmor
             return ArmorModuleUtility.QualityMultiplier(module) * (1f + SyncBonus);
         }
 
+        /// <summary>
+        /// More load in use than available, which only happens when a load bonus from another worn
+        /// piece goes away (a second mind helmet taken off). Modifications here then stop working
+        /// until enough load is freed or the bonus comes back.
+        /// </summary>
+        public bool IsOverloaded
+        {
+            get
+            {
+                int tick = CurrentTick;
+                if (tick != overloadTick)
+                {
+                    overloadCached = modules.Count > 0 && UsedLoad > Capacity + 0.001f;
+                    overloadTick = tick;
+                }
+                return overloadCached;
+            }
+        }
+
+        public bool IsModuleActive(Thing module)
+        {
+            return !IsOverloaded && !ArmorModuleUtility.IsSpent(module);
+        }
+
+        public void ClearCaches()
+        {
+            syncBonusTick = -1;
+            overloadTick = -1;
+        }
+
         public bool HasModuleOfDef(ThingDef def)
         {
             List<Thing> list = Modules;
@@ -96,7 +129,27 @@ namespace ModularPowerArmor
 
         public AcceptanceReport CanInstall(Thing module)
         {
-            CompProperties_ArmorModule moduleProps = ArmorModuleUtility.PropsOf(module);
+            if (ArmorModuleUtility.IsSpent(module))
+            {
+                return "MPA_Reason_Spent".Translate(module.LabelNoCount).Resolve();
+            }
+            return CanInstall(module.def, ArmorModuleUtility.CapacityBonus(module));
+        }
+
+        /// <summary>
+        /// Whether a module of this type fits, for when there is no particular module yet (Armor
+        /// Modulus bills). Assumes the worst quality for capacity bonuses.
+        /// </summary>
+        public AcceptanceReport CanInstall(ThingDef moduleDef)
+        {
+            CompProperties_ArmorModule moduleProps = ArmorModuleUtility.PropsOf(moduleDef);
+            float bonus = moduleProps == null ? 0f : moduleProps.computationalLoadBonus * ArmorModuleUtility.QualityMultiplier(QualityCategory.Awful);
+            return CanInstall(moduleDef, bonus);
+        }
+
+        private AcceptanceReport CanInstall(ThingDef moduleDef, float capacityBonus)
+        {
+            CompProperties_ArmorModule moduleProps = ArmorModuleUtility.PropsOf(moduleDef);
             if (moduleProps == null)
             {
                 return false;
@@ -105,15 +158,23 @@ namespace ModularPowerArmor
             {
                 return "MPA_Reason_WrongSlot".Translate(ArmorModuleStatDisplay.SlotLabel(Slot)).Resolve();
             }
-            if (HasModuleOfDef(module.def))
+            if (HasModuleOfDef(moduleDef))
             {
-                return "MPA_Reason_AlreadyInstalled".Translate(module.def.label).Resolve();
+                return "MPA_Reason_AlreadyInstalled".Translate(moduleDef.label).Resolve();
             }
-            float cost = ArmorModuleUtility.LoadCost(module);
-            float available = Capacity - UsedLoad + ArmorModuleUtility.CapacityBonus(module);
+            List<Thing> list = Modules;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (moduleProps.ExcludedBy(ArmorModuleUtility.PropsOf(list[i])))
+                {
+                    return "MPA_Reason_Excludes".Translate(list[i].LabelNoCount).Resolve();
+                }
+            }
+            float cost = moduleDef.GetStatValueAbstract(MPA_DefOf.MPA_ComputationalLoadCost);
+            float available = Capacity - UsedLoad + capacityBonus;
             if (cost > available + 0.001f)
             {
-                return "MPA_Reason_NotEnoughLoad".Translate(cost.ToString("0.#"), (Capacity - UsedLoad).ToString("0.#")).Resolve();
+                return "MPA_Reason_NotEnoughLoad".Translate(cost.ToString("0.#"), Mathf.Max(0f, Capacity - UsedLoad).ToString("0.#")).Resolve();
             }
             return true;
         }
@@ -128,6 +189,18 @@ namespace ModularPowerArmor
             if (bonus > 0f && UsedLoad - ArmorModuleUtility.LoadCost(module) > Capacity - bonus + 0.001f)
             {
                 return "MPA_Reason_RemoveWouldOverload".Translate(module.LabelNoCount).Resolve();
+            }
+            float wornBonus = ArmorModuleUtility.WornCapacityBonus(module);
+            Pawn wearer = Wearer;
+            if (wornBonus > 0f && wearer != null)
+            {
+                foreach (CompModularArmor other in ArmorModuleUtility.WornModularArmor(wearer))
+                {
+                    if (other != this && other.Modules.Count > 0 && other.UsedLoad > other.Capacity - wornBonus + 0.001f)
+                    {
+                        return "MPA_Reason_RemoveWouldOverloadOther".Translate(module.LabelNoCount, other.parent.LabelShort).Resolve();
+                    }
+                }
             }
             return true;
         }
@@ -149,12 +222,19 @@ namespace ModularPowerArmor
             return installed;
         }
 
-        /// <summary>Drops a module on the map next to <paramref name="dropCell"/>.</summary>
+        /// <summary>
+        /// Drops a module on the map next to <paramref name="dropCell"/>. A spent second heart is
+        /// thrown away instead; the destroyed module is returned.
+        /// </summary>
         public Thing TryRemove(Thing module, IntVec3 dropCell, Map map)
         {
             if (map == null || !modules.Contains(module))
             {
                 return null;
+            }
+            if (TryDiscardSpent(module))
+            {
+                return module;
             }
             modules.TryDrop(module, dropCell, map, ThingPlaceMode.Near, out Thing dropped);
             if (dropped != null)
@@ -164,9 +244,47 @@ namespace ModularPowerArmor
             return dropped;
         }
 
+        /// <summary>Takes a module out without placing it anywhere, for the Armor Modulus. Spent modules are destroyed.</summary>
+        public bool TryTakeOut(Thing module, out Thing taken)
+        {
+            taken = null;
+            if (!modules.Contains(module))
+            {
+                return false;
+            }
+            if (TryDiscardSpent(module))
+            {
+                return true;
+            }
+            if (!modules.Remove(module))
+            {
+                return false;
+            }
+            taken = module;
+            Notify_ModulesChanged();
+            return true;
+        }
+
+        private bool TryDiscardSpent(Thing module)
+        {
+            if (!ArmorModuleUtility.IsSpent(module))
+            {
+                return false;
+            }
+            string label = module.LabelNoCount;
+            modules.Remove(module);
+            if (!module.Destroyed)
+            {
+                module.Destroy();
+            }
+            Notify_ModulesChanged();
+            Messages.Message("MPA_SpentDiscarded".Translate(label), MessageTypeDefOf.SilentInput, false);
+            return true;
+        }
+
         public void Notify_ModulesChanged()
         {
-            syncBonusTick = -1;
+            ClearCaches();
             Pawn wearer = Wearer;
             if (wearer != null)
             {
@@ -205,6 +323,10 @@ namespace ModularPowerArmor
             for (int i = 0; i < list.Count; i++)
             {
                 offset += ModuleStatOffset(list[i], stat);
+            }
+            if (stat == MPA_DefOf.MPA_ComputationalLoad)
+            {
+                offset += ArmorModuleUtility.WornCapacityBonusFor(this);
             }
             return offset;
         }
@@ -252,6 +374,24 @@ namespace ModularPowerArmor
                     sb.AppendLine($"{whitespace}{list[i].LabelCapNoCount}: x{factor.ToStringPercent()}");
                 }
             }
+            if (stat == MPA_DefOf.MPA_ComputationalLoad && Wearer != null)
+            {
+                foreach (CompModularArmor other in ArmorModuleUtility.WornModularArmor(Wearer))
+                {
+                    if (other == this)
+                    {
+                        continue;
+                    }
+                    foreach (Thing module in other.Modules)
+                    {
+                        float bonus = ArmorModuleUtility.WornCapacityBonus(module);
+                        if (bonus != 0f)
+                        {
+                            sb.AppendLine($"{whitespace}{"MPA_Stat_WornWith".Translate(module.LabelCapNoCount, other.parent.LabelShort)}: {stat.ValueToString(bonus, ToStringNumberSense.Offset)}");
+                        }
+                    }
+                }
+            }
         }
 
         private float ModuleStatOffset(Thing module, StatDef stat)
@@ -271,7 +411,7 @@ namespace ModularPowerArmor
                 // Quality only: letting synchronization raise capacity would let removing an implant overload the armor.
                 return ArmorModuleUtility.CapacityBonus(module);
             }
-            if (moduleProps.armorStatOffsets.NullOrEmpty())
+            if (moduleProps.armorStatOffsets.NullOrEmpty() || !IsModuleActive(module))
             {
                 return 0f;
             }
@@ -282,7 +422,7 @@ namespace ModularPowerArmor
         private float ModuleStatFactor(Thing module, StatDef stat)
         {
             CompProperties_ArmorModule moduleProps = ArmorModuleUtility.PropsOf(module);
-            if (moduleProps == null || moduleProps.armorStatFactors.NullOrEmpty())
+            if (moduleProps == null || moduleProps.armorStatFactors.NullOrEmpty() || !IsModuleActive(module))
             {
                 return 1f;
             }
@@ -298,21 +438,20 @@ namespace ModularPowerArmor
             {
                 yield return gizmo;
             }
+            // Worn armor is modified at an Armor Modulus; the only worn button is the longjump.
             Pawn wearer = Wearer;
-            // One button per pawn, even when wearing both a modular helmet and modular armor.
-            if (wearer == null || !wearer.IsColonistPlayerControlled || ArmorModuleUtility.FirstWornModularArmor(wearer) != this)
+            if (wearer == null || !wearer.IsColonistPlayerControlled)
             {
                 yield break;
             }
-            yield return new Command_Action
+            List<Thing> list = Modules;
+            for (int i = 0; i < list.Count; i++)
             {
-                defaultLabel = "MPA_ModifyArmor".Translate(),
-                defaultDesc = "MPA_ModifyArmorDesc".Translate(),
-                icon = ArmorModuleTextures.ModifyArmor,
-                // Each pawn gets its own menu; grouping would open one menu per selected pawn at once.
-                groupable = false,
-                action = () => Find.WindowStack.Add(new FloatMenu(ArmorModuleMenus.WornArmorOptions(wearer)))
-            };
+                if (ArmorModuleUtility.PropsOf(list[i])?.longjump != null)
+                {
+                    yield return new Command_Longjump(wearer, this, list[i]);
+                }
+            }
         }
 
         public override IEnumerable<FloatMenuOption> CompFloatMenuOptions(Pawn selPawn)
@@ -340,6 +479,11 @@ namespace ModularPowerArmor
                 sb.AppendLine();
                 sb.Append("MPA_InspectModules".Translate(Modules.Select(m => m.LabelNoCount).ToCommaList()));
             }
+            if (IsOverloaded)
+            {
+                sb.AppendLine();
+                sb.Append("MPA_InspectOverloaded".Translate().Colorize(ColorLibrary.RedReadable));
+            }
             return sb.ToString();
         }
 
@@ -352,7 +496,7 @@ namespace ModularPowerArmor
             yield return new StatDrawEntry(
                 StatCategoryDefOf.Apparel,
                 "MPA_Stat_LoadInUse".Translate(),
-                $"{UsedLoad:0.#} / {Capacity:0.#}",
+                $"{UsedLoad:0.#} / {Capacity:0.#}" + (IsOverloaded ? " (" + "MPA_Overloaded".Translate() + ")" : ""),
                 "MPA_Stat_LoadInUseDesc".Translate(),
                 3001);
 
@@ -384,14 +528,14 @@ namespace ModularPowerArmor
                 npcModulesRolled = true;
                 ArmorModuleUtility.TryGiveNpcModules(this, pawn);
             }
-            syncBonusTick = -1;
+            ClearCaches();
             ArmorModuleUtility.Notify_WornModulesChanged(pawn);
         }
 
         public override void Notify_Unequipped(Pawn pawn)
         {
             base.Notify_Unequipped(pawn);
-            syncBonusTick = -1;
+            ClearCaches();
             ArmorModuleUtility.Notify_WornModulesChanged(pawn);
         }
 
@@ -421,6 +565,14 @@ namespace ModularPowerArmor
             {
                 map = lastDamagedWearer.MapHeld;
                 cell = lastDamagedWearer.PositionHeld;
+            }
+            foreach (Thing module in Modules.ToList())
+            {
+                if (ArmorModuleUtility.IsSpent(module))
+                {
+                    modules.Remove(module);
+                    module.Destroy();
+                }
             }
             if (map != null && cell.IsValid && cell.InBounds(map))
             {

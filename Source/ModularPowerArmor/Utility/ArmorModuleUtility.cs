@@ -43,6 +43,20 @@ namespace ModularPowerArmor
             return Mathf.Max(0f, 1f + (factor - 1f) * multiplier);
         }
 
+        /// <summary>
+        /// Scales a drawback the other way round, so better quality lessens it: 0.8 at x1.3 becomes
+        /// 0.846 and at x0.7 becomes 0.714.
+        /// </summary>
+        public static float ScalePenalty(float factor, float multiplier)
+        {
+            return Mathf.Max(0f, 1f + (factor - 1f) / Mathf.Max(multiplier, 0.1f));
+        }
+
+        public static bool HasQuality(ThingDef moduleDef)
+        {
+            return moduleDef != null && moduleDef.HasComp(typeof(CompQuality));
+        }
+
         // ---- Module lookups ----
 
         public static CompProperties_ArmorModule PropsOf(Thing module)
@@ -64,6 +78,42 @@ namespace ModularPowerArmor
         {
             CompProperties_ArmorModule props = PropsOf(module);
             return props == null || props.computationalLoadBonus == 0f ? 0f : props.computationalLoadBonus * QualityMultiplier(module);
+        }
+
+        /// <summary>Computational load this module adds to every other modular piece worn with its host (second mind).</summary>
+        public static float WornCapacityBonus(Thing module)
+        {
+            CompProperties_ArmorModule props = PropsOf(module);
+            return props == null || props.wornComputationalLoadBonus == 0f ? 0f : props.wornComputationalLoadBonus * QualityMultiplier(module);
+        }
+
+        /// <summary>Load bonus <paramref name="armor"/> gets from modules in the other modular pieces its wearer has on.</summary>
+        public static float WornCapacityBonusFor(CompModularArmor armor)
+        {
+            Pawn wearer = armor.Wearer;
+            if (wearer == null)
+            {
+                return 0f;
+            }
+            float bonus = 0f;
+            foreach (CompModularArmor other in WornModularArmor(wearer))
+            {
+                if (other == armor)
+                {
+                    continue;
+                }
+                List<Thing> modules = other.Modules;
+                for (int i = 0; i < modules.Count; i++)
+                {
+                    bonus += WornCapacityBonus(modules[i]);
+                }
+            }
+            return bonus;
+        }
+
+        public static bool IsSpent(Thing module)
+        {
+            return module.TryGetComp<CompArmorModule>()?.spent ?? false;
         }
 
         public static ArmorSlot DetectSlot(ThingDef apparelDef)
@@ -119,13 +169,61 @@ namespace ModularPowerArmor
                 foreach (Thing module in armor.Modules)
                 {
                     CompProperties_ArmorModule props = PropsOf(module);
-                    if (props != null && props.HasWearerEffects)
+                    if (props != null && props.HasWearerEffects && armor.IsModuleActive(module))
                     {
                         return true;
                     }
                 }
             }
             return false;
+        }
+
+        /// <summary>The first active module on any piece the pawn wears whose properties match.</summary>
+        public static Thing FirstActiveWornModule(Pawn pawn, System.Predicate<CompProperties_ArmorModule> match, out CompModularArmor host)
+        {
+            foreach (CompModularArmor armor in WornModularArmor(pawn))
+            {
+                List<Thing> modules = armor.Modules;
+                for (int i = 0; i < modules.Count; i++)
+                {
+                    CompProperties_ArmorModule props = PropsOf(modules[i]);
+                    if (props != null && match(props) && armor.IsModuleActive(modules[i]))
+                    {
+                        host = armor;
+                        return modules[i];
+                    }
+                }
+            }
+            host = null;
+            return null;
+        }
+
+        /// <summary>Fast lookup through the wearer hediff, for checks that run often (stats, rendering, combat).</summary>
+        public static Hediff_ArmorModifications WearerHediff(Pawn pawn)
+        {
+            List<Hediff> hediffs = pawn?.health?.hediffSet?.hediffs;
+            if (hediffs == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < hediffs.Count; i++)
+            {
+                if (hediffs[i] is Hediff_ArmorModifications hediff)
+                {
+                    return hediff;
+                }
+            }
+            return null;
+        }
+
+        public static bool SeesThroughObscurement(Pawn pawn)
+        {
+            return WearerHediff(pawn)?.SeesThroughObscurement ?? false;
+        }
+
+        public static bool PreventsStagger(Pawn pawn)
+        {
+            return WearerHediff(pawn)?.PreventsStagger ?? false;
         }
 
         /// <summary>
@@ -164,9 +262,11 @@ namespace ModularPowerArmor
             foreach (CompModularArmor armor in WornModularArmor(pawn))
             {
                 hash = Gen.HashCombineInt(hash, armor.parent.thingIDNumber);
+                hash = Gen.HashCombineStruct(hash, armor.IsOverloaded);
                 foreach (Thing module in armor.Modules)
                 {
                     hash = Gen.HashCombineInt(hash, module.thingIDNumber);
+                    hash = Gen.HashCombineStruct(hash, IsSpent(module));
                 }
             }
             hash = Gen.HashCombineInt(hash, CountBionicImplants(pawn, TechLevel.Undefined));
@@ -180,6 +280,11 @@ namespace ModularPowerArmor
             if (pawn?.health?.hediffSet == null)
             {
                 return;
+            }
+            // Load bonuses cross between pieces (second mind), so every worn piece may have changed.
+            foreach (CompModularArmor armor in WornModularArmor(pawn))
+            {
+                armor.ClearCaches();
             }
             Hediff_ArmorModifications hediff = pawn.health.hediffSet.GetFirstHediffOfDef(MPA_DefOf.MPA_ArmorModifications) as Hediff_ArmorModifications;
             bool wanted = HasWearerEffects(pawn);
@@ -244,7 +349,7 @@ namespace ModularPowerArmor
                 foreach (Thing module in armor.Modules)
                 {
                     CompProperties_ArmorModule props = PropsOf(module);
-                    if (props == null || !props.HasWearerEffects)
+                    if (props == null || !props.HasWearerEffects || !armor.IsModuleActive(module))
                     {
                         continue;
                     }
@@ -263,6 +368,14 @@ namespace ModularPowerArmor
                         {
                             float current = statFactors.TryGetValue(mod.stat, out float existing) ? existing : 1f;
                             statFactors[mod.stat] = current * ScaleFactor(mod.value, multiplier);
+                        }
+                    }
+                    if (props.wearerStatPenaltyFactors != null)
+                    {
+                        foreach (StatModifier mod in props.wearerStatPenaltyFactors)
+                        {
+                            float current = statFactors.TryGetValue(mod.stat, out float existing) ? existing : 1f;
+                            statFactors[mod.stat] = current * ScalePenalty(mod.value, multiplier);
                         }
                     }
                     if (props.wearerCapacityModifiers != null)
@@ -332,8 +445,79 @@ namespace ModularPowerArmor
                 }
                 sb.Append(armor.parent.LabelCapNoCount).Append(": ");
                 sb.Append(armor.Modules.Select(m => m.LabelNoCount).ToCommaList());
+                if (armor.IsOverloaded)
+                {
+                    sb.Append(" (").Append("MPA_Overloaded".Translate()).Append(")");
+                }
             }
             return sb.ToString();
+        }
+
+        /// <summary>One line per effect a stat can't show: senses, stagger, healing, the second heart, the longjump.</summary>
+        public static List<string> SpecialEffectLines(Pawn pawn)
+        {
+            List<string> lines = new List<string>();
+            if (DeathRefusalUtility.IsSustained(pawn))
+            {
+                lines.Add("MPA_Effect_Sustained".Translate(pawn.LabelShort, pawn.Named("PAWN")).Resolve());
+            }
+            foreach (CompModularArmor armor in WornModularArmor(pawn))
+            {
+                if (armor.IsOverloaded)
+                {
+                    lines.Add("MPA_Effect_Overloaded".Translate(armor.parent.LabelShort).Resolve());
+                }
+                foreach (Thing module in armor.Modules)
+                {
+                    CompProperties_ArmorModule props = PropsOf(module);
+                    if (props == null)
+                    {
+                        continue;
+                    }
+                    string name = module.LabelCapNoCount;
+                    if (props.refuseDeath)
+                    {
+                        lines.Add((IsSpent(module) ? "MPA_Effect_HeartSpent" : "MPA_Effect_HeartReady").Translate(name).Resolve());
+                    }
+                    if (!armor.IsModuleActive(module))
+                    {
+                        continue;
+                    }
+                    float multiplier = armor.EffectMultiplier(module);
+                    if (props.seeThroughObscurement)
+                    {
+                        lines.Add("MPA_Effect_SeeThrough".Translate(name).Resolve());
+                    }
+                    if (props.preventStagger)
+                    {
+                        lines.Add("MPA_Effect_NoStagger".Translate(name).Resolve());
+                    }
+                    if (props.HasCoveredPartEffects)
+                    {
+                        lines.Add("MPA_Effect_Regenerators".Translate(
+                            name,
+                            armor.parent.LabelShort,
+                            ScaleFactor(props.coveredPainFactor, multiplier).ToStringPercent(),
+                            (props.coveredHealPerDay * multiplier).ToString("0.#"),
+                            props.coveredTendIntervalTicks.ToStringTicksToPeriod(),
+                            Mathf.Clamp01(props.coveredTendQuality * multiplier).ToStringPercent()).Resolve());
+                    }
+                    if (props.wornComputationalLoadBonus > 0f)
+                    {
+                        lines.Add("MPA_Effect_WornLoad".Translate(name, WornCapacityBonus(module).ToString("0.#")).Resolve());
+                    }
+                    if (props.longjump != null)
+                    {
+                        int left = module.TryGetComp<CompArmorModule>()?.LongjumpTicksLeft ?? 0;
+                        lines.Add("MPA_Effect_Longjump".Translate(
+                            name,
+                            LongjumpUtility.Range(armor, module).ToString("0.#"),
+                            LongjumpUtility.CooldownTicks(armor, module).ToStringTicksToPeriod(),
+                            left > 0 ? "MPA_Effect_LongjumpLeft".Translate(left.ToStringTicksToPeriod()) : "MPA_Effect_LongjumpReady".Translate()).Resolve());
+                    }
+                }
+            }
+            return lines;
         }
 
         // ---- Generated pawns ----
@@ -356,7 +540,8 @@ namespace ModularPowerArmor
                 {
                     break;
                 }
-                if (!PropsOf(def).FitsSlot(armor.Slot) || armor.HasModuleOfDef(def))
+                CompProperties_ArmorModule props = PropsOf(def);
+                if (!props.generateOnNpcs || !props.FitsSlot(armor.Slot) || armor.HasModuleOfDef(def))
                 {
                     continue;
                 }

@@ -1,8 +1,8 @@
 # Modular Power Armor
 
-A RimWorld mod (1.5, 1.6 and 1.7) that lets you install modifications into power armor the way you install bionics into pawns. Each armor piece has a **Computational Load** budget. Every modification costs some of it, comes in qualities like weapons and armor, and many of them show up on the pawn wearing them.
+A RimWorld mod (1.5, 1.6 and 1.7) that lets you install modifications into power armor the way you install bionics into pawns. Each armor piece has a **Computational Load** budget. Every modification costs some of it, comes in qualities like weapons and armor, and many of them show up on the pawn wearing them. Armor is refitted at the **Armor Modulus** workbench.
 
-No Harmony required. Combat Extended is fully supported.
+Requires [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077). Combat Extended is fully supported.
 
 ![Preview](About/Preview.png)
 
@@ -36,8 +36,9 @@ Every def name above was checked against Combat Extended's compatibility patches
 
 - Each armor piece has its own **Computational Load** stat, shown in its info card. Helmets and body armor have separate onboard computers, so they have separate budgets.
 - Each modification has a **computational load cost**. The total cost of a piece's modifications can't exceed its computational load.
-- The auxiliary co-processor raises a piece's computational load and costs nothing itself. You can't remove it if the remaining modifications wouldn't fit without it.
-- Each modification can only be installed once per piece.
+- The auxiliary subpersona raises a piece's computational load and costs nothing itself. You can't remove it if the remaining modifications wouldn't fit without it.
+- The second mind raises the load of its helmet **and** of the body armor worn with it. If that helmet comes off, body armor that needs the extra load is **overloaded**: its modifications stop working (their visuals stay) until the helmet is back on or enough load is freed. The armor's inspect pane and info card say when a piece is overloaded.
+- Each modification can only be installed once per piece, and the two kinds of plating can't share a piece.
 
 ## Modifications
 
@@ -46,18 +47,58 @@ Values are at Normal quality.
 | Modification | Fits | Load | Effect | Combat Extended |
 |---|---|---|---|---|
 | Additional plating | Body + helmet | 2 | Piece: +20% sharp armor, +9% blunt armor | +4 mm RHA sharp, +9 MPa blunt |
+| Uranium composite plating | Body + helmet | 3 | Piece: +55% sharp armor, +25% blunt armor. Wearer: x80% move speed, a drawback that better quality lessens. Can't share a piece with additional plating | +11 mm RHA sharp, +25 MPa blunt |
 | Bionic synchronization | Body + helmet | 3 | Other modifications on the same piece are 2% stronger per bionic-grade (spacer or better) implant in the wearer | Same |
 | Thermal regulation unit | Body + helmet | 1 | Wearer: min comfortable temperature -8°C, max +8°C | Same |
 | Ablative heat shielding | Body + helmet | 1 | Piece: +15% heat armor, x50% flammability | Same (CE heat armor is still a percentage) |
-| Trauma response suite | Body + helmet | 2 | Wearer: x75% bleeding, x85% pain | Same |
-| Auxiliary co-processor | Body + helmet | 0 | Piece: +3 computational load | Same |
-| Neural stress dampener | Body + helmet | 2 | Wearer: -4% mental break threshold | Also x85% suppressability |
+| Neuromemetic regenerators | Body + helmet | 2 | On the body parts the piece covers and the organs inside them: x50% pain, heals 6 injury damage a day (scars included), tends a random bleeding wound every 15 seconds at 80% quality | Same |
+| Auxiliary subpersona | Body + helmet | 0 | Piece: +3 computational load | Same |
+| Neural stress dampener | Body + helmet | 2 | Wearer: -8% mental break threshold | Also x50% suppressability |
 | Targeting uplink | Helmet | 3 | Wearer: x85% aiming time | Also +10% aiming accuracy |
-| Multispectral sensor array | Helmet | 2 | Wearer: x110% sight | Same |
-| Biogel servo replacement | Body | 3 | Wearer: x115% manipulation, x105% move speed | Same |
+| Multispectral sensor array | Helmet | 2 | Wearer: x115% sight, and sees through blindness, darkness, fog and smoke | Same, including CE's darkness, weather and smoke aiming penalties |
+| Second mind | Helmet | 0 | Wearer: x120% consciousness. Piece: +4 computational load, and +4 for the body armor worn with it | Same |
+| Biogel servo replacement | Body | 3 | Wearer: x120% manipulation, x110% move speed | Same |
 | Load-bearing exoframe | Body | 2 | Wearer: x125% carrying capacity, x110% melee damage | Also +25 kg carry weight, +5 bulk |
+| Rigidity matrix | Body | 4 | Wearer: can't be staggered, x75% damage taken | Same (CE's melee stagger too) |
+| Second heart | Body | 4 | Refuses the wearer's death once, when their head is destroyed. No quality | Same |
+| Longjump hydraulics | Body | 3 | The wearer can leap up to 20 cells, over walls and through roofs. Recharges in 3 hours | Same |
 
-Modifications are crafted at a **fabrication bench** and require the **powered armor** research. If that project isn't found, **advanced fabrication** is used instead. Crafting skill decides their quality, as it does for weapons and armor. Non-player pawns' armor has a 20% chance per piece to come with one to three modifications, so you can also loot them.
+Modifications are crafted at a **fabrication bench** and require the **powered armor** research. If that project isn't found, **advanced fabrication** is used instead. Crafting skill decides their quality, as it does for weapons and armor. Non-player pawns' armor has a 20% chance per piece to come with one to three modifications, so you can also loot them (never a second heart or a second mind).
+
+Notable recipes: uranium composite plating takes 40 hyperweave and 80 uranium; the auxiliary subpersona takes 3 basic subcores; the second heart takes a human heart and 3 high subcores; the second mind takes an AI persona core and 5 advanced components. Without Biotech, advanced components stand in for the subcores.
+
+### Neuromemetic regenerators
+
+Everything they do is limited to the body parts their armor piece covers and the organs inside them, so regenerators in body armor look after the torso, arms and legs, and regenerators in a helmet look after the head.
+
+- Pain from injuries and conditions on those parts is halved.
+- Every 10 seconds, a random injury there heals a little (6 damage a day at Normal quality, on top of natural healing). Permanent injuries such as scars heal too.
+- Every 15 seconds, one random bleeding wound there is tended at 80% quality (higher with better quality, up to 100%).
+
+### Multispectral sensor array
+
+- The wearer's sight never drops below what the sensor gives a sighted wearer (x115% at Normal quality), so missing eyes, blinded eyes and blinding effects don't matter.
+- No work speed penalty in the dark, and no "in darkness" mood penalty.
+- Weather, smoke and darkness don't affect the wearer's ranged accuracy. With Combat Extended, the sensor clears CE's darkness, weather and smoke shifts instead.
+
+### Second heart
+
+- If the wearer's head is destroyed (or the neck, taking the head with it), the second heart refuses their death, as long as nothing else would kill them: bleeding out, a destroyed heart or torso, or any other fatal wound still kills.
+- The pawn is kept alive at 50% consciousness. All of their wounds are tended, their pain is cut to 20%, and they get x150% move speed for 12 hours.
+- An orange **Death Refused: _name_** alert appears in the corner. Its description is the killing blow and the time left.
+- Two days later the pawn dies, unless the head has been restored somehow (a healer mech serum, a regeneration mod, ...). The alert clears as soon as the head is back.
+- It works once. The module is then **spent**: it does nothing, and is thrown away when it is removed. Install a new one.
+- It has no quality, so it always works the same.
+
+### Longjump hydraulics
+
+- The wearer gets a **Longjump** button (drafted or not). Pick a spot within range to leap there.
+- Leaps go over walls and through constructed roofs, but not through mountains: natural rock or an overhead mountain anywhere along the way, including where the leap starts and ends, blocks it. You can't land on a spot that's occupied (by a pawn or anything you couldn't stand on) or that you can't see.
+- Range is 20 cells and the recharge time 3 hours at Normal quality. Better quality leaps farther and recharges faster: 14 cells and 4.3 hours at Awful, 32 cells and 1.9 hours at Legendary. The button shows the recharge.
+
+### Rigidity matrix
+
+Hits don't stagger the wearer (vanilla slows pawns hit by bullets; Combat Extended staggers on melee hits), and the wearer takes x75% damage, scaling with quality like other factors.
 
 ## Quality
 
@@ -65,30 +106,32 @@ Each quality tier above or below Normal changes a modification's effects by 15% 
 
 - **Offsets** (armor, temperature, load bonus, ...) are multiplied by the effect strength.
 - **Factors** have their distance from 100% multiplied, so a x115% bonus becomes x117.25% at Good quality.
+- **Drawbacks** (the uranium plating's move speed) work the other way round: their distance from 100% is divided by the effect strength, so better quality makes them smaller. x80% becomes x71% at Awful and x87.5% at Legendary.
+- The second heart has no quality.
 
-| Quality | Effect strength | Biogel servo: manipulation / move speed | Additional plating: sharp / blunt (vanilla) | Additional plating (CE) | Bionic sync per implant |
+| Quality | Effect strength | Biogel servo: manipulation / move speed | Additional plating: sharp / blunt (vanilla) | Additional plating (CE) | Uranium plating: move speed |
 |---|---|---|---|---|---|
-| Awful | 70% | x110.5% / x103.50% | +14% / +6.3% | +2.8 mm RHA / +6.3 MPa | +1.4% |
-| Poor | 85% | x112.8% / x104.25% | +17% / +7.6% | +3.4 mm RHA / +7.6 MPa | +1.7% |
-| Normal | 100% | x115.0% / x105.00% | +20% / +9.0% | +4.0 mm RHA / +9.0 MPa | +2.0% |
-| Good | 115% | x117.2% / x105.75% | +23% / +10.3% | +4.6 mm RHA / +10.3 MPa | +2.3% |
-| Excellent | 130% | x119.5% / x106.50% | +26% / +11.7% | +5.2 mm RHA / +11.7 MPa | +2.6% |
-| Masterwork | 145% | x121.7% / x107.25% | +29% / +13.1% | +5.8 mm RHA / +13.0 MPa | +2.9% |
-| Legendary | 160% | x124.0% / x108.00% | +32% / +14.4% | +6.4 mm RHA / +14.4 MPa | +3.2% |
+| Awful | 70% | x114% / x107.0% | +14% / +6.3% | +2.8 mm RHA / +6.3 MPa | x71.4% |
+| Poor | 85% | x117% / x108.5% | +17% / +7.6% | +3.4 mm RHA / +7.6 MPa | x76.5% |
+| Normal | 100% | x120% / x110.0% | +20% / +9.0% | +4.0 mm RHA / +9.0 MPa | x80.0% |
+| Good | 115% | x123% / x111.5% | +23% / +10.3% | +4.6 mm RHA / +10.3 MPa | x82.6% |
+| Excellent | 130% | x126% / x113.0% | +26% / +11.7% | +5.2 mm RHA / +11.7 MPa | x84.6% |
+| Masterwork | 145% | x129% / x114.5% | +29% / +13.1% | +5.8 mm RHA / +13.0 MPa | x86.2% |
+| Legendary | 160% | x132% / x116.0% | +32% / +14.4% | +6.4 mm RHA / +14.4 MPa | x87.5% |
 
 Bionic synchronization multiplies on top of quality. For example, a Legendary plating on a piece with a Normal synchronizer and a wearer with 5 bionics applies at 160% x 110% = 176% strength. Synchronization doesn't affect computational load bonuses, because otherwise removing an implant could overload the armor.
 
-## Installing and removing
+## The Armor Modulus
 
-Installing or removing a modification takes about 10 seconds, scaled by the worker's general labor speed. Any colonist who can manipulate can do it.
+A 3x2 powered workbench (Production tab, **powered armor** research; 150 steel, 60 plasteel, 6 components, 2 advanced components; 250 W).
 
-- **Armor someone is wearing:** select the colonist and use the **Modify armor** button. It lists every modification on the map that fits, plus what's installed. The colonist fetches the modification and installs it themselves.
-- **From a modification:** select a colonist and right-click a modification item to install it into armor they're wearing.
-- **Armor on the ground:** select a colonist and right-click the armor.
+- **Bills.** There is an **Install _modification_** bill for every modification, and a **Strip all modifications** bill. A colonist brings a piece of armor (and the modification) to the station, and the finished armor comes back out as the bill's product, so it is hauled away like anything else crafted. Stripped modifications come out alongside it. Use "Do X times" to refit armor in bulk, and the bill's ingredient filter to choose which armor types, qualities and hit points it works on. Armor only counts as an ingredient when the bill can do something with it: the modification has to fit the piece and its free load, and must not already be installed (or, for stripping, there has to be something to strip).
+- **Worn armor.** Right-click the station with a colonist selected and choose **Modify _name_'s worn armor here**. A window shows the armor they are wearing with its load, armor values and installed modifications, the modifications on the map that would fit, and the colonist's stats and special effects. Install and remove buttons queue the work, which the colonist does at the station while wearing the armor.
+- **Armor on the ground** can still be modified where it lies: select a colonist and right-click the armor.
 
-Removed modifications keep their quality and hit points. Armor that is destroyed or smelted drops its modifications.
+Worn armor can't be modified anywhere but at an Armor Modulus. Installing or removing by hand takes about 10 seconds, scaled by the worker's general labor speed; any colonist who can manipulate can do it. Removed modifications keep their quality and hit points, and armor that is destroyed or smelted drops its modifications.
 
-Wearer effects are applied through an **armor modifications** health condition, so they show up in the health tab and in every stat breakdown. Armor effects show in the armor's own stat breakdown.
+Wearer effects are applied through an **armor modifications** health condition, so they show up in the health tab and in every stat breakdown; its tooltip also lists the special effects. Armor effects show in the armor's own stat breakdown.
 
 ## Visuals
 
@@ -129,8 +172,23 @@ The `Mods/CombatExtended` folder only loads when CE is active:
 
 - Armor bonuses switch to CE's units (mm RHA and MPa). They go onto the armor piece's own stat, which CE reads, so CE's partial armor multipliers still apply.
 - All modification items get CE bulk.
-- Three modifications gain CE-only effects: the stress dampener reduces suppressability, the targeting uplink adds aiming accuracy, and the exoframe adds carry weight and bulk.
-- Night vision is deliberately left alone: CE caches apparel night vision per armor type and quality, so a per-item bonus wouldn't apply reliably.
+- Some modifications gain CE-only effects: the stress dampener halves suppressability, the targeting uplink adds aiming accuracy, and the exoframe adds carry weight and bulk.
+- The multispectral sensor array clears darkness, weather and smoke from CE's aiming report (in the mod's code, so nothing changes without CE). Apparel night vision itself is left alone, because CE caches it per armor type and quality.
+
+## Harmony patches
+
+Most effects are plain stats and hediffs. These need Harmony:
+
+| Patch | For |
+|---|---|
+| `PawnCapacityUtility.CalculateCapacityLevel` (postfix) | Sensor array sight floor; second heart consciousness and breathing (hediff offsets can't raise a capacity from zero) |
+| `Pawn.Kill` (prefix) | Second heart |
+| `StaggerHandler.StaggerFor` (prefix) | Rigidity matrix |
+| `ShotReport.HitReportFor`, `StatPart_Glow.ActiveFor`, `ThoughtWorker_Dark.CurrentStateInternal` (postfixes) | Sensor array: weather, smoke and darkness |
+| `Bill.IsFixedOrAllowedIngredient`, `GenRecipe.MakeRecipeProducts` (postfixes) | Armor Modulus bills |
+| CE's `Verb_LaunchProjectileCE.ShiftVecReportFor` (postfix, only with CE) | Sensor array under CE |
+
+Each patch is applied on its own, so if a game update breaks one, the rest keep working and the error names the broken one.
 
 ## Adding your own armor or modifications
 
@@ -148,15 +206,19 @@ To support more armor, add a `ModularArmorTargetDef` in your own mod (no C# need
 
 `fit` picks the module art drawn on that armor. Use the closest of the shapes listed in [`MPA_ArmorTargets.xml`](Defs/Targets/MPA_ArmorTargets.xml); Marine is the default.
 
-A modification is any `ThingDef` with `CompQuality`, an `MPA_ComputationalLoadCost` stat and a `ModularPowerArmor.CompProperties_ArmorModule` comp; see [`Defs/Modules`](Defs/Modules) for examples. Available fields:
+A modification is any `ThingDef` with an `MPA_ComputationalLoadCost` stat and a `ModularPowerArmor.CompProperties_ArmorModule` comp, usually with `CompQuality` too; see [`Defs/Modules`](Defs/Modules) for examples. Available fields:
 
-- `slots`
-- `wearerStatOffsets`, `wearerStatFactors`, `wearerCapacityModifiers`, `wearerPainFactor`, `wearerBleedFactor`
+- `slots`, `exclusionTags` (modifications sharing a tag can't share a piece), `generateOnNpcs`
+- `wearerStatOffsets`, `wearerStatFactors`, `wearerStatPenaltyFactors` (drawbacks that better quality lessens), `wearerCapacityModifiers`, `wearerPainFactor`, `wearerBleedFactor`
+- `coveredPainFactor`, `coveredHealPerDay`, `coveredTendIntervalTicks`, `coveredTendQuality` (the body parts the host piece covers)
+- `seeThroughObscurement`, `preventStagger`, `refuseDeath`, `longjump` (`range`, `cooldownTicks`)
 - `armorStatOffsets`, `armorStatFactors`
-- `computationalLoadBonus`
+- `computationalLoadBonus`, `wornComputationalLoadBonus` (for the other pieces worn with it)
 - `bionicSyncPerImplant`, `bionicSyncMinTechLevel`
 - `installTicks`
 - `bodyRenderNodes`, `helmetRenderNodes`
+
+To install it at the Armor Modulus, give it a bill too: copy an install recipe from [`MPA_ModulusRecipes.xml`](Defs/Recipes/MPA_ModulusRecipes.xml) and name your modification in the second ingredient and in the `ArmorModulusRecipe` extension. Which armor the bill accepts is filled in when the game loads.
 
 ## Building
 
@@ -164,7 +226,7 @@ A modification is any `ThingDef` with `CompQuality`, an `MPA_ComputationalLoadCo
 Source/build.sh
 ```
 
-This builds `1.5/Assemblies`, `1.6/Assemblies` and `1.7/Assemblies` against the `Krafs.Rimworld.Ref` packages, so no RimWorld install is required. RimWorld 1.7 runs on .NET 10, so you need the .NET 10 SDK; it also builds the .NET Framework 4.7.2 assemblies for 1.5 and 1.6.
+This builds `1.5/Assemblies`, `1.6/Assemblies` and `1.7/Assemblies` against the `Krafs.Rimworld.Ref` packages and the `Lib.Harmony.Ref` reference assembly, so no RimWorld install is required (the Harmony mod supplies `0Harmony.dll` in game). RimWorld 1.7 runs on .NET 10, so you need the .NET 10 SDK; it also builds the .NET Framework 4.7.2 assemblies for 1.5 and 1.6.
 
 To regenerate the textures, install [rwtexturegen](https://github.com/Jitby-Jones/rwtexturegen) (`pip install -e <path>`) and run:
 

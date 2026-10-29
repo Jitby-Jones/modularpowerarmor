@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace ModularPowerArmor
@@ -23,19 +25,47 @@ namespace ModularPowerArmor
             return helmet ? "MPA_Slot_HelmetOnly".Translate() : "MPA_Slot_BodyOnly".Translate();
         }
 
-        public static IEnumerable<StatDrawEntry> EntriesFor(CompProperties_ArmorModule props, QualityCategory quality)
+        public static IEnumerable<StatDrawEntry> EntriesFor(CompProperties_ArmorModule props, ThingDef def, QualityCategory quality, Thing thing = null)
         {
             StatCategoryDef category = MPA_DefOf.MPA_ArmorModification;
-            float multiplier = ArmorModuleUtility.QualityMultiplier(quality);
+            bool hasQuality = def == null || ArmorModuleUtility.HasQuality(def);
+            float multiplier = hasQuality ? ArmorModuleUtility.QualityMultiplier(quality) : 1f;
             int priority = 5000;
 
             yield return new StatDrawEntry(category, "MPA_Stat_Fits".Translate(), SlotsLabel(props),
                 "MPA_Stat_FitsDesc".Translate(), priority--);
 
-            yield return new StatDrawEntry(category, "MPA_Stat_QualityEffect".Translate(),
-                "x" + multiplier.ToStringPercent(),
-                "MPA_Stat_QualityEffectDesc".Translate(quality.GetLabel(), ArmorModuleUtility.Settings.qualityStep.ToStringPercent()),
-                priority--);
+            if (!props.exclusionTags.NullOrEmpty())
+            {
+                List<string> others = ArmorModuleUtility.AllModuleDefs
+                    .Where(other => other != def && props.ExcludedBy(ArmorModuleUtility.PropsOf(other)))
+                    .Select(other => other.label)
+                    .ToList();
+                if (others.Count > 0)
+                {
+                    yield return new StatDrawEntry(category, "MPA_Stat_Excludes".Translate(), others.ToCommaList().CapitalizeFirst(),
+                        "MPA_Stat_ExcludesDesc".Translate(), priority--);
+                }
+            }
+
+            if (hasQuality)
+            {
+                yield return new StatDrawEntry(category, "MPA_Stat_QualityEffect".Translate(),
+                    "x" + multiplier.ToStringPercent(),
+                    "MPA_Stat_QualityEffectDesc".Translate(quality.GetLabel(), ArmorModuleUtility.Settings.qualityStep.ToStringPercent()),
+                    priority--);
+            }
+            else
+            {
+                yield return new StatDrawEntry(category, "MPA_Stat_QualityEffect".Translate(), "MPA_Stat_NoQuality".Translate(),
+                    "MPA_Stat_NoQualityDesc".Translate(), priority--);
+            }
+
+            if (thing != null && ArmorModuleUtility.IsSpent(thing))
+            {
+                yield return new StatDrawEntry(category, "MPA_Stat_Spent".Translate(), "Yes".Translate(),
+                    "MPA_InspectSpent".Translate(), priority--);
+            }
 
             if (props.wearerStatOffsets != null)
             {
@@ -51,6 +81,15 @@ namespace ModularPowerArmor
                 {
                     yield return Entry(category, "MPA_Stat_Wearer".Translate(mod.stat.label),
                         "x" + ArmorModuleUtility.ScaleFactor(mod.value, multiplier).ToStringPercent(), mod.stat.description, priority--);
+                }
+            }
+            if (props.wearerStatPenaltyFactors != null)
+            {
+                foreach (StatModifier mod in props.wearerStatPenaltyFactors)
+                {
+                    yield return Entry(category, "MPA_Stat_Wearer".Translate(mod.stat.label),
+                        "x" + ArmorModuleUtility.ScalePenalty(mod.value, multiplier).ToStringPercent(),
+                        mod.stat.description + "\n\n" + "MPA_Stat_PenaltyDesc".Translate(), priority--);
                 }
             }
             if (props.wearerCapacityModifiers != null)
@@ -84,6 +123,43 @@ namespace ModularPowerArmor
                 yield return Entry(category, "MPA_Stat_Bleeding".Translate(),
                     "x" + ArmorModuleUtility.ScaleFactor(props.wearerBleedFactor, multiplier).ToStringPercent(), "MPA_Stat_BleedingDesc".Translate(), priority--);
             }
+            if (props.coveredPainFactor != 1f)
+            {
+                yield return Entry(category, "MPA_Stat_CoveredPain".Translate(),
+                    "x" + ArmorModuleUtility.ScaleFactor(props.coveredPainFactor, multiplier).ToStringPercent(), "MPA_Stat_CoveredPainDesc".Translate(), priority--);
+            }
+            if (props.coveredHealPerDay > 0f)
+            {
+                yield return Entry(category, "MPA_Stat_CoveredHealing".Translate(),
+                    "MPA_Stat_CoveredHealingValue".Translate((props.coveredHealPerDay * multiplier).ToString("0.#")), "MPA_Stat_CoveredHealingDesc".Translate(), priority--);
+            }
+            if (props.coveredTendIntervalTicks > 0)
+            {
+                yield return Entry(category, "MPA_Stat_CoveredTending".Translate(),
+                    "MPA_Stat_CoveredTendingValue".Translate(Mathf.Clamp01(props.coveredTendQuality * multiplier).ToStringPercent(), props.coveredTendIntervalTicks.ToStringTicksToPeriod()),
+                    "MPA_Stat_CoveredTendingDesc".Translate(), priority--);
+            }
+            if (props.seeThroughObscurement)
+            {
+                yield return Entry(category, "MPA_Stat_SeeThrough".Translate(), "Yes".Translate(), "MPA_Stat_SeeThroughDesc".Translate(), priority--);
+            }
+            if (props.preventStagger)
+            {
+                yield return Entry(category, "MPA_Stat_NoStagger".Translate(), "Yes".Translate(), "MPA_Stat_NoStaggerDesc".Translate(), priority--);
+            }
+            if (props.refuseDeath)
+            {
+                yield return Entry(category, "MPA_Stat_RefuseDeath".Translate(), "MPA_Stat_RefuseDeathValue".Translate(),
+                    "MPA_Stat_RefuseDeathDesc".Translate(Hediff_DeathRefused.SustainedConsciousness.ToStringPercent(), Hediff_DeathRefused.DurationTicks.ToStringTicksToPeriod()), priority--);
+            }
+            if (props.longjump != null)
+            {
+                yield return Entry(category, "MPA_Stat_LongjumpRange".Translate(), (props.longjump.range * multiplier).ToString("0.#"),
+                    "MPA_Stat_LongjumpRangeDesc".Translate(), priority--);
+                yield return Entry(category, "MPA_Stat_LongjumpCooldown".Translate(),
+                    Mathf.RoundToInt(props.longjump.cooldownTicks / Mathf.Max(0.1f, multiplier)).ToStringTicksToPeriod(),
+                    "MPA_Stat_LongjumpCooldownDesc".Translate(), priority--);
+            }
             if (props.armorStatOffsets != null)
             {
                 foreach (StatModifier mod in props.armorStatOffsets)
@@ -104,6 +180,11 @@ namespace ModularPowerArmor
             {
                 yield return Entry(category, "MPA_Stat_LoadBonus".Translate(),
                     "+" + (props.computationalLoadBonus * multiplier).ToString("0.##"), "MPA_Stat_LoadBonusDesc".Translate(), priority--);
+            }
+            if (props.wornComputationalLoadBonus != 0f)
+            {
+                yield return Entry(category, "MPA_Stat_WornLoadBonus".Translate(),
+                    "+" + (props.wornComputationalLoadBonus * multiplier).ToString("0.##"), "MPA_Stat_WornLoadBonusDesc".Translate(), priority--);
             }
             if (props.bionicSyncPerImplant != 0f)
             {

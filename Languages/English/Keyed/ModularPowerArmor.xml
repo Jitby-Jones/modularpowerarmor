@@ -11,23 +11,32 @@
 	<MPA_Setting_RenderGraphicsDesc>Show the visuals of installed modifications on the pawns wearing them. Turn this off if the overlays clash with another mod's armor textures.</MPA_Setting_RenderGraphicsDesc>
 	<MPA_Setting_Reset>Reset to defaults</MPA_Setting_Reset>
 
-	<!-- Gizmo and float menus -->
-	<MPA_ModifyArmor>Modify armor</MPA_ModifyArmor>
-	<MPA_ModifyArmorDesc>Install or remove modifications on the power armor this colonist is wearing. Modifications have to be somewhere on the map that the colonist can reach.</MPA_ModifyArmorDesc>
+	<!-- Float menus and messages -->
 	<MPA_ModifyArmorOption>Modify {0}</MPA_ModifyArmorOption>
 	<MPA_InstallOption>Install {0} in {1}</MPA_InstallOption>
 	<MPA_RemoveOption>Remove {0} from {1}</MPA_RemoveOption>
-	<MPA_NothingToInstall>No modifications installed or available</MPA_NothingToInstall>
 	<MPA_Installed>{0} installed {1} in {2}.</MPA_Installed>
 	<MPA_Removed>{0} removed {1} from {2}.</MPA_Removed>
+	<MPA_Stripped>{0} stripped the modifications out of {1}.</MPA_Stripped>
+	<MPA_ModulusOption>Modify {0}'s worn armor here</MPA_ModulusOption>
+	<MPA_Queued>queued</MPA_Queued>
+	<MPA_SpentLabel>{0} (spent)</MPA_SpentLabel>
+	<MPA_SpentDiscarded>The spent {0} was thrown away.</MPA_SpentDiscarded>
 
 	<!-- Reasons an option is disabled -->
 	<MPA_Reason_WrongSlot>doesn't fit a {0}</MPA_Reason_WrongSlot>
 	<MPA_Reason_AlreadyInstalled>already has {0} installed</MPA_Reason_AlreadyInstalled>
+	<MPA_Reason_Excludes>can't share a piece with {0}</MPA_Reason_Excludes>
 	<MPA_Reason_NotEnoughLoad>needs {0} computational load, {1} free</MPA_Reason_NotEnoughLoad>
 	<MPA_Reason_RemoveWouldOverload>the other modifications wouldn't fit without {0}</MPA_Reason_RemoveWouldOverload>
+	<MPA_Reason_RemoveWouldOverloadOther>{1} needs the computational load {0} gives it</MPA_Reason_RemoveWouldOverloadOther>
+	<MPA_Reason_Spent>{0} is spent</MPA_Reason_Spent>
 	<MPA_Reason_Downed>{0} is downed</MPA_Reason_Downed>
 	<MPA_Reason_NoManipulation>{0} can't manipulate things</MPA_Reason_NoManipulation>
+	<MPA_Reason_NoModularArmor>{0} isn't wearing any modular armor</MPA_Reason_NoModularArmor>
+	<MPA_Reason_ModulusUnusable>{0} has no power or is broken down</MPA_Reason_ModulusUnusable>
+	<MPA_Reason_Overloaded>{0} is overloaded</MPA_Reason_Overloaded>
+	<MPA_Reason_Burning>{0} is on fire</MPA_Reason_Burning>
 
 	<!-- Slots -->
 	<MPA_Slot_Body>body armor</MPA_Slot_Body>
@@ -40,30 +49,110 @@
 	<MPA_InspectLoad>Computational load: {0} / {1}</MPA_InspectLoad>
 	<MPA_InspectModules>Modifications: {0}</MPA_InspectModules>
 	<MPA_InspectModule>Fits {0}. Computational load cost: {1}</MPA_InspectModule>
+	<MPA_InspectOverloaded>Overloaded: more computational load is in use than this piece has, so its modifications are offline. Free some load, or put back on the armor piece that was providing the extra load.</MPA_InspectOverloaded>
+	<MPA_InspectSpent>Spent: this second heart has already refused a death. Remove it and install a new one.</MPA_InspectSpent>
 	<MPA_HediffModuleCount>{0} installed</MPA_HediffModuleCount>
+	<MPA_Overloaded>overloaded</MPA_Overloaded>
 
 	<!-- Info card: modular armor -->
 	<MPA_Stat_LoadInUse>Computational load in use</MPA_Stat_LoadInUse>
-	<MPA_Stat_LoadInUseDesc>How much of this piece's computational load its installed modifications use, out of the total available.</MPA_Stat_LoadInUseDesc>
+	<MPA_Stat_LoadInUseDesc>How much of this piece's computational load its installed modifications use, out of the total available. If more is in use than available (when a piece that provided extra load comes off), the modifications go offline.</MPA_Stat_LoadInUseDesc>
 	<MPA_Stat_Installed>Installed modifications</MPA_Stat_Installed>
 	<MPA_Stat_InstalledDesc>Modifications installed in this armor piece. The percentage shows how strongly each one applies its effects, after quality and bionic synchronization.</MPA_Stat_InstalledDesc>
 	<MPA_Stat_EffectStrength>{0} effect</MPA_Stat_EffectStrength>
+	<MPA_Stat_WornWith>{0} ({1})</MPA_Stat_WornWith>
 
 	<!-- Info card: modifications -->
 	<MPA_Stat_Fits>Fits</MPA_Stat_Fits>
 	<MPA_Stat_FitsDesc>Which power armor pieces this modification can be installed in.</MPA_Stat_FitsDesc>
+	<MPA_Stat_Excludes>Can't share a piece with</MPA_Stat_Excludes>
+	<MPA_Stat_ExcludesDesc>Modifications that can't be installed in the same armor piece as this one.</MPA_Stat_ExcludesDesc>
 	<MPA_Stat_QualityEffect>Effect strength from quality</MPA_Stat_QualityEffect>
-	<MPA_Stat_QualityEffectDesc>This modification is {0} quality. Each quality tier above or below Normal changes its effects by {1}. The effects listed here already include it.\n\nFactors scale their distance from 100%: a x115% bonus becomes x117% at 115% strength.</MPA_Stat_QualityEffectDesc>
+	<MPA_Stat_QualityEffectDesc>This modification is {0} quality. Each quality tier above or below Normal changes its effects by {1}. The effects listed here already include it.\n\nFactors scale their distance from 100%: a x115% bonus becomes x117% at 115% strength. Drawbacks work the other way round: better quality makes them smaller.</MPA_Stat_QualityEffectDesc>
+	<MPA_Stat_NoQuality>none (fixed effects)</MPA_Stat_NoQuality>
+	<MPA_Stat_NoQualityDesc>This modification has no quality; its effects are always the same.</MPA_Stat_NoQualityDesc>
+	<MPA_Stat_Spent>Spent</MPA_Stat_Spent>
 	<MPA_Stat_Wearer>Wearer {0}</MPA_Stat_Wearer>
 	<MPA_Stat_ArmorPiece>Armor piece {0}</MPA_Stat_ArmorPiece>
+	<MPA_Stat_PenaltyDesc>This is a drawback of the modification: better quality makes it smaller.</MPA_Stat_PenaltyDesc>
 	<MPA_Stat_Pain>Wearer pain</MPA_Stat_Pain>
 	<MPA_Stat_PainDesc>Multiplies the pain the wearer feels from injuries.</MPA_Stat_PainDesc>
 	<MPA_Stat_Bleeding>Wearer bleeding</MPA_Stat_Bleeding>
 	<MPA_Stat_BleedingDesc>Multiplies how fast the wearer bleeds.</MPA_Stat_BleedingDesc>
+	<MPA_Stat_CoveredPain>Pain on covered body parts</MPA_Stat_CoveredPain>
+	<MPA_Stat_CoveredPainDesc>Multiplies the pain from injuries and conditions on the body parts the armor piece covers, and the organs inside them.</MPA_Stat_CoveredPainDesc>
+	<MPA_Stat_CoveredHealing>Healing on covered body parts</MPA_Stat_CoveredHealing>
+	<MPA_Stat_CoveredHealingValue>{0} per day</MPA_Stat_CoveredHealingValue>
+	<MPA_Stat_CoveredHealingDesc>How much injury damage is healed each day on the body parts the armor piece covers and the organs inside them, on top of natural healing. Scars and other permanent injuries heal too.</MPA_Stat_CoveredHealingDesc>
+	<MPA_Stat_CoveredTending>Tends bleeding wounds</MPA_Stat_CoveredTending>
+	<MPA_Stat_CoveredTendingValue>{0} quality, every {1}</MPA_Stat_CoveredTendingValue>
+	<MPA_Stat_CoveredTendingDesc>Every so often, tends one random bleeding wound on the body parts the armor piece covers.</MPA_Stat_CoveredTendingDesc>
+	<MPA_Stat_SeeThrough>Sees through blindness and darkness</MPA_Stat_SeeThrough>
+	<MPA_Stat_SeeThroughDesc>The wearer sees through blindness, darkness, fog and smoke. Their sight never drops below what the sensor gives a sighted wearer, even without working eyes; they don't work slower or get upset in the dark; and weather, smoke and darkness don't spoil their aim.</MPA_Stat_SeeThroughDesc>
+	<MPA_Stat_NoStagger>Can't be staggered</MPA_Stat_NoStagger>
+	<MPA_Stat_NoStaggerDesc>Hits don't stagger the wearer, so they keep moving at full speed under fire.</MPA_Stat_NoStaggerDesc>
+	<MPA_Stat_RefuseDeath>Refuses death</MPA_Stat_RefuseDeath>
+	<MPA_Stat_RefuseDeathValue>once</MPA_Stat_RefuseDeathValue>
+	<MPA_Stat_RefuseDeathDesc>If the wearer's head is destroyed, they don't die. They are kept alive at {0} consciousness, all of their wounds are tended and they get a surge of speed, but unless the head is restored somehow they die {1} later. Bleeding out and other fatal wounds still kill. Works once; the spent module has to be replaced.</MPA_Stat_RefuseDeathDesc>
+	<MPA_Stat_LongjumpRange>Longjump range</MPA_Stat_LongjumpRange>
+	<MPA_Stat_LongjumpRangeDesc>How far the wearer can leap, in cells. Leaps go over walls and through roofs, but not through mountains, and can't land on an occupied spot.</MPA_Stat_LongjumpRangeDesc>
+	<MPA_Stat_LongjumpCooldown>Longjump recharge time</MPA_Stat_LongjumpCooldown>
+	<MPA_Stat_LongjumpCooldownDesc>How long the hydraulics take to recharge after a leap.</MPA_Stat_LongjumpCooldownDesc>
 	<MPA_Stat_LoadBonus>Computational load bonus</MPA_Stat_LoadBonus>
 	<MPA_Stat_LoadBonusDesc>Extra computational load for the armor piece this is installed in. Bionic synchronization doesn't affect it.</MPA_Stat_LoadBonusDesc>
+	<MPA_Stat_WornLoadBonus>Computational load for other worn pieces</MPA_Stat_WornLoadBonus>
+	<MPA_Stat_WornLoadBonusDesc>Extra computational load for every other piece of modular armor worn together with the piece this is installed in. If this piece comes off, armor that needed the extra load goes offline until it is back on.</MPA_Stat_WornLoadBonusDesc>
 	<MPA_Stat_BionicSync>Bionic synchronization</MPA_Stat_BionicSync>
 	<MPA_Stat_BionicSyncValue>+{0} per implant</MPA_Stat_BionicSyncValue>
 	<MPA_Stat_BionicSyncDesc>Every other modification on the same armor piece gets this much stronger for each implant or replacement part in the wearer. Only parts of {0} tech level or higher count.</MPA_Stat_BionicSyncDesc>
+
+	<!-- Longjump hydraulics -->
+	<MPA_Longjump>Longjump</MPA_Longjump>
+	<MPA_LongjumpDesc>Leap to a spot up to {0} cells away, over walls and through roofs. Can't go through mountains or land on an occupied spot. Recharges in {1}.</MPA_LongjumpDesc>
+	<MPA_LongjumpRecharging>recharging ({0} left)</MPA_LongjumpRecharging>
+	<MPA_LongjumpFogged>Can't see there</MPA_LongjumpFogged>
+	<MPA_LongjumpOutOfRange>Out of range</MPA_LongjumpOutOfRange>
+	<MPA_LongjumpOccupied>Occupied</MPA_LongjumpOccupied>
+	<MPA_LongjumpMountain>Blocked by a mountain</MPA_LongjumpMountain>
+
+	<!-- Second heart -->
+	<MPA_DeathRefusedAlert>Death Refused: {0}</MPA_DeathRefusedAlert>
+	<MPA_DeathRefusedAlertMulti>Death Refused ({0})</MPA_DeathRefusedAlertMulti>
+	<MPA_DeathRefusedAlertDesc>{0}'s head was destroyed, but their second heart refused their death.\n\nKilling blow: {1}\n\nUnless their head is restored somehow, they die in {2}.</MPA_DeathRefusedAlertDesc>
+	<MPA_DeathRefusedMessage>{0}'s second heart refused death!</MPA_DeathRefusedMessage>
+	<MPA_DeathRefusedRecovered>{0}'s head has been restored, and their second heart has let go.</MPA_DeathRefusedRecovered>
+	<MPA_DeathRefusedTip>Dies in {0} unless the head is restored.</MPA_DeathRefusedTip>
+	<MPA_KillingBlow>{0} {1} damage to the {2}</MPA_KillingBlow>
+	<MPA_KillingBlowBy>from {0}</MPA_KillingBlowBy>
+	<MPA_KillingBlowWith>({0})</MPA_KillingBlowWith>
+	<MPA_KillingBlowHead>head</MPA_KillingBlowHead>
+	<MPA_KillingBlowUnknown>unknown</MPA_KillingBlowUnknown>
+
+	<!-- Special effects (Armor Modulus window, health tab tooltip) -->
+	<MPA_Effect_Sustained>{0}'s death has been refused: only the second heart is keeping them alive.</MPA_Effect_Sustained>
+	<MPA_Effect_Overloaded>{0} is overloaded: its modifications are offline.</MPA_Effect_Overloaded>
+	<MPA_Effect_HeartReady>{0}: will refuse death once if the head is destroyed.</MPA_Effect_HeartReady>
+	<MPA_Effect_HeartSpent>{0}: spent. Remove it and install a new one.</MPA_Effect_HeartSpent>
+	<MPA_Effect_SeeThrough>{0}: sees through blindness, darkness, fog and smoke.</MPA_Effect_SeeThrough>
+	<MPA_Effect_NoStagger>{0}: can't be staggered.</MPA_Effect_NoStagger>
+	<MPA_Effect_Regenerators>{0} ({1}): pain x{2} on covered body parts, heals {3} injury damage per day there, and tends a bleeding wound every {4} at {5} quality.</MPA_Effect_Regenerators>
+	<MPA_Effect_WornLoad>{0}: +{1} computational load for the other armor worn with it.</MPA_Effect_WornLoad>
+	<MPA_Effect_Longjump>{0}: leaps up to {1} cells, recharges in {2} ({3}).</MPA_Effect_Longjump>
+	<MPA_Effect_LongjumpReady>ready</MPA_Effect_LongjumpReady>
+	<MPA_Effect_LongjumpLeft>{0} left</MPA_Effect_LongjumpLeft>
+
+	<!-- Armor Modulus window -->
+	<MPA_ModulusTitle>{1}: {0}'s armor</MPA_ModulusTitle>
+	<MPA_ModulusSubtitle>{0} does the work here, wearing the armor. Modifications have to be somewhere on the map {0} can reach.</MPA_ModulusSubtitle>
+	<MPA_ModulusInstalled>Installed modifications</MPA_ModulusInstalled>
+	<MPA_ModulusAvailable>Modifications on the map</MPA_ModulusAvailable>
+	<MPA_ModulusNone>None</MPA_ModulusNone>
+	<MPA_ModulusInstall>install</MPA_ModulusInstall>
+	<MPA_ModulusRemove>remove</MPA_ModulusRemove>
+	<MPA_ModulusLoadCost>load {0}</MPA_ModulusLoadCost>
+	<MPA_ModulusWearer>{0}'s stats</MPA_ModulusWearer>
+	<MPA_ModulusEffects>Special effects</MPA_ModulusEffects>
+	<MPA_ModulusPain>pain</MPA_ModulusPain>
+	<MPA_LoadBar>Load {0} / {1}</MPA_LoadBar>
 
 </LanguageData>

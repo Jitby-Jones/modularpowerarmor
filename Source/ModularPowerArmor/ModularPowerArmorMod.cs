@@ -32,6 +32,15 @@ namespace ModularPowerArmor
         public ModularPowerArmorMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<ModularPowerArmorSettings>();
+            try
+            {
+                HarmonyPatches.Apply();
+            }
+            catch (System.Exception e)
+            {
+                // Most likely the Harmony mod is missing or loads after this one.
+                Log.Error($"[Modular Power Armor] Harmony patches failed; make sure Harmony is installed and loads first. {e}");
+            }
         }
 
         public override string SettingsCategory()

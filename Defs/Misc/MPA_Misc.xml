@@ -13,6 +13,39 @@
 		<priceImpact>false</priceImpact>
 	</HediffDef>
 
+	<HediffDef>
+		<defName>MPA_DeathRefused</defName>
+		<label>death refused</label>
+		<labelNoun>a failing second heart</labelNoun>
+		<description>This person's head was destroyed, but the second heart in their power armor refused their death. It keeps them alive and half-conscious and dulls their pain, but it can't replace a head: unless the head is restored somehow, they die when the second heart gives out two days later. The first hours bring a surge of speed.</description>
+		<hediffClass>ModularPowerArmor.Hediff_DeathRefused</hediffClass>
+		<defaultLabelColor>(1.0, 0.55, 0.1)</defaultLabelColor>
+		<isBad>true</isBad>
+		<everCurableByItem>false</everCurableByItem>
+		<scenarioCanAdd>false</scenarioCanAdd>
+		<priceImpact>false</priceImpact>
+		<stages>
+			<li>
+				<label>surging</label>
+				<painFactor>0.2</painFactor>
+				<statFactors>
+					<MoveSpeed>1.5</MoveSpeed>
+				</statFactors>
+			</li>
+			<li>
+				<painFactor>0.2</painFactor>
+			</li>
+		</stages>
+	</HediffDef>
+
+	<JobDef>
+		<defName>MPA_Longjump</defName>
+		<driverClass>ModularPowerArmor.JobDriver_Longjump</driverClass>
+		<reportString>leaping.</reportString>
+		<casualInterruptible>false</casualInterruptible>
+		<playerInterruptible>true</playerInterruptible>
+	</JobDef>
+
 	<JobDef>
 		<defName>MPA_InstallArmorModule</defName>
 		<driverClass>ModularPowerArmor.JobDriver_InstallArmorModule</driverClass>

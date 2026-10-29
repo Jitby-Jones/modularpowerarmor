@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+	<!--
+		Armor Modulus bills. Each one takes a piece of modular armor plus, for the install bills, the
+		modification; nothing is used up, and the finished piece comes back out as the product.
+
+		The armor ingredient is always the first one. Which armor is modular is only known once the
+		game has loaded, so marine armor stands in here and the mod allows every modular piece that
+		fits the bill's modification at startup. Armor only counts as an ingredient when the bill
+		can do something with it (the modification fits, or there is something to strip).
+
+		To give another mod's modification a bill, copy an install recipe and name the module in
+		both the second ingredient and the ArmorModulusRecipe extension.
+	-->
+	<RecipeDef Name="MPA_ModulusRecipeBase" Abstract="True">
+		<workerClass>ModularPowerArmor.RecipeWorker_ArmorModulus</workerClass>
+		<jobString>Modifying armor.</jobString>
+		<workAmount>1500</workAmount>
+		<workSpeedStat>GeneralLaborSpeed</workSpeedStat>
+		<workSkill>Crafting</workSkill>
+		<effectWorking>Smith</effectWorking>
+		<soundWorking>Recipe_Machining</soundWorking>
+		<recipeUsers>
+			<li>MPA_ArmorModulus</li>
+		</recipeUsers>
+		<ingredients>
+			<li>
+				<filter>
+					<customSummary>modular armor piece</customSummary>
+					<thingDefs>
+						<li>Apparel_PowerArmor</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<fixedIngredientFilter>
+			<thingDefs>
+				<li>Apparel_PowerArmor</li>
+			</thingDefs>
+		</fixedIngredientFilter>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_StripArmorModules</defName>
+		<label>strip all modifications</label>
+		<description>Take every modification out of a piece of modular power armor. The armor and its modifications come back out of the Armor Modulus separately.</description>
+		<jobString>Stripping modifications from armor.</jobString>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<strip>true</strip>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_AdditionalPlating</defName>
+		<label>install additional plating</label>
+		<description>Install additional plating in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_AdditionalPlating</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_AdditionalPlating</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_UraniumPlating</defName>
+		<label>install uranium composite plating</label>
+		<description>Install uranium composite plating in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_UraniumPlating</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_UraniumPlating</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_AblativeShielding</defName>
+		<label>install ablative heat shielding</label>
+		<description>Install ablative heat shielding in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_AblativeShielding</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_AblativeShielding</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_BionicSynchronization</defName>
+		<label>install bionic synchronization</label>
+		<description>Install bionic synchronization in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_BionicSynchronization</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_BionicSynchronization</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_ThermalRegulator</defName>
+		<label>install thermal regulation unit</label>
+		<description>Install thermal regulation unit in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_ThermalRegulator</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_ThermalRegulator</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_TraumaSuite</defName>
+		<label>install neuromemetic regenerators</label>
+		<description>Install neuromemetic regenerators in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_TraumaSuite</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_TraumaSuite</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_CoProcessor</defName>
+		<label>install auxiliary subpersona</label>
+		<description>Install auxiliary subpersona in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_CoProcessor</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_CoProcessor</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_StressDampener</defName>
+		<label>install neural stress dampener</label>
+		<description>Install neural stress dampener in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_StressDampener</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_StressDampener</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_BiogelServos</defName>
+		<label>install biogel servo replacement</label>
+		<description>Install biogel servo replacement in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_BiogelServos</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_BiogelServos</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_Exoframe</defName>
+		<label>install load-bearing exoframe</label>
+		<description>Install load-bearing exoframe in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_Exoframe</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_Exoframe</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_RigidityMatrix</defName>
+		<label>install rigidity matrix</label>
+		<description>Install rigidity matrix in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_RigidityMatrix</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_RigidityMatrix</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_SecondHeart</defName>
+		<label>install second heart</label>
+		<description>Install second heart in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_SecondHeart</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_SecondHeart</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_LongjumpHydraulics</defName>
+		<label>install longjump hydraulics</label>
+		<description>Install longjump hydraulics in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_LongjumpHydraulics</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_LongjumpHydraulics</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_TargetingUplink</defName>
+		<label>install targeting uplink</label>
+		<description>Install targeting uplink in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_TargetingUplink</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_TargetingUplink</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_MultispectralVisor</defName>
+		<label>install multispectral sensor array</label>
+		<description>Install multispectral sensor array in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_MultispectralVisor</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_MultispectralVisor</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+	<RecipeDef ParentName="MPA_ModulusRecipeBase">
+		<defName>MPA_Install_SecondMind</defName>
+		<label>install second mind</label>
+		<description>Install second mind in a piece of modular power armor. The armor and the modification are brought to the Armor Modulus, and the finished piece comes back out.</description>
+		<ingredients>
+			<li>
+				<filter>
+					<thingDefs>
+						<li>MPA_Module_SecondMind</li>
+					</thingDefs>
+				</filter>
+				<count>1</count>
+			</li>
+		</ingredients>
+		<modExtensions>
+			<li Class="ModularPowerArmor.ArmorModulusRecipe">
+				<module>MPA_Module_SecondMind</module>
+			</li>
+		</modExtensions>
+	</RecipeDef>
+
+</Defs>

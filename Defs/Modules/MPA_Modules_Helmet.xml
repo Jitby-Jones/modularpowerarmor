@@ -48,7 +48,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_MultispectralVisor</defName>
 		<label>multispectral sensor array</label>
-		<description>A sensor pod for the side of a helmet: thermal, low-light and motion-tracking sensors that feed straight to the wearer's display. Improves the wearer's sight.\n\nFits helmets only.</description>
+		<description>A sensor pod for the side of a helmet: thermal, low-light and motion-tracking sensors that feed straight to the wearer's display. Improves the wearer's sight, and lets them see through blindness, darkness, fog and smoke: missing or blinded eyes, the dark, bad weather and smoke no longer hinder them.\n\nFits helmets only.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/SensorArray</texPath>
 		</graphicData>
@@ -70,14 +70,62 @@
 				<wearerCapacityModifiers>
 					<li>
 						<capacity>Sight</capacity>
-						<postFactor>1.10</postFactor>
+						<postFactor>1.15</postFactor>
 					</li>
 				</wearerCapacityModifiers>
+				<seeThroughObscurement>true</seeThroughObscurement>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA sensor array (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SensorArray_{fit}/SensorArray_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Second mind ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_SecondMind</defName>
+		<label>second mind</label>
+		<description>An AI persona core packed into a helmet housing and run as a co-pilot for the wearer's own mind. Raises the wearer's consciousness, and adds computational load to the helmet and to the body armor worn with it. If the helmet comes off, body armor that needs the extra load goes offline until the helmet is back on.\n\nFits helmets only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/SecondMind</texPath>
+		</graphicData>
+		<statBases>
+			<Mass>2</Mass>
+			<WorkToMake>20000</WorkToMake>
+			<MPA_ComputationalLoadCost>0</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<AIPersonaCore>1</AIPersonaCore>
+			<ComponentSpacer>5</ComponentSpacer>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Helmet</li>
+				</slots>
+				<wearerCapacityModifiers>
+					<li>
+						<capacity>Consciousness</capacity>
+						<postFactor>1.20</postFactor>
+					</li>
+				</wearerCapacityModifiers>
+				<computationalLoadBonus>4</computationalLoadBonus>
+				<wornComputationalLoadBonus>4</wornComputationalLoadBonus>
+				<generateOnNpcs>false</generateOnNpcs>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA second mind (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/SecondMind_{fit}/SecondMind_{fit}</texPath>
+						<layerFraction>0.4</layerFraction>
 					</li>
 				</helmetRenderNodes>
 			</li>

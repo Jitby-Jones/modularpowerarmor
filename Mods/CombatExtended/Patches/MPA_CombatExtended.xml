@@ -7,7 +7,9 @@
 	GetStatValue, so CE's partial armor multipliers (for hands, neck and so on) still apply on top.
 
 	Night vision isn't touched: CE caches apparel night vision per armor type and quality, so a
-	per-item bonus wouldn't apply reliably. The multispectral sensor array's Sight bonus works the same in CE.
+	per-item bonus wouldn't apply reliably. Instead the multispectral sensor array clears darkness,
+	weather and smoke from CE's aiming report directly (in the mod's code), and its Sight bonus and
+	blindness immunity work the same in CE.
 -->
 <Patch>
 
@@ -30,6 +32,27 @@
 		<xpath>Defs/ThingDef[defName="MPA_Module_Exoframe"]/statBases</xpath>
 		<value>
 			<Bulk>8</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_UraniumPlating"]/statBases</xpath>
+		<value>
+			<Bulk>10</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_RigidityMatrix" or defName="MPA_Module_LongjumpHydraulics"]/statBases</xpath>
+		<value>
+			<Bulk>5</Bulk>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="MPA_Module_SecondMind"]/statBases</xpath>
+		<value>
+			<Bulk>1</Bulk>
 		</value>
 	</Operation>
 
@@ -65,12 +88,23 @@
 		</value>
 	</Operation>
 
-	<!-- ===== Neural stress dampener: also makes the wearer harder to suppress ===== -->
+	<!-- ===== Uranium composite plating: +11mm RHA sharp, +25 MPa blunt (the same 45:20 blunt-to-sharp ratio as CE marine armor) ===== -->
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_UraniumPlating"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]/armorStatOffsets</xpath>
+		<value>
+			<armorStatOffsets>
+				<ArmorRating_Sharp>11</ArmorRating_Sharp>
+				<ArmorRating_Blunt>25</ArmorRating_Blunt>
+			</armorStatOffsets>
+		</value>
+	</Operation>
+
+	<!-- ===== Neural stress dampener: also halves how easily the wearer is suppressed ===== -->
 	<Operation Class="PatchOperationAdd">
 		<xpath>Defs/ThingDef[defName="MPA_Module_StressDampener"]/comps/li[@Class="ModularPowerArmor.CompProperties_ArmorModule"]</xpath>
 		<value>
 			<wearerStatFactors>
-				<Suppressability>0.85</Suppressability>
+				<Suppressability>0.5</Suppressability>
 			</wearerStatFactors>
 		</value>
 	</Operation>
@@ -100,14 +134,21 @@
 	<Operation Class="PatchOperationReplace">
 		<xpath>Defs/ThingDef[defName="MPA_Module_AdditionalPlating"]/description</xpath>
 		<value>
-			<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds 4mm RHA of sharp protection and 9 MPa of blunt protection to the piece it is mounted on.\n\nFits body armor and helmets.</description>
+			<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds 4mm RHA of sharp protection and 9 MPa of blunt protection to the piece it is mounted on.\n\nCan't share a piece with uranium composite plating.\n\nFits body armor and helmets.</description>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="MPA_Module_UraniumPlating"]/description</xpath>
+		<value>
+			<description>Thick depleted-uranium plates bonded to a hyperweave backing. Far more protection than ordinary plating, and far more weight: adds 11mm RHA of sharp protection and 25 MPa of blunt protection to the piece it is mounted on, but slows the wearer down. Better quality gives the same protection for less weight.\n\nCan't share a piece with additional plating.\n\nFits body armor and helmets.</description>
 		</value>
 	</Operation>
 
 	<Operation Class="PatchOperationReplace">
 		<xpath>Defs/ThingDef[defName="MPA_Module_StressDampener"]/description</xpath>
 		<value>
-			<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold and makes them harder to suppress.\n\nFits body armor and helmets.</description>
+			<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold by 8% and halves how easily they are suppressed.\n\nFits body armor and helmets.</description>
 		</value>
 	</Operation>
 

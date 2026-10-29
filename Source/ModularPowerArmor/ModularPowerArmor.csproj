@@ -50,6 +50,8 @@
 
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref" Version="$(RimWorldRefVersion)" ExcludeAssets="runtime" />
+    <!-- Compile-time only: the Harmony mod (brrainz.harmony) provides 0Harmony.dll in game. -->
+    <PackageReference Include="Lib.Harmony.Ref" Version="2.3.3" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">

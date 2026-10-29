@@ -33,11 +33,11 @@
 				<wearerCapacityModifiers>
 					<li>
 						<capacity>Manipulation</capacity>
-						<postFactor>1.15</postFactor>
+						<postFactor>1.20</postFactor>
 					</li>
 				</wearerCapacityModifiers>
 				<wearerStatFactors>
-					<MoveSpeed>1.05</MoveSpeed>
+					<MoveSpeed>1.10</MoveSpeed>
 				</wearerStatFactors>
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
@@ -90,6 +90,138 @@
 						<texPath>ModularPowerArmor/Worn/Body/Exoframe_{fit}/Exoframe_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.6</layerFraction>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Rigidity matrix ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_RigidityMatrix</defName>
+		<label>rigidity matrix</label>
+		<description>A lattice of field-hardened struts that locks the armor rigid the instant it is struck, spreading the impact across the whole frame. The wearer can't be staggered by hits, and takes 25% less damage.\n\nFits body armor only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/RigidityMatrix</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>150</MaxHitPoints>
+			<Mass>6</Mass>
+			<WorkToMake>18000</WorkToMake>
+			<MPA_ComputationalLoadCost>4</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Plasteel>60</Plasteel>
+			<ComponentSpacer>3</ComponentSpacer>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+				</slots>
+				<preventStagger>true</preventStagger>
+				<wearerStatFactors>
+					<IncomingDamageFactor>0.75</IncomingDamageFactor>
+				</wearerStatFactors>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA rigidity matrix (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/RigidityMatrix_{fit}/RigidityMatrix_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.35</layerFraction>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Second heart ===================== -->
+	<!-- No quality. Biotech adds 3 high subcores to the recipe (Patches/MPA_Subcores.xml); without it, 6 advanced components stand in. -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_SecondHeart</defName>
+		<label>second heart</label>
+		<description>A human heart kept beating in a cradle of three high subcores and wired into the armor's life support. If the wearer's head is destroyed, the second heart refuses their death: it keeps them alive at 50% consciousness, tends all of their wounds, dulls their pain and gives them a surge of speed. It can't replace a head, though. Unless the head is restored somehow, they die two days later, and bleeding out or any other fatal wound still kills them.\n\nWorks once. After that it is spent, and has to be removed and replaced with a new one.\n\nHas no quality.\n\nFits body armor only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/SecondHeart</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>80</MaxHitPoints>
+			<Mass>2</Mass>
+			<WorkToMake>24000</WorkToMake>
+			<MPA_ComputationalLoadCost>4</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Heart>1</Heart>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<!-- Replaces the base comps to leave out CompQuality. -->
+		<comps Inherit="False">
+			<li Class="CompProperties_Forbiddable" />
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+				</slots>
+				<refuseDeath>true</refuseDeath>
+				<generateOnNpcs>false</generateOnNpcs>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA second heart (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/SecondHeart_{fit}/SecondHeart_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.55</layerFraction>
+					</li>
+				</bodyRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Longjump hydraulics ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_LongjumpHydraulics</defName>
+		<label>longjump hydraulics</label>
+		<description>High-pressure hydraulic rams in the armor's legs. The wearer can leap up to 20 cells, over walls and through roofs, though not through mountains, onto any spot that isn't occupied. Recharges in 3 hours. Better quality leaps farther and recharges faster.\n\nFits body armor only.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/LongjumpHydraulics</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>150</MaxHitPoints>
+			<Mass>6</Mass>
+			<WorkToMake>18000</WorkToMake>
+			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Plasteel>60</Plasteel>
+			<ComponentSpacer>3</ComponentSpacer>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+				</slots>
+				<longjump>
+					<range>20</range>
+					<cooldownTicks>7500</cooldownTicks>
+				</longjump>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA longjump hydraulics (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/LongjumpHydraulics_{fit}/LongjumpHydraulics_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.65</layerFraction>
 					</li>
 				</bodyRenderNodes>
 			</li>

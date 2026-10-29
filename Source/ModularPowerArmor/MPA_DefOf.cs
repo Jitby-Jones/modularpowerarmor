@@ -12,9 +12,11 @@ namespace ModularPowerArmor
         public static StatCategoryDef MPA_ArmorModification;
 
         public static HediffDef MPA_ArmorModifications;
+        public static HediffDef MPA_DeathRefused;
 
         public static JobDef MPA_InstallArmorModule;
         public static JobDef MPA_RemoveArmorModule;
+        public static JobDef MPA_Longjump;
 
         static MPA_DefOf()
         {

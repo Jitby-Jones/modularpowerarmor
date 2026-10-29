@@ -7,17 +7,19 @@ namespace ModularPowerArmor
 {
     /// <summary>
     /// A: the armor (on the map, or worn by the actor), B: the installed modification,
-    /// C: the actor when the armor is worn (where the progress bar is drawn).
+    /// C: the Armor Modulus the actor works at when the armor is worn.
     /// </summary>
     public class JobDriver_RemoveArmorModule : JobDriver
     {
         private const TargetIndex ArmorInd = TargetIndex.A;
         private const TargetIndex ModuleInd = TargetIndex.B;
-        private const TargetIndex WearerInd = TargetIndex.C;
+        private const TargetIndex StationInd = TargetIndex.C;
 
         private Thing Armor => job.GetTarget(ArmorInd).Thing;
 
         private Thing Module => job.GetTarget(ModuleInd).Thing;
+
+        private Building_ArmorModulus Station => job.GetTarget(StationInd).Thing as Building_ArmorModulus;
 
         private CompModularArmor ArmorComp => Armor?.TryGetComp<CompModularArmor>();
 
@@ -25,7 +27,15 @@ namespace ModularPowerArmor
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
-            return Armor == null || !Armor.Spawned || pawn.Reserve(Armor, job, 1, -1, null, errorOnFailed);
+            if (Armor != null && Armor.Spawned && !pawn.Reserve(Armor, job, 1, -1, null, errorOnFailed))
+            {
+                return false;
+            }
+            if (Station != null && !pawn.Reserve(Station, job, 1, -1, null, errorOnFailed))
+            {
+                return false;
+            }
+            return true;
         }
 
         protected override IEnumerable<Toil> MakeNewToils()
@@ -41,9 +51,26 @@ namespace ModularPowerArmor
                 this.FailOnForbidden(ArmorInd);
                 yield return Toils_Goto.GotoThing(ArmorInd, PathEndMode.Touch);
             }
+            else
+            {
+                // Armor someone is wearing can only be modified at an Armor Modulus.
+                this.FailOn(() => Station == null || Station.Destroyed || !Station.CurrentlyUsableForBills());
+                this.FailOnForbidden(StationInd);
+                yield return Toils_Goto.GotoThing(StationInd, PathEndMode.InteractionCell);
+            }
 
             Toil work = Toils_General.Wait(ArmorModuleUtility.WorkTicks(pawn, Module));
-            work.WithProgressBarToilDelay(armorOnMap ? ArmorInd : WearerInd);
+            work.WithProgressBarToilDelay(armorOnMap ? ArmorInd : StationInd);
+            if (!armorOnMap)
+            {
+                System.Action stop = work.initAction;
+                work.initAction = () =>
+                {
+                    stop?.Invoke();
+                    pawn.rotationTracker.FaceTarget(Station);
+                };
+                work.WithEffect(EffecterDefOf.ConstructMetal, StationInd);
+            }
             yield return work;
 
             Toil finish = ToilMaker.MakeToil("MPA_FinishRemove");

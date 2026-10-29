@@ -6,7 +6,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_AdditionalPlating</defName>
 		<label>additional plating</label>
-		<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds roughly 4mm RHA of protection to the piece it is mounted on.\n\nFits body armor and helmets.</description>
+		<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds roughly 4mm RHA of protection to the piece it is mounted on.\n\nCan't share a piece with uranium composite plating.\n\nFits body armor and helmets.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/AdditionalPlating</texPath>
 		</graphicData>
@@ -26,6 +26,9 @@
 					<li>Body</li>
 					<li>Helmet</li>
 				</slots>
+				<exclusionTags>
+					<li>Plating</li>
+				</exclusionTags>
 				<!-- 4mm RHA is about 20% sharp armor on marine armor (106% vanilla / 20mm RHA in Combat Extended). -->
 				<armorStatOffsets>
 					<ArmorRating_Sharp>0.20</ArmorRating_Sharp>
@@ -184,13 +187,13 @@
 		</comps>
 	</ThingDef>
 
-	<!-- ===================== Trauma response suite ===================== -->
+	<!-- ===================== Neuromemetic regenerators (defName kept from the trauma response suite for saves) ===================== -->
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_TraumaSuite</defName>
-		<label>trauma response suite</label>
-		<description>Automatic tourniquets, coagulant injectors and a localized nerve dampener that kick in the moment the wearer is hurt. Reduces bleeding and the pain of injuries.\n\nFits body armor and helmets.</description>
+		<label>neuromemetic regenerators</label>
+		<description>Two canisters of neuromemetic regenerative gel, fed into the wearer through ports in the armor's lining. On the body parts the armor piece covers, and the organs inside them, the gel halves pain, slowly heals injuries (old scars included), and tends a random bleeding wound every 15 seconds.\n\nFits body armor and helmets.</description>
 		<graphicData>
-			<texPath>ModularPowerArmor/Items/TraumaSuite</texPath>
+			<texPath>ModularPowerArmor/Items/NeuromemeticRegenerators</texPath>
 		</graphicData>
 		<statBases>
 			<Mass>2</Mass>
@@ -208,32 +211,48 @@
 					<li>Body</li>
 					<li>Helmet</li>
 				</slots>
-				<wearerBleedFactor>0.75</wearerBleedFactor>
-				<wearerPainFactor>0.85</wearerPainFactor>
+				<!-- Only on the body parts the host piece covers. -->
+				<coveredPainFactor>0.5</coveredPainFactor>
+				<coveredHealPerDay>6</coveredHealPerDay>
+				<coveredTendIntervalTicks>900</coveredTendIntervalTicks>
+				<coveredTendQuality>0.8</coveredTendQuality>
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA trauma suite (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/TraumaSuite_{fit}/TraumaSuite_{fit}</texPath>
+						<debugLabel>MPA regenerators (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/Regenerators_{fit}/Regenerators_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.5</layerFraction>
 						<visibleFacing>
-							<li>South</li>
+							<li>North</li>
 							<li>East</li>
 							<li>West</li>
 						</visibleFacing>
 					</li>
 				</bodyRenderNodes>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA regenerators (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/Regenerators_{fit}/Regenerators_{fit}</texPath>
+						<layerFraction>0.45</layerFraction>
+						<visibleFacing>
+							<li>North</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+					</li>
+				</helmetRenderNodes>
 			</li>
 		</comps>
 	</ThingDef>
 
-	<!-- ===================== Auxiliary co-processor ===================== -->
+	<!-- ===================== Auxiliary subpersona (defName kept from the co-processor for saves) ===================== -->
+	<!-- Biotech adds 3 basic subcores to the recipe (Patches/MPA_Subcores.xml); without it, 3 advanced components stand in. -->
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_CoProcessor</defName>
-		<label>auxiliary co-processor</label>
-		<description>A self-contained processing core that takes over housekeeping tasks from the armor's main computer. Raises the computational load of the piece it is installed in, and uses none itself.\n\nCan't be removed if the remaining modifications would no longer fit.\n\nFits body armor and helmets.</description>
+		<label>auxiliary subpersona</label>
+		<description>Three low subcores wired together into a subordinate persona that takes over housekeeping from the armor's main computer. Raises the computational load of the piece it is installed in, and uses none itself.\n\nCan't be removed if the remaining modifications would no longer fit.\n\nFits body armor and helmets.</description>
 		<graphicData>
-			<texPath>ModularPowerArmor/Items/CoProcessor</texPath>
+			<texPath>ModularPowerArmor/Items/AuxiliarySubpersona</texPath>
 		</graphicData>
 		<statBases>
 			<Mass>2</Mass>
@@ -241,7 +260,6 @@
 			<MPA_ComputationalLoadCost>0</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<ComponentSpacer>3</ComponentSpacer>
 			<Gold>10</Gold>
 			<Plasteel>10</Plasteel>
 		</costList>
@@ -259,12 +277,12 @@
 				<computationalLoadBonus>3</computationalLoadBonus>
 				<bodyRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA co-processor (body)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Body/CoProcessor_{fit}/CoProcessor_{fit}</texPath>
+						<debugLabel>MPA subpersona (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/Subpersona_{fit}/Subpersona_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.7</layerFraction>
 						<visibleFacing>
-							<li>North</li>
+							<li>South</li>
 							<li>East</li>
 							<li>West</li>
 						</visibleFacing>
@@ -272,14 +290,9 @@
 				</bodyRenderNodes>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
-						<debugLabel>MPA co-processor (helmet)</debugLabel>
-						<texPath>ModularPowerArmor/Worn/Head/CoProcessor_{fit}/CoProcessor_{fit}</texPath>
+						<debugLabel>MPA subpersona (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/Subpersona_{fit}/Subpersona_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
-						<visibleFacing>
-							<li>North</li>
-							<li>East</li>
-							<li>West</li>
-						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -290,7 +303,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_StressDampener</defName>
 		<label>neural stress dampener</label>
-		<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold.\n\nFits body armor and helmets.</description>
+		<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold by 8%.\n\nFits body armor and helmets.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/StressDampener</texPath>
 		</graphicData>
@@ -311,13 +324,78 @@
 					<li>Helmet</li>
 				</slots>
 				<wearerStatOffsets>
-					<MentalBreakThreshold>-0.04</MentalBreakThreshold>
+					<MentalBreakThreshold>-0.08</MentalBreakThreshold>
 				</wearerStatOffsets>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA stress dampener (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/StressDampener_{fit}/StressDampener_{fit}</texPath>
 						<layerFraction>0.3</layerFraction>
+					</li>
+				</helmetRenderNodes>
+			</li>
+		</comps>
+	</ThingDef>
+
+	<!-- ===================== Uranium composite plating ===================== -->
+	<ThingDef ParentName="MPA_ModuleBase">
+		<defName>MPA_Module_UraniumPlating</defName>
+		<label>uranium composite plating</label>
+		<description>Thick depleted-uranium plates bonded to a hyperweave backing. Far more protection than ordinary plating, and far more weight: adds roughly 11mm RHA of protection to the piece it is mounted on, but slows the wearer down. Better quality gives the same protection for less weight.\n\nCan't share a piece with additional plating.\n\nFits body armor and helmets.</description>
+		<graphicData>
+			<texPath>ModularPowerArmor/Items/UraniumPlating</texPath>
+		</graphicData>
+		<statBases>
+			<MaxHitPoints>200</MaxHitPoints>
+			<Mass>12</Mass>
+			<WorkToMake>20000</WorkToMake>
+			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
+		</statBases>
+		<costList>
+			<Hyperweave>40</Hyperweave>
+			<Uranium>80</Uranium>
+		</costList>
+		<recipeMaker>
+			<skillRequirements>
+				<Crafting>8</Crafting>
+			</skillRequirements>
+		</recipeMaker>
+		<comps>
+			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
+				<slots>
+					<li>Body</li>
+					<li>Helmet</li>
+				</slots>
+				<exclusionTags>
+					<li>Plating</li>
+				</exclusionTags>
+				<!-- Same scale as additional plating: 11mm RHA and 25 MPa (CE) are 55% sharp and 25% blunt here. -->
+				<armorStatOffsets>
+					<ArmorRating_Sharp>0.55</ArmorRating_Sharp>
+					<ArmorRating_Blunt>0.25</ArmorRating_Blunt>
+				</armorStatOffsets>
+				<!-- A drawback: better quality lessens it. -->
+				<wearerStatPenaltyFactors>
+					<MoveSpeed>0.8</MoveSpeed>
+				</wearerStatPenaltyFactors>
+				<bodyRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA uranium plating (body)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/UraniumPlating_{fit}/UraniumPlating_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.2</layerFraction>
+					</li>
+				</bodyRenderNodes>
+				<helmetRenderNodes>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA uranium plating (helmet)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Head/UraniumPlating_{fit}/UraniumPlating_{fit}</texPath>
+						<layerFraction>0.2</layerFraction>
+						<visibleFacing>
+							<li>South</li>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
 			</li>
