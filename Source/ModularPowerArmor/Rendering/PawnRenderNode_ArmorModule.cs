@@ -96,12 +96,13 @@ namespace ModularPowerArmor
             {
                 return null;
             }
-            // Module art is white and unmasked, like vanilla power armor, so Cutout multiplies it by
-            // the armor's color and it is dyed together with the armor.
+            // Module art comes with a CutoutComplex mask: the parts painted like the armor's shell
+            // (red in the mask) take the armor's color and are dyed together with the armor, while
+            // frames, optics and lamps keep their own colors.
             bool tinted = (moduleProps == null || moduleProps.useArmorColor) && apparel != null;
             Color color = tinted ? apparel.DrawColor : Color.white;
             Color colorTwo = tinted ? apparel.DrawColorTwo : Color.white;
-            Shader shader = Props.shaderTypeDef?.Shader ?? ShaderDatabase.Cutout;
+            Shader shader = Props.shaderTypeDef?.Shader ?? ShaderDatabase.CutoutComplex;
             return GraphicDatabase.Get<Graphic_Multi>(path, shader, Vector2.one, color, colorTwo);
         }
 

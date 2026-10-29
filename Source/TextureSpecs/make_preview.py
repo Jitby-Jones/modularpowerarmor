@@ -14,39 +14,60 @@ import rwtex.archetypes.armor3d  # noqa: F401  (registers the marine designs)
 
 MOD = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 TEX = os.path.join(MOD, 'Textures')
-BODY = ['Plating', 'BiogelServos', 'Regenerators', 'Exoframe', 'Subpersona', 'ThermalFins', 'RigidityMatrix', 'SecondHeart',
-        'LongjumpHydraulics']
-HEAD = ['Plating', 'TargetingUplink', 'SensorArray', 'Subpersona', 'NeuralLink', 'StressDampener', 'Regenerators', 'SecondMind']
+# in the order the render nodes draw them (layerFraction, see modules.py)
+BODY = ['Exoframe', 'RigidityMatrix', 'LongjumpHydraulics', 'BiogelServos', 'ThermalFins', 'Plating', 'Regenerators', 'SecondHeart',
+        'Subpersona']
+HEAD = ['Plating', 'NeuralLink', 'StressDampener', 'Subpersona', 'SecondMind', 'Regenerators', 'SensorArray', 'TargetingUplink']
 ICONS = ['AdditionalPlating', 'UraniumPlating', 'BiogelServos', 'NeuromemeticRegenerators', 'Exoframe', 'AuxiliarySubpersona',
          'ThermalRegulator', 'RigidityMatrix', 'SecondHeart', 'LongjumpHydraulics', 'TargetingUplink', 'SensorArray', 'SecondMind',
          'BionicSynchronization', 'StressDampener', 'AblativeShielding']
 
 
 def load(p):
-    return Image.open(p).convert('RGBA') if os.path.exists(p) else Image.new('RGBA', (128, 128))
+    return Image.open(p).convert('RGBA') if os.path.exists(p) else Image.new('RGBA', (SIZE, SIZE))
 
 
-def tint(im, col):
+def tint(im, col, mask=None):
+    """Multiply by the armor's colour: everything (Cutout) or the mask's red parts (CutoutComplex)."""
     a = np.array(im).astype(float)
-    a[:, :, :3] *= np.array(col, float)[None, None, :]
+    c = np.array(col, float)[None, None, :]
+    if mask is None:
+        a[:, :, :3] *= c
+    else:
+        m = np.asarray(mask.convert('RGB').resize(im.size, Image.BILINEAR)).astype(float)[:, :, :1] / 255.0
+        a[:, :, :3] *= (1 - m) + m * c
     return Image.fromarray(a.clip(0, 255).astype(np.uint8))
 
 
-arm = armor('spacer', design='marine', name='Marine', mask_roles=(), ground=False, body_types=['Male'])
-hel = helmet('spacer', design='marine', name='MarineHelmet', mask_roles=(), ground=False)
+def module_layer(path, col):
+    """A module texture dyed through its mask, or None where the module doesn't show."""
+    if not os.path.exists(path + '.png'):
+        return None
+    img = load(path + '.png')
+    if img.size != (SIZE, SIZE):
+        return None
+    return tint(img, col, Image.open(path + 'm.png'))
+
+
+SIZE = 256
+arm = armor('spacer', design='marine', name='Marine', size=SIZE, mask_roles=(), ground=False, body_types=['Male'])
+hel = helmet('spacer', design='marine', name='MarineHelmet', size=SIZE, mask_roles=(), ground=False)
 
 
 def pawn(d, col):
-    body = PV.body_scene('Male', d).render()
-    ap = arm.scenes[f'Male_{d}'].render()
+    body = PV.body_scene('Male', d, SIZE).render()
+    ap = tint(arm.scenes[f'Male_{d}'].render(), col)
     for m in BODY:
-        ap.alpha_composite(load(f'{TEX}/ModularPowerArmor/Worn/Body/{m}_Marine/{m}_Marine_Male_{d}.png'))
-    hm = hel.scenes[d].render()
+        lay = module_layer(f'{TEX}/ModularPowerArmor/Worn/Body/{m}_Marine/{m}_Marine_Male_{d}', col)
+        if lay is not None:
+            ap.alpha_composite(lay)
+    hm = tint(hel.scenes[d].render(), col)
     for m in HEAD:
-        hm.alpha_composite(load(f'{TEX}/ModularPowerArmor/Worn/Head/{m}_Marine/{m}_Marine_{d}.png'))
-    ap, hm = tint(ap, col), tint(hm, col)
-    head = PV.head_scene(d).render()
-    return PV.worn(body, ap, head, hm, d)
+        lay = module_layer(f'{TEX}/ModularPowerArmor/Worn/Head/{m}_Marine/{m}_Marine_{d}', col)
+        if lay is not None:
+            hm.alpha_composite(lay)
+    head = PV.head_scene(d, SIZE).render()
+    return PV.worn(body, ap, head, hm, d, SIZE)
 
 
 W, H = 1280, 720
@@ -66,13 +87,13 @@ cols = [(1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (1.0, 1.0, 1.0), (0.78, 0.36, 0.32)]
 dirs = ['south', 'east', 'north', 'south']
 for i, (dr, col) in enumerate(zip(dirs, cols)):
     p = pawn(dr, col)
-    p = p.crop((14, 14, 114, 150)).resize((180, 245), Image.NEAREST)
+    p = p.crop((24, 16, 232, 300)).resize((180, 245), Image.LANCZOS)
     img.paste(p, (40 + i * 196, 172), p)
 # the Armor Modulus
 bench = load(f'{TEX}/ModularPowerArmor/Things/ArmorModulus/ArmorModulus_north.png')
 img.paste(bench, (858, 166), bench)
 d.text((862, 428), 'Armor Modulus', font=ImageFont.truetype(font, 20), fill=(205, 212, 218))
-d.text((68, 434), 'Every module is drawn to fit 14 armors and 10 helmets, dyed with the armor.',
+d.text((68, 434), 'Drawn to fit 14 armors and 10 helmets, its plates dyed with the armor.',
        font=ImageFont.truetype(font2, 20), fill=(175, 182, 190))
 # icons
 for i, n in enumerate(ICONS):

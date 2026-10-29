@@ -41,7 +41,7 @@
 						<debugLabel>MPA additional plating (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/Plating_{fit}/Plating_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.2</layerFraction>
+						<layerFraction>0.44</layerFraction>
 					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>
@@ -96,11 +96,11 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA neural link (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/NeuralLink_{fit}/NeuralLink_{fit}</texPath>
-						<layerFraction>0.6</layerFraction>
+						<layerFraction>0.3</layerFraction>
 						<visibleFacing>
-							<li>North</li>
 							<li>East</li>
 							<li>West</li>
+							<li>North</li>
 						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
@@ -147,11 +147,11 @@
 						<debugLabel>MPA thermal regulator (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/ThermalFins_{fit}/ThermalFins_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.4</layerFraction>
+						<layerFraction>0.36</layerFraction>
 						<visibleFacing>
-							<li>North</li>
 							<li>East</li>
 							<li>West</li>
+							<li>North</li>
 						</visibleFacing>
 					</li>
 				</bodyRenderNodes>
@@ -232,11 +232,11 @@
 						<debugLabel>MPA regenerators (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/Regenerators_{fit}/Regenerators_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.5</layerFraction>
+						<layerFraction>0.6</layerFraction>
 						<visibleFacing>
-							<li>North</li>
 							<li>East</li>
 							<li>West</li>
+							<li>North</li>
 						</visibleFacing>
 					</li>
 				</bodyRenderNodes>
@@ -244,11 +244,11 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA regenerators (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/Regenerators_{fit}/Regenerators_{fit}</texPath>
-						<layerFraction>0.45</layerFraction>
+						<layerFraction>0.6</layerFraction>
 						<visibleFacing>
-							<li>North</li>
 							<li>East</li>
 							<li>West</li>
+							<li>North</li>
 						</visibleFacing>
 					</li>
 				</helmetRenderNodes>
@@ -293,7 +293,7 @@
 						<debugLabel>MPA subpersona (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/Subpersona_{fit}/Subpersona_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.7</layerFraction>
+						<layerFraction>0.8</layerFraction>
 						<visibleFacing>
 							<li>South</li>
 							<li>East</li>
@@ -348,7 +348,7 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA stress dampener (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/StressDampener_{fit}/StressDampener_{fit}</texPath>
-						<layerFraction>0.3</layerFraction>
+						<layerFraction>0.4</layerFraction>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -405,7 +405,7 @@
 						<debugLabel>MPA uranium plating (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/UraniumPlating_{fit}/UraniumPlating_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.2</layerFraction>
+						<layerFraction>0.44</layerFraction>
 					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>

@@ -38,7 +38,7 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA targeting uplink (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/TargetingUplink_{fit}/TargetingUplink_{fit}</texPath>
-						<layerFraction>0.7</layerFraction>
+						<layerFraction>0.8</layerFraction>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -80,7 +80,7 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA sensor array (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SensorArray_{fit}/SensorArray_{fit}</texPath>
-						<layerFraction>0.5</layerFraction>
+						<layerFraction>0.7</layerFraction>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -130,7 +130,7 @@
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
 						<debugLabel>MPA second mind (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SecondMind_{fit}/SecondMind_{fit}</texPath>
-						<layerFraction>0.4</layerFraction>
+						<layerFraction>0.55</layerFraction>
 						<visibleFacing>
 							<li>South</li>
 							<li>North</li>

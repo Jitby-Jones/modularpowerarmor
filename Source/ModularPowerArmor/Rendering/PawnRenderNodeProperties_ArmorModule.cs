@@ -17,8 +17,9 @@ namespace ModularPowerArmor
         public bool bodyTypeTextures;
 
         /// <summary>
-        /// Draw the overlay in the armor's color (Cutout shader by default), so white art is dyed
-        /// together with the armor. Turn off for art that keeps its own colors.
+        /// Dye the overlay with the armor's color: with the default CutoutComplex shader, the parts
+        /// the texture's mask marks red take the armor's color (the green channel takes its second
+        /// color). Turn off for art that keeps its own colors.
         /// </summary>
         public bool useArmorColor = true;
 

@@ -45,7 +45,7 @@
 						<debugLabel>MPA biogel servos (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/BiogelServos_{fit}/BiogelServos_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.3</layerFraction>
+						<layerFraction>0.28</layerFraction>
 					</li>
 				</bodyRenderNodes>
 			</li>
@@ -91,7 +91,7 @@
 						<debugLabel>MPA exoframe (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/Exoframe_{fit}/Exoframe_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.6</layerFraction>
+						<layerFraction>0.08</layerFraction>
 					</li>
 				</bodyRenderNodes>
 			</li>
@@ -136,7 +136,7 @@
 						<debugLabel>MPA rigidity matrix (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/RigidityMatrix_{fit}/RigidityMatrix_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.35</layerFraction>
+						<layerFraction>0.14</layerFraction>
 						<visibleFacing>
 							<li>South</li>
 							<li>East</li>
@@ -189,8 +189,10 @@
 						<debugLabel>MPA second heart (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/SecondHeart_{fit}/SecondHeart_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.55</layerFraction>
+						<layerFraction>0.7</layerFraction>
 						<visibleFacing>
+							<li>East</li>
+							<li>West</li>
 							<li>North</li>
 						</visibleFacing>
 					</li>
@@ -237,11 +239,11 @@
 						<debugLabel>MPA longjump hydraulics (body)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Body/LongjumpHydraulics_{fit}/LongjumpHydraulics_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
-						<layerFraction>0.65</layerFraction>
+						<layerFraction>0.2</layerFraction>
 						<visibleFacing>
-							<li>North</li>
 							<li>East</li>
 							<li>West</li>
+							<li>North</li>
 						</visibleFacing>
 					</li>
 				</bodyRenderNodes>

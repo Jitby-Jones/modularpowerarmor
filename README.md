@@ -165,43 +165,44 @@ Wearer effects are applied through an **armor modifications** health condition, 
 
 Modifications with a visual are drawn on the pawn through RimWorld's render tree, so they also show in portraits and the colonist bar:
 
-| Piece | Modification | Where it goes |
+| Piece | Modification | What it looks like |
 |---|---|---|
-| Body | Additional plating | A raised plate over the chest and plates over the shoulders, where the armor's own features leave room |
-| Body | Uranium composite plating | The same places, heavier: a three-block chest slab and two-layer shoulder plates |
-| Body | Biogel servo replacement | Servo housings over both elbows |
-| Body | Neuromemetic regenerators | Two canisters poking out of the upper back, angled down |
-| Body | Second heart | A pump between the regenerator canisters on the back |
-| Body | Auxiliary subpersona | A housing with subcore cartridges over the belt buckle |
-| Body | Load-bearing exoframe | Actuators on the hips and struts down the thighs |
-| Body | Rigidity matrix | Lattice braces on the front of the thighs (beside the belt on fat bodies) |
-| Body | Thermal regulation unit | A radiator on the lower back |
-| Body | Longjump hydraulics | Pistons on the backs of the calves |
-| Helmet | Additional plating | A brow plate |
-| Helmet | Uranium composite plating | A heavier three-block brow plate |
-| Helmet | Targeting uplink | A rangefinder box and antenna on one side |
-| Helmet | Multispectral sensor array | A sensor pod directly under the targeting uplink |
-| Helmet | Second mind | A persona core housing on the other side |
-| Helmet | Auxiliary subpersona | A box under the second mind |
-| Helmet | Neuromemetic regenerators | Two canisters on the back of the helmet, angled up |
-| Helmet | Bionic synchronization | A neural link port at the nape |
-| Helmet | Neural stress dampener | A stimulator node on the crown |
+| Body | Additional plating | A thick appliqué slab with a raised keel clamped over the chest, and layered pauldrons over the shoulders where the armor's own features leave room |
+| Body | Uranium composite plating | The same places, heavier: dark uranium-ceramic slabs in dyed trim, a trefoil on the chest |
+| Body | Biogel servo replacement | Servo motors on the outside of both elbows driving biogel muscle sleeves along the arms |
+| Body | Neuromemetic regenerators | Two long canisters out of the upper back, angled down and outwards in a clamped cradle |
+| Body | Second heart | An armored life-support drum on the upper back, the heart behind a porthole, arterial hoses into the armor |
+| Body | Auxiliary subpersona | A processor case across the belt with three subcore cartridges and data cables up into the chest |
+| Body | Load-bearing exoframe | A whole-body exoskeleton: shoulder and hip actuators, struts and rams down the outside of the arms and legs, elbow and knee joints, and on the back a segmented spine, a yoke to the shoulders and a hip frame |
+| Body | Rigidity matrix | Lattice guard plates over the thighs, locked together across the hips, with dampers from the belt |
+| Body | Thermal regulation unit | A finned radiator with two fans on the lower back, coolant lines into the armor |
+| Body | Longjump hydraulics | A heavy ram down the back of each leg, fed by an accumulator on the lower back |
+| Helmet | Additional plating | A brow guard: a thick visor hood across the upper face |
+| Helmet | Uranium composite plating | A heavier, dark brow guard in dyed trim |
+| Helmet | Targeting uplink | A laser rangefinder with a whip antenna high on one side |
+| Helmet | Multispectral sensor array | A pod under the uplink with three stacked optics: thermal, visible and ultraviolet |
+| Helmet | Second mind | A persona core housing at the other temple |
+| Helmet | Auxiliary subpersona | A subcore housing under the second mind |
+| Helmet | Neuromemetic regenerators | Two canisters rising from a cradle on the back of the helmet |
+| Helmet | Bionic synchronization | A spinal interface socket at the nape with three plugged-in cables |
+| Helmet | Neural stress dampener | A low emitter dome with three stub antennas on the crown |
 
-- **The art is drawn for each armor.** Every armor has its own set (14 body armors x 5 body types x 3 facings, 10 helmets x 3 facings), placed using measurements of that armor's own worn textures. Modules move clear of launchers, wings, jump packs, gold trim, horns and antennas, and they hug slim armor like the trooper's as closely as the bulky siegebreaker.
-- **Any combination fits.** Each modification has its own spot on each armor, and the spots never overlap, so all of them can be installed at once without clipping. Where an armor has no room for one in a view (a narrow back, thin legs, a backpack), it is left out of that view rather than clipping: the second heart only shows on wider backs, and the rigidity matrix only where the exoframe struts leave room.
+- **The art is drawn for each armor.** Every armor has its own set (14 body armors x 5 body types x 3 facings, 10 helmets x 3 facings) at 256x256, double vanilla's resolution, placed using measurements of that armor's own worn textures. Modules move clear of launchers, wings, jump packs, gold trim, horns and antennas, and they hug slim armor like the trooper's as closely as the bulky siegebreaker.
+- **It is drawn as one 3D object.** Every module is placed on a 3D model of the pawn, so it is in the same place in every view: the exoframe's struts run down the outside of the limbs and show edge-on from the front, its joints are round only from the side, where their axles face you, and a pair of canisters seen from the side shows as one.
+- **Modules layer, they don't clip.** Each module has its place and a fixed drawing order, so where two meet (a servo over the exoframe's arm strut, the subpersona over the rigidity matrix) the upper one covers the lower one cleanly, and any combination can be installed at once. Where an armor's own features take a module's place in one view, the module is left out of that view, or, for the exoframe, its shoulder goes under the wing or pauldron.
 - **Only while the armor shows.** A modification is drawn only while the armor piece it is installed in is drawn, so hidden headgear and mods that hide apparel hide its modifications too.
-- **It is dyed with the armor.** The art is white and unmasked, like vanilla power armor, and is drawn in the armor's own color.
+- **Its plates are dyed with the armor.** The art comes with CutoutComplex masks: the parts built like the armor's shell take the armor's color, while frames, rams, hoses, optics and lamps keep their own gunmetal, rubber and glass.
 
 Each visual is drawn just above the armor piece it's installed in and below the next apparel layer. You can turn visuals off in the mod settings.
 
 The art is generated with [rwtexturegen](https://github.com/Jitby-Jones/rwtexturegen) from the specs in [`Source/TextureSpecs`](Source/TextureSpecs):
 
-- `modules.py` draws the worn art.
+- `modules.py` draws the worn art, using the drawing kit in `mpa_kit.py` and the armor measurements in `mpa_fit.py`; `build_art.py` renders it into `Textures`.
 - `module_icons.py` draws the item and UI icons.
 - `armor_modulus.py` draws the Armor Modulus.
 - `armor_profiles.json` holds the measured silhouettes. These are numbers only: no art from RimWorld or other mods is included. `measure_profiles.py` regenerates the file from your own copies of the armor textures.
 
-For your own art, set a render node's `texPath` with a `{fit}` token. It is replaced by the armor's fit, and Marine is used if that fit has no art. Body nodes use `bodyTypeTextures` (`_Male`, `_Female`, `_Thin`, `_Fat`, `_Hulk`), and all files are 128x128 with `_north`, `_south` and `_east` versions. Nodes use the Cutout shader in the armor's color by default. Set `useArmorColor` to `false`, or give a `shaderTypeDef`, for art that keeps its own colors.
+For your own art, set a render node's `texPath` with a `{fit}` token. It is replaced by the armor's fit, and Marine is used if that fit has no art. Body nodes use `bodyTypeTextures` (`_Male`, `_Female`, `_Thin`, `_Fat`, `_Hulk`), with `_north`, `_south` and `_east` versions of each file; any square size works (the mod's own art is 256x256). Nodes use the CutoutComplex shader in the armor's colors by default, so each texture needs a mask (`_northm`, `_southm`, `_eastm`; the mod's are half size) whose red marks what takes the armor's color. For unmasked art dyed all over, set `shaderTypeDef` to `Cutout`; set `useArmorColor` to `false` for art that keeps its own colors.
 
 ## Combat Extended
 
@@ -269,11 +270,12 @@ To regenerate the textures, install [rwtexturegen](https://github.com/Jitby-Jone
 
 ```bash
 cd Source/TextureSpecs
-rwtex build modules.py --out /tmp/mpa-art --mod ../..
-rwtex build module_icons.py --out /tmp/mpa-icons --mod ../..
+python3 build_art.py
+python3 module_icons.py
 rwtex build armor_modulus.py --out /tmp/mpa-bench --mod ../..
+python3 make_preview.py
 ```
 
 ## Status
 
-The code compiles against the RimWorld 1.5, 1.6 and 1.7 reference assemblies, and every API it calls or patches was checked against all three. All XML was checked for field names (against each version's game code), enum values, cross-references, textures (every armor fit, body type and facing), translation keys, patch targets and the Armor Modulus bills. The module art was checked by compositing it over each supported armor's own textures, for every body type and facing, both one module at a time and all of them together. The mod hasn't been play-tested in the game yet.
+The code compiles against the RimWorld 1.5, 1.6 and 1.7 reference assemblies, and every API it calls or patches was checked against all three. All XML was checked for field names (against each version's game code), enum values, cross-references, textures (every armor fit, body type and facing), translation keys, patch targets and the Armor Modulus bills. The module art was checked by compositing it, masks and all, over each supported armor's own textures, for every body type and facing, both one module at a time and all of them together. The mod hasn't been play-tested in the game yet.
