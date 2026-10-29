@@ -16,7 +16,8 @@
 			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<Plasteel>30</Plasteel>
+			<Plasteel>40</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
 			<ComponentSpacer>2</ComponentSpacer>
 			<MedicineIndustrial>3</MedicineIndustrial>
 		</costList>
@@ -66,9 +67,10 @@
 			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>40</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
 			<Steel>60</Steel>
-			<Plasteel>20</Plasteel>
-			<ComponentIndustrial>4</ComponentIndustrial>
 		</costList>
 		<recipeMaker>
 			<skillRequirements>
@@ -111,7 +113,8 @@
 			<MPA_ComputationalLoadCost>4</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<Plasteel>60</Plasteel>
+			<Plasteel>50</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
 			<ComponentSpacer>3</ComponentSpacer>
 		</costList>
 		<recipeMaker>
@@ -146,7 +149,7 @@
 	</ThingDef>
 
 	<!-- ===================== Second heart ===================== -->
-	<!-- No quality. Biotech adds 3 high subcores to the recipe (Patches/MPA_Subcores.xml); without it, 6 advanced components stand in. -->
+	<!-- No quality. Biotech adds 3 high subcores to the recipe (Patches/MPA_Subcores.xml); without it, the recipe takes 4 advanced components instead of 2. -->
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_SecondHeart</defName>
 		<label>second heart</label>
@@ -161,9 +164,13 @@
 			<MPA_ComputationalLoadCost>4</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>40</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>2</ComponentSpacer>
 			<Heart>1</Heart>
 		</costList>
 		<recipeMaker>
+			<researchPrerequisite>MPA_Research_AdvancedModules</researchPrerequisite>
 			<skillRequirements>
 				<Crafting>8</Crafting>
 			</skillRequirements>
@@ -207,7 +214,8 @@
 			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<Plasteel>60</Plasteel>
+			<Plasteel>50</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
 			<ComponentSpacer>3</ComponentSpacer>
 		</costList>
 		<recipeMaker>

@@ -9,8 +9,10 @@
 		mod settings): offsets scale directly, and factors scale their distance from 1.
 		  Awful 70% | Poor 85% | Normal 100% | Good 115% | Excellent 130% | Masterwork 145% | Legendary 160%
 
-		Module recipes that don't name a research prerequisite are given "Powered armor" at startup
-		(falling back to "Advanced fabrication").
+		Every module costs 30-50 plasteel, 2 components and 1-4 advanced components (the second mind
+		5), plus its own materials. Recipes need the "armor modification" research; neuromemetic
+		regenerators, uranium composite plating, the second heart and the second mind need
+		"advanced modules" (Defs/Research/MPA_Research.xml).
 	-->
 	<ThingDef Name="MPA_ModuleBase" Abstract="True">
 		<thingClass>ThingWithComps</thingClass>
@@ -52,6 +54,7 @@
 			</li>
 		</comps>
 		<recipeMaker>
+			<researchPrerequisite>MPA_Research_ArmorModification</researchPrerequisite>
 			<workSpeedStat>GeneralLaborSpeed</workSpeedStat>
 			<workSkill>Crafting</workSkill>
 			<effectWorking>Smith</effectWorking>

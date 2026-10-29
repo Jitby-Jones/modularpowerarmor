@@ -17,7 +17,9 @@
 			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<Plasteel>45</Plasteel>
+			<Plasteel>50</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
 			<Uranium>15</Uranium>
 		</costList>
 		<comps>
@@ -72,9 +74,10 @@
 			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<ComponentSpacer>2</ComponentSpacer>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>3</ComponentSpacer>
 			<Gold>15</Gold>
-			<Plasteel>15</Plasteel>
 		</costList>
 		<recipeMaker>
 			<skillRequirements>
@@ -119,8 +122,10 @@
 			<MPA_ComputationalLoadCost>1</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
 			<Steel>40</Steel>
-			<ComponentIndustrial>3</ComponentIndustrial>
 		</costList>
 		<recipeMaker>
 			<skillRequirements>
@@ -168,7 +173,9 @@
 			<MPA_ComputationalLoadCost>1</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<Plasteel>25</Plasteel>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
 			<Silver>20</Silver>
 		</costList>
 		<comps>
@@ -201,10 +208,14 @@
 			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>40</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>3</ComponentSpacer>
 			<MedicineIndustrial>4</MedicineIndustrial>
-			<ComponentSpacer>1</ComponentSpacer>
-			<Plasteel>15</Plasteel>
 		</costList>
+		<recipeMaker>
+			<researchPrerequisite>MPA_Research_AdvancedModules</researchPrerequisite>
+		</recipeMaker>
 		<comps>
 			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
 				<slots>
@@ -246,7 +257,7 @@
 	</ThingDef>
 
 	<!-- ===================== Auxiliary subpersona (defName kept from the co-processor for saves) ===================== -->
-	<!-- Biotech adds 3 basic subcores to the recipe (Patches/MPA_Subcores.xml); without it, 3 advanced components stand in. -->
+	<!-- Biotech adds 3 basic subcores to the recipe (Patches/MPA_Subcores.xml); without it, the recipe takes 4 advanced components instead of 1. -->
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_CoProcessor</defName>
 		<label>auxiliary subpersona</label>
@@ -260,8 +271,10 @@
 			<MPA_ComputationalLoadCost>0</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>1</ComponentSpacer>
 			<Gold>10</Gold>
-			<Plasteel>10</Plasteel>
 		</costList>
 		<recipeMaker>
 			<skillRequirements>
@@ -317,9 +330,10 @@
 			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<ComponentSpacer>1</ComponentSpacer>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>2</ComponentSpacer>
 			<Gold>10</Gold>
-			<Plasteel>10</Plasteel>
 		</costList>
 		<comps>
 			<li Class="ModularPowerArmor.CompProperties_ArmorModule">
@@ -356,10 +370,14 @@
 			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>50</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>2</ComponentSpacer>
 			<Hyperweave>40</Hyperweave>
 			<Uranium>80</Uranium>
 		</costList>
 		<recipeMaker>
+			<researchPrerequisite>MPA_Research_AdvancedModules</researchPrerequisite>
 			<skillRequirements>
 				<Crafting>8</Crafting>
 			</skillRequirements>

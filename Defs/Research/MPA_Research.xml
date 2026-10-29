@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+	<!--
+		Armor modification branches off marine armor. Its prerequisite and its place in the research
+		tree are filled in at startup from whichever project unlocks marine armor (vanilla "marine
+		armor"), so it sits next to it even with mods that rearrange the tree. The view positions below
+		are only used if no such project is found.
+	-->
+	<ResearchProjectDef>
+		<defName>MPA_Research_ArmorModification</defName>
+		<label>armor modification</label>
+		<description>Refit power armor with modules. Unlocks the Armor Modulus, where armor is modified, and the standard armor modifications, from additional plating to longjump hydraulics.</description>
+		<baseCost>3000</baseCost>
+		<techLevel>Spacer</techLevel>
+		<requiredResearchBuilding>HiTechResearchBench</requiredResearchBuilding>
+		<requiredResearchFacilities>
+			<li>MultiAnalyzer</li>
+		</requiredResearchFacilities>
+		<researchViewX>19.00</researchViewX>
+		<researchViewY>4.10</researchViewY>
+	</ResearchProjectDef>
+
+	<ResearchProjectDef>
+		<defName>MPA_Research_AdvancedModules</defName>
+		<label>advanced modules</label>
+		<description>The most demanding armor modifications: neuromemetic regenerators, uranium composite plating, the second heart and the second mind.</description>
+		<baseCost>4500</baseCost>
+		<techLevel>Spacer</techLevel>
+		<prerequisites>
+			<li>MPA_Research_ArmorModification</li>
+		</prerequisites>
+		<requiredResearchBuilding>HiTechResearchBench</requiredResearchBuilding>
+		<requiredResearchFacilities>
+			<li>MultiAnalyzer</li>
+		</requiredResearchFacilities>
+		<researchViewX>20.00</researchViewX>
+		<researchViewY>4.10</researchViewY>
+	</ResearchProjectDef>
+
+</Defs>

@@ -43,7 +43,8 @@ namespace ModularPowerArmor
             {
                 FleckMaker.ThrowMetaIcon(pawn.Position, pawn.Map, FleckDefOf.HealingCross);
             }
-            if (pawn.Faction == Faction.OfPlayer || pawn.HostFaction == Faction.OfPlayer)
+            // The colony's own pawns get the critical alert (Alert_DeathRefused); prisoners and guests a message.
+            if (pawn.Faction != Faction.OfPlayer && pawn.HostFaction == Faction.OfPlayer)
             {
                 Messages.Message("MPA_DeathRefusedMessage".Translate(pawn.LabelShort, pawn.Named("PAWN")), pawn, MessageTypeDefOf.NegativeHealthEvent);
             }

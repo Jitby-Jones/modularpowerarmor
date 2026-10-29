@@ -22,7 +22,7 @@ Armor from mods you don't have is skipped automatically.
 
 16 modifications are included, from plating and servos to neuromemetic regenerators, a rigidity matrix, longjump hydraulics, a second mind built around an AI persona core, and a second heart that refuses death once when the wearer's head is destroyed. Many of them show up on the pawn wearing them, drawn to fit each armor's shape and dyed along with it. Any combination can be installed without the parts clipping into each other.
 
-Armor is modified at the Armor Modulus, a workbench unlocked with powered armor: bills install or strip modifications in bulk, and right-clicking it with a colonist selected lets that colonist refit the armor they are wearing while showing their modifications and stats. Armor lying on the ground can also be modified where it lies by right-clicking it.
+Two research projects follow marine armor: Armor Modification unlocks the Armor Modulus and most modifications, and Advanced Modules the rest. At the Armor Modulus, bills install or strip modifications in bulk, and right-clicking it with a colonist selected lets that colonist refit the armor they are wearing while showing their modifications and stats. Armor lying on the ground can also be modified where it lies by right-clicking it.
 
 Combat Extended is fully supported: armor bonuses switch to mm RHA / MPa and some modifications gain CE-specific effects.
 

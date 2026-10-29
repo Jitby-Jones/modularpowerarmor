@@ -20,13 +20,14 @@ namespace ModularPowerArmor
 
     /// <summary>
     /// Runs once all defs are loaded: turns the listed armor into modular armor, gives humanlike
-    /// races the comp that draws module visuals, and gates module recipes behind research.
+    /// races the comp that draws module visuals, hooks the research into the tree, and gates
+    /// module recipes behind it.
     /// </summary>
     [StaticConstructorOnStartup]
     public static class ModularArmorStartup
     {
-        // Tried in order; module recipes that don't set their own prerequisite get the first that exists.
-        private static readonly string[] ModuleResearchCandidates = { "PoweredArmor", "AdvancedFabrication" };
+        private const string MarineArmorDef = "Apparel_PowerArmor";
+        private const string MarineArmorResearchFallback = "PoweredArmor";
 
         static ModularArmorStartup()
         {
@@ -69,6 +70,7 @@ namespace ModularPowerArmor
             }
 
             ArmorModuleUtility.CacheModuleDefs();
+            SetUpResearch();
             AssignModuleResearch();
             SetUpModulusRecipes();
 
@@ -143,21 +145,88 @@ namespace ModularPowerArmor
             recipe.defaultIngredientFilter?.SetAllow(def, allow);
         }
 
-        private static void AssignModuleResearch()
+        /// <summary>
+        /// Armor modification branches off whichever project unlocks marine armor, and both of the
+        /// mod's projects are placed beside it in the research tree.
+        /// </summary>
+        private static void SetUpResearch()
         {
-            ResearchProjectDef research = null;
-            foreach (string candidate in ModuleResearchCandidates)
+            ResearchProjectDef armorModification = MPA_DefOf.MPA_Research_ArmorModification;
+            ResearchProjectDef marine = MarineArmorResearch();
+            if (marine == null)
             {
-                research = DefDatabase<ResearchProjectDef>.GetNamedSilentFail(candidate);
-                if (research != null)
-                {
-                    break;
-                }
-            }
-            if (research == null)
-            {
+                Log.Warning("[Modular Power Armor] Couldn't find the research that unlocks marine armor; armor modification has no prerequisite.");
                 return;
             }
+            if (armorModification.prerequisites == null)
+            {
+                armorModification.prerequisites = new List<ResearchProjectDef>();
+            }
+            if (!armorModification.prerequisites.Contains(marine))
+            {
+                armorModification.prerequisites.Add(marine);
+            }
+            PlaceBeside(armorModification, marine);
+            PlaceBeside(MPA_DefOf.MPA_Research_AdvancedModules, armorModification);
+        }
+
+        private static ResearchProjectDef MarineArmorResearch()
+        {
+            ThingDef marine = DefDatabase<ThingDef>.GetNamedSilentFail(MarineArmorDef);
+            ResearchProjectDef research = marine?.recipeMaker?.researchPrerequisite
+                ?? marine?.recipeMaker?.researchPrerequisites?.FirstOrDefault();
+            if (research == null && marine != null)
+            {
+                foreach (RecipeDef recipe in DefDatabase<RecipeDef>.AllDefsListForReading)
+                {
+                    if (recipe.ProducedThingDef == marine)
+                    {
+                        research = recipe.researchPrerequisite ?? recipe.researchPrerequisites?.FirstOrDefault();
+                        if (research != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            return research ?? DefDatabase<ResearchProjectDef>.GetNamedSilentFail(MarineArmorResearchFallback);
+        }
+
+        /// <summary>
+        /// Puts a project in the first free spot to the right of <paramref name="anchor"/>, in the
+        /// same research tab, so it reads as a branch of it.
+        /// </summary>
+        private static void PlaceBeside(ResearchProjectDef project, ResearchProjectDef anchor)
+        {
+            project.tab = anchor.tab;
+            List<ResearchProjectDef> others = DefDatabase<ResearchProjectDef>.AllDefsListForReading
+                .Where(other => other != project && other.tab == anchor.tab)
+                .ToList();
+            float[] rowOffsets = { 0f, 0.7f, -0.7f, 1.4f, -1.4f, 2.1f, -2.1f };
+            for (int column = 1; column <= 4; column++)
+            {
+                foreach (float rowOffset in rowOffsets)
+                {
+                    float x = anchor.researchViewX + column;
+                    float y = anchor.researchViewY + rowOffset;
+                    if (y < 0f)
+                    {
+                        continue;
+                    }
+                    if (others.All(other => Mathf.Abs(other.researchViewX - x) > 0.8f || Mathf.Abs(other.researchViewY - y) > 0.55f))
+                    {
+                        project.researchViewX = x;
+                        project.researchViewY = y;
+                        return;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Modification recipes from other mods that don't name a research get armor modification.</summary>
+        private static void AssignModuleResearch()
+        {
+            ResearchProjectDef research = MPA_DefOf.MPA_Research_ArmorModification;
             foreach (RecipeDef recipe in DefDatabase<RecipeDef>.AllDefsListForReading)
             {
                 ThingDef product = recipe.ProducedThingDef;

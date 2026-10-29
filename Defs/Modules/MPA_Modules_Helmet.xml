@@ -16,8 +16,9 @@
 			<MPA_ComputationalLoadCost>3</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
 			<ComponentSpacer>2</ComponentSpacer>
-			<Plasteel>20</Plasteel>
 			<Gold>5</Gold>
 		</costList>
 		<recipeMaker>
@@ -58,8 +59,9 @@
 			<MPA_ComputationalLoadCost>2</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<ComponentSpacer>1</ComponentSpacer>
-			<Plasteel>15</Plasteel>
+			<Plasteel>30</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
+			<ComponentSpacer>2</ComponentSpacer>
 			<Silver>25</Silver>
 		</costList>
 		<comps>
@@ -99,10 +101,13 @@
 			<MPA_ComputationalLoadCost>0</MPA_ComputationalLoadCost>
 		</statBases>
 		<costList>
-			<AIPersonaCore>1</AIPersonaCore>
+			<Plasteel>40</Plasteel>
+			<ComponentIndustrial>2</ComponentIndustrial>
 			<ComponentSpacer>5</ComponentSpacer>
+			<AIPersonaCore>1</AIPersonaCore>
 		</costList>
 		<recipeMaker>
+			<researchPrerequisite>MPA_Research_AdvancedModules</researchPrerequisite>
 			<skillRequirements>
 				<Crafting>8</Crafting>
 			</skillRequirements>

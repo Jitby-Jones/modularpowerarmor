@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 	Subcores come from Biotech. When the subcore defs are there, the auxiliary subpersona takes 3 basic
-	("low") subcores and the second heart 3 high subcores; otherwise advanced components stand in.
-	The checks look for the defs themselves rather than the DLC, so nothing breaks if they are missing.
+	("low") subcores and the second heart 3 high subcores, on top of their plasteel and components.
+	Otherwise they take 4 advanced components in total instead. The checks look for the defs
+	themselves rather than the DLC, so nothing breaks if they are missing.
 -->
 <Patch>
 
@@ -16,10 +17,10 @@
 		</match>
 		<nomatch Class="PatchOperationSequence">
 			<operations>
-				<li Class="PatchOperationAdd">
-					<xpath>Defs/ThingDef[defName="MPA_Module_CoProcessor"]/costList</xpath>
+				<li Class="PatchOperationReplace">
+					<xpath>Defs/ThingDef[defName="MPA_Module_CoProcessor"]/costList/ComponentSpacer</xpath>
 					<value>
-						<ComponentSpacer>3</ComponentSpacer>
+						<ComponentSpacer>4</ComponentSpacer>
 					</value>
 				</li>
 				<li Class="PatchOperationReplace">
@@ -42,10 +43,10 @@
 		</match>
 		<nomatch Class="PatchOperationSequence">
 			<operations>
-				<li Class="PatchOperationAdd">
-					<xpath>Defs/ThingDef[defName="MPA_Module_SecondHeart"]/costList</xpath>
+				<li Class="PatchOperationReplace">
+					<xpath>Defs/ThingDef[defName="MPA_Module_SecondHeart"]/costList/ComponentSpacer</xpath>
 					<value>
-						<ComponentSpacer>6</ComponentSpacer>
+						<ComponentSpacer>4</ComponentSpacer>
 					</value>
 				</li>
 				<li Class="PatchOperationReplace">

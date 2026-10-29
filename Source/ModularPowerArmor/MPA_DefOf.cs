@@ -14,6 +14,9 @@ namespace ModularPowerArmor
         public static HediffDef MPA_ArmorModifications;
         public static HediffDef MPA_DeathRefused;
 
+        public static ResearchProjectDef MPA_Research_ArmorModification;
+        public static ResearchProjectDef MPA_Research_AdvancedModules;
+
         public static JobDef MPA_InstallArmorModule;
         public static JobDef MPA_RemoveArmorModule;
         public static JobDef MPA_Longjump;

@@ -63,9 +63,37 @@ Values are at Normal quality.
 | Second heart | Body | 4 | Refuses the wearer's death once, when their head is destroyed. No quality | Same |
 | Longjump hydraulics | Body | 3 | The wearer can leap up to 20 cells, over walls and through roofs. Recharges in 3 hours | Same |
 
-Modifications are crafted at a **fabrication bench** and require the **powered armor** research. If that project isn't found, **advanced fabrication** is used instead. Crafting skill decides their quality, as it does for weapons and armor. Non-player pawns' armor has a 20% chance per piece to come with one to three modifications, so you can also loot them (never a second heart or a second mind).
+Non-player pawns' armor has a 20% chance per piece to come with one to three modifications, so you can also loot them (never a second heart or a second mind).
 
-Notable recipes: uranium composite plating takes 40 hyperweave and 80 uranium; the auxiliary subpersona takes 3 basic subcores; the second heart takes a human heart and 3 high subcores; the second mind takes an AI persona core and 5 advanced components. Without Biotech, advanced components stand in for the subcores.
+### Research and recipes
+
+- **Armor Modification** branches off **Marine armor** (hi-tech research bench with a multi-analyzer, 3000). It unlocks the Armor Modulus and every modification except the four below.
+- **Advanced Modules** follows it (4500) and unlocks neuromemetic regenerators, uranium composite plating, the second heart and the second mind.
+
+Both projects sit right next to marine armor in the research tree; their place is worked out when the game loads, so they stay beside it even if another mod moves it.
+
+Modifications are crafted at a **fabrication bench**, and Crafting skill decides their quality, as it does for weapons and armor. Every modification costs 30-50 plasteel, 2 components and 1-4 advanced components, plus its own materials:
+
+| Modification | Plasteel | Components | Advanced components | Also |
+|---|---|---|---|---|
+| Additional plating | 50 | 2 | 1 | 15 uranium |
+| Uranium composite plating | 50 | 2 | 2 | 40 hyperweave, 80 uranium |
+| Bionic synchronization | 30 | 2 | 3 | 15 gold |
+| Thermal regulation unit | 30 | 2 | 1 | 40 steel |
+| Ablative heat shielding | 30 | 2 | 1 | 20 silver |
+| Neuromemetic regenerators | 40 | 2 | 3 | 4 industrial medicine |
+| Auxiliary subpersona | 30 | 2 | 1 | 10 gold, 3 basic subcores |
+| Neural stress dampener | 30 | 2 | 2 | 10 gold |
+| Targeting uplink | 30 | 2 | 2 | 5 gold |
+| Multispectral sensor array | 30 | 2 | 2 | 25 silver |
+| Second mind | 40 | 2 | 5 | 1 AI persona core |
+| Biogel servo replacement | 40 | 2 | 2 | 3 industrial medicine |
+| Load-bearing exoframe | 40 | 2 | 1 | 60 steel |
+| Rigidity matrix | 50 | 2 | 3 | |
+| Second heart | 40 | 2 | 2 | 1 human heart, 3 high subcores |
+| Longjump hydraulics | 50 | 2 | 3 | |
+
+The second mind keeps the 5 advanced components it was designed with. Subcores come from Biotech; without them, the auxiliary subpersona and the second heart take 4 advanced components in total instead.
 
 ### Neuromemetic regenerators
 
@@ -85,7 +113,7 @@ Everything they do is limited to the body parts their armor piece covers and the
 
 - If the wearer's head is destroyed (or the neck, taking the head with it), the second heart refuses their death, as long as nothing else would kill them: bleeding out, a destroyed heart or torso, or any other fatal wound still kills.
 - The pawn is kept alive at 50% consciousness. All of their wounds are tended, their pain is cut to 20%, and they get x150% move speed for 12 hours.
-- An orange **Death Refused: _name_** alert appears in the corner. Its description is the killing blow and the time left.
+- A red (critical) **Death Refused: _name_** alert appears in the corner. Its description is the killing blow and the time left.
 - Two days later the pawn dies, unless the head has been restored somehow (a healer mech serum, a regeneration mod, ...). The alert clears as soon as the head is back.
 - It works once. The module is then **spent**: it does nothing, and is thrown away when it is removed. Install a new one.
 - It has no quality, so it always works the same.
@@ -123,7 +151,7 @@ Bionic synchronization multiplies on top of quality. For example, a Legendary pl
 
 ## The Armor Modulus
 
-A 3x2 powered workbench (Production tab, **powered armor** research; 150 steel, 60 plasteel, 6 components, 2 advanced components; 250 W).
+A 3x2 powered workbench (Production tab, **Armor Modification** research; 150 steel, 60 plasteel, 6 components, 2 advanced components; 250 W).
 
 - **Bills.** There is an **Install _modification_** bill for every modification, and a **Strip all modifications** bill. A colonist brings a piece of armor (and the modification) to the station, and the finished armor comes back out as the bill's product, so it is hauled away like anything else crafted. Stripped modifications come out alongside it. Use "Do X times" to refit armor in bulk, and the bill's ingredient filter to choose which armor types, qualities and hit points it works on. Armor only counts as an ingredient when the bill can do something with it: the modification has to fit the piece and its free load, and must not already be installed (or, for stripping, there has to be something to strip).
 - **Worn armor.** Right-click the station with a colonist selected and choose **Modify _name_'s worn armor here**. A window shows the armor they are wearing with its load, armor values and installed modifications, the modifications on the map that would fit, and the colonist's stats and special effects. Install and remove buttons queue the work, which the colonist does at the station while wearing the armor.

@@ -1,20 +1,17 @@
 using System.Collections.Generic;
 using System.Text;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace ModularPowerArmor
 {
-    /// <summary>Orange alert for every pawn a second heart is keeping alive, with the blow that took their head.</summary>
-    public class Alert_DeathRefused : Alert
+    /// <summary>
+    /// Red (critical) alert for every pawn a second heart is keeping alive, with the blow that took
+    /// their head. Like other critical alerts it also posts a message when it goes up.
+    /// </summary>
+    public class Alert_DeathRefused : Alert_Critical
     {
         private readonly List<Pawn> sustained = new List<Pawn>();
-
-        public Alert_DeathRefused()
-        {
-            defaultPriority = AlertPriority.High;
-        }
 
         private List<Pawn> SustainedPawns
         {
@@ -34,15 +31,6 @@ namespace ModularPowerArmor
                     }
                 }
                 return sustained;
-            }
-        }
-
-        protected override Color BGColor
-        {
-            get
-            {
-                float brightness = Pulser.PulseBrightness(0.5f, Pulser.PulseBrightness(0.5f, 0.6f));
-                return new Color(brightness, brightness * 0.5f, 0f);
             }
         }
 

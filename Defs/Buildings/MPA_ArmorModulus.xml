@@ -77,7 +77,7 @@
 			<li>PlaceWorker_PreventInteractionSpotOverlap</li>
 		</placeWorkers>
 		<researchPrerequisites>
-			<li>PoweredArmor</li>
+			<li>MPA_Research_ArmorModification</li>
 		</researchPrerequisites>
 	</ThingDef>
 
