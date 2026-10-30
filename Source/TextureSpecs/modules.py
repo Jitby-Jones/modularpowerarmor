@@ -99,6 +99,10 @@ FITS = {
     'Privateer': {'Plating': {'caps': (-1,)}, 'UraniumPlating': {'caps': (-1,)}, 'Exoframe': {'under': {1: 0.38}}},
 }
 
+# The great-helm faceplate fitted to the siegebreaker helmets, smaller and flatter-faced than the
+# cataphract's: the joint closer to the face, narrower plates, a shorter chin (see HELM).
+SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88))
+
 # Per-helmet adjustments, {fit: {module: {option: value}}}. The targeting uplink and the sensor
 # array share one side of the helmet ('side', the pawn's right by default), the second mind and
 # the subpersona the other.
@@ -108,12 +112,12 @@ HELMS = {
     'Recon': {'TargetingUplink': {'mast': False}},
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
-    # cataphract helmets take a great-helm faceplate over the whole front, in composite or in
-    # uranium (its 'variant' picks one of HELM_VARIANTS)
+    # cataphract and siegebreaker helmets take a great-helm faceplate over the whole front, in
+    # composite or in uranium (its 'variant' picks one of HELM_VARIANTS)
     'Cataphract': {'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
     'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
-    'Siegebreaker': {'TargetingUplink': {'mast': False}},
-    'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}},
+    'Siegebreaker': {'TargetingUplink': {'mast': False}, 'Plating': SIEGE_HELM, 'UraniumPlating': SIEGE_HELM},
+    'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}, 'Plating': SIEGE_HELM, 'UraniumPlating': SIEGE_HELM},
     'RoyalTrooper': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
 }
 
