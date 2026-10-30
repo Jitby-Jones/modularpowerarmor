@@ -108,10 +108,10 @@ HELMS = {
     'Recon': {'TargetingUplink': {'mast': False}},
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
-    # cataphract helmets take a great-helm faceplate over the whole front (its 'variant' picks one
-    # of HELM_VARIANTS)
-    'Cataphract': {'Plating': {'style': 'helm'}},
-    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm'}},
+    # cataphract helmets take a great-helm faceplate over the whole front, in composite or in
+    # uranium (its 'variant' picks one of HELM_VARIANTS)
+    'Cataphract': {'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
+    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalTrooper': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
@@ -1139,7 +1139,7 @@ def _brow_guard(K, c, fit, o):
 # 'keel' (one plate a side, a raised keel along the joint) and 'prow' (narrow plates under a tall
 # point).
 HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
-            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False)
+            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False)
 HELM_VARIANTS = {
     'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
     'keel': {},
@@ -1156,13 +1156,16 @@ def _great_helm(K, c, fit, o):
     Built in 3D: from the front the lit plate and the shaded one meet under the point; from the
     side the near plate shows, the joint its upright front edge. Detailed like the body
     plating: the plates' thickness and lower lip show, with an inset panel and bolts, and as
-    options a raised keel along the joint and a split into a visor over a chin plate."""
+    options a raised keel along the joint and a split into a visor over a chin plate. In
+    uranium (mat URAN) the plates are dark, framed in dyed trim, with a trefoil on the pawn's
+    right plate."""
     k = c.k
     vt, vb = o['v']                  # the joint's top (the point) and bottom (head units)
     wr = o['ridge']                  # how far forward the joint stands
     ue, dw = o['reach'], o['slope']  # the plates' back edges: how far out and how far back
     vbt, vbb = o['back']             # the back edges' top and bottom
     lip = o['lip']                   # the lower lip's height (head units)
+    mat = o['mat']
     east = c.dir == 'east'
 
     def pt(t, v, side, dz=0.0):
@@ -1183,7 +1186,8 @@ def _great_helm(K, c, fit, o):
 
     def plate(name, side, va, vb_, z, tones, t1=1.0, dz=0.0, inset=True):
         hi, lo = tones
-        p = vplate(K, c, name, band(side, 0, t1, va, vb_, 2, dz), z, tone=hi, bevel=1.3)
+        outline = band(side, 0, t1, va, vb_, 2, dz)
+        p = vplate(K, c, name, outline, z, mat, tone=hi, bevel=1.3)
         if p is None:
             return None
         # the top edge's thickness, lit from above, and the lower lip
@@ -1193,7 +1197,26 @@ def _great_helm(K, c, fit, o):
             p.line([pt(t, vb_(t) + lip, side, dz) for t in np.linspace(0, t1, 4)], 0.8 * k, 'deep')
         if inset:
             K.panel(p, band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz), hi, w=0.8)
+        if mat is URAN:
+            # the dyed trim frame round the uranium plate
+            p.details.append(Line(outline, 2.4 * k, f'{SHELL.name}.{"shade" if hi == "base" else "deep"}', closed=True, mask='r'))
         return p
+
+    def plate_trefoil(p, side, t0, v0, R):
+        """A radiation trefoil on an amber disc, drawn on the plate so it foreshortens with it."""
+        L = math.hypot(ue, dw)
+
+        def q(d, v):
+            return pt(t0 + d / L, v0 + v, side)
+
+        def disc(r):
+            return G.poly([q(r * math.cos(a), r * math.sin(a)) for a in np.linspace(0, 2 * PI, 20, endpoint=False)])
+        p.fill(disc(R * 1.25), f'{AMBER.name}.shade', mask=None)
+        for i in range(3):
+            a = np.linspace(math.radians(60 + 120 * i), math.radians(120 + 120 * i), 6)
+            p.fill(G.poly([q(0, 0)] + [q(R * math.cos(x), R * math.sin(x)) for x in a]), f'{DARK.name}.base', mask=None)
+        p.fill(disc(R * 0.42), f'{AMBER.name}.shade', mask=None)
+        p.fill(disc(R * 0.26), f'{DARK.name}.base', mask=None)
     split = o['split']
     for side in ((1,) if east else (1, -1)):
         shaded = not east and side < 0
@@ -1213,6 +1236,8 @@ def _great_helm(K, c, fit, o):
         if o['stencil'] and not shaded:
             x, y = pt(0.42, top(0.42) - 0.3, side)
             K.stencil(p, x - 2.5 * k, y, 5.0 * k, 3)
+        if o['trefoil'] and side > 0:
+            plate_trefoil(p, side, 0.5, (top(0.5) + lo_edge(0.5)) / 2 - 0.04, 0.12)
     # a raised keel along the joint
     kw, kh = o['keel'], o['keel_w']
     if kw:
@@ -1240,12 +1265,10 @@ def helm_plating(K, c, fit):
         _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
 
 
-@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2)
-def helm_uranium(K, c, fit):
+def _uranium_brow(K, c, fit, o):
     """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil."""
     k = c.k
     hf = c.form
-    o = hopts(fit, 'UraniumPlating', phi=(0.26, 0.68), w=0.78)
     p0, p1 = o['phi']
     w = o['w']
     if c.dir == 'east':
@@ -1282,6 +1305,19 @@ def helm_uranium(K, c, fit):
         xb, yb = hf.P(sd * (w - 0.14), (p0 + p1) / 2 + 0.02, r)
         K.bolt(p, xb, yb, 1.2 * k)
         p.line([hf.P(sd * 0.3, ph, r) for ph in np.linspace(p0 + 0.04, p1 - 0.05, 4)], 1.2 * k, 'deep')
+
+
+@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2)
+def helm_uranium(K, c, fit):
+    """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil; on
+    cataphract helmets, the great-helm faceplate in uranium."""
+    o = hopts(fit, 'UraniumPlating', style='brow', variant='wedge')
+    if o['style'] == 'helm':
+        h = dict(HELM, **HELM_VARIANTS[o['variant']], mat=URAN, trefoil=True)
+        h.update({key: val for key, val in o.items() if key in HELM})
+        _great_helm(K, c, fit, h)
+    else:
+        _uranium_brow(K, c, fit, hopts(fit, 'UraniumPlating', phi=(0.26, 0.68), w=0.78))
 
 
 # ============================================================================= helmet: targeting uplink
