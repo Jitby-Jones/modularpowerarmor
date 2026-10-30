@@ -1134,9 +1134,10 @@ def _brow_guard(K, c, fit, o):
 
 
 # The great helm's shape (head units; see _great_helm) and its variations, picked per helmet with
-# the 'variant' option: 'visor' (a visor over a chin plate, the plates meeting at a hard fold),
-# 'keel' (one plate a side, a raised keel along the joint), 'wedge' (broad plates over the ear
-# pieces under a lower point) and 'prow' (narrow plates under a tall point).
+# the 'variant' option: 'wedge' (broad plates over the ear pieces under a lower point, used on
+# both cataphract helmets), 'visor' (a visor over a chin plate, the plates meeting at a hard fold),
+# 'keel' (one plate a side, a raised keel along the joint) and 'prow' (narrow plates under a tall
+# point).
 HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
             split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False)
 HELM_VARIANTS = {
@@ -1230,7 +1231,7 @@ def _great_helm(K, c, fit, o):
 def helm_plating(K, c, fit):
     """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
     helmets, a great-helm faceplate over the whole front."""
-    o = hopts(fit, 'Plating', style='brow', variant='visor')
+    o = hopts(fit, 'Plating', style='brow', variant='wedge')
     if o['style'] == 'helm':
         h = dict(HELM, **HELM_VARIANTS[o['variant']])
         h.update({key: val for key, val in o.items() if key in HELM})
