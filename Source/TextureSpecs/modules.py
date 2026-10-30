@@ -32,7 +32,7 @@ import math
 import numpy as np
 
 import mpa_fit as F
-from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, STEEL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
+from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
 from rwtex import geom as G
 from rwtex.archetypes.apparel import armor, helmet
 from rwtex.form import TILT
@@ -1137,7 +1137,7 @@ def _great_helm(K, c, fit, o):
     """Great-helm faceplate: two thick composite plates joined along a raised keel down the
     middle of the face. The keel stands upright in front of the helmet and rises to a capped
     point over the brow; each plate slopes back from it to a pivot bolt at the temple, with an
-    inset panel, triangular rivet studs and a row of breathing slots along its lower lip. Built
+    inset panel and a row of breathing slots along its lower lip. Built
     in 3D: from the front the lit plate and the shaded one meet at the keel under the point,
     the pivots edge-on at the sides; from the side the near plate shows, the keel its upright
     front edge and the pivot round at the back."""
@@ -1180,12 +1180,6 @@ def _great_helm(K, c, fit, o):
                    f'{DARK.name}.base', mask=None)
         # the inset panel
         K.panel(p, band(side, 0.2, 0.86, lambda t: top(t) - 0.16, lambda t: bot(t) + lip + 0.1), hi, w=0.8)
-        # triangular rivet studs down the plate in two staggered rows
-        for t, v in o['studs']:
-            tri = [pt(t, v + 0.11, side), pt(t + 0.08, v - 0.06, side), pt(t - 0.08, v - 0.06, side)]
-            p.fill(G.poly(tri), f'{FRAME.name}.shade', mask=None)
-            xm, ym = sum(q[0] for q in tri) / 3, sum(q[1] for q in tri) / 3
-            p.fill(G.circle(xm, ym, 0.6 * k), f'{STEEL.name}.base', mask=None)
         # the pivot: round from the side, a barrel edge-on from the front
         x, y = pt(1.0, o['pivot'], side)
         if east:
@@ -1221,7 +1215,7 @@ def helm_plating(K, c, fit):
     helmets, a great-helm faceplate over the whole front."""
     if hopts(fit, 'Plating', style='brow')['style'] == 'helm':
         _great_helm(K, c, fit, hopts(fit, 'Plating', v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), pivot=0.0,
-                                     keel=0.07, studs=((0.32, 0.5), (0.64, 0.28), (0.32, 0.06), (0.64, -0.16), (0.32, -0.38))))
+                                     keel=0.07))
     else:
         _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
 
