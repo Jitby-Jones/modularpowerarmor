@@ -32,7 +32,7 @@ import math
 import numpy as np
 
 import mpa_fit as F
-from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
+from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, STEEL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
 from rwtex import geom as G
 from rwtex.archetypes.apparel import armor, helmet
 from rwtex.form import TILT
@@ -108,10 +108,10 @@ HELMS = {
     'Recon': {'TargetingUplink': {'mast': False}},
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
-    # cataphract helmets take a gabled faceplate over the whole front; on the prestige helmet it
-    # starts under the crest, which runs down into its ridge
-    'Cataphract': {'Plating': {'style': 'gable'}},
-    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'gable', 'v': (0.5, -1.05), 'drop': -0.15}},
+    # cataphract helmets take a great-helm faceplate over the whole front; on the prestige helmet
+    # its point stops under the crest, which runs on up from its keel
+    'Cataphract': {'Plating': {'style': 'helm'}},
+    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm', 'v': (0.66, -1.0), 'back': (0.12, -0.95)}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalTrooper': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
@@ -1133,59 +1133,95 @@ def _brow_guard(K, c, fit, o):
         K.notch(p, xn - 1.4 * k, yn - 0.6 * k, xn + 1.4 * k, yn + 0.6 * k)
 
 
-def _gable_visor(K, c, fit, o):
-    """Gabled faceplate: two flat panels over the front of the helmet that slope back from a hard
-    ridge down the middle of the face, like the prow of a great helm. Built in 3D: from the front
-    the lit panel and the shaded one meet at the ridge; from the side the near panel shows, the
-    ridge its prow."""
+def _great_helm(K, c, fit, o):
+    """Great-helm faceplate: two thick composite plates joined along a raised keel down the
+    middle of the face. The keel stands upright in front of the helmet and rises to a capped
+    point over the brow; each plate slopes back from it to a pivot bolt at the temple, with an
+    inset panel, triangular rivet studs and a row of breathing slots along its lower lip. Built
+    in 3D: from the front the lit plate and the shaded one meet at the keel under the point,
+    the pivots edge-on at the sides; from the side the near plate shows, the keel its upright
+    front edge and the pivot round at the back."""
     k = c.k
-    v0, v1 = o['v']                  # the ridge's top and bottom (head units)
-    w0, w1 = o['ridge']              # its forward reach at the top and at the bottom
-    ue, dw = o['reach'], o['slope']  # the panels' outer edges: how far out and how far back
-    drop, chin = o['drop'], o['chin']
+    vt, vb = o['v']                  # the keel's top (the point) and bottom (head units)
+    wr = o['ridge']                  # how far forward the keel stands
+    ue, dw = o['reach'], o['slope']  # the plates' back edges: how far out and how far back
+    vbt, vbb = o['back']             # the back edges' top and bottom
+    east = c.dir == 'east'
 
-    def pt(s, t, side):
-        """Panel point: s from the ridge's top (0) to its bottom (1), t from the ridge (0) to the
-        outer edge (1), on the pawn's right (side 1) or left (-1)."""
-        return head_pt(c, side * ue * t, v0 + (v1 - v0) * s, w0 + (w1 - w0) * s - dw * t)
+    def pt(t, v, side, dz=0.0):
+        """A point on a plate: t from the keel (0) to the back edge (1), at height v, on the
+        pawn's right (side 1) or left (-1); dz stands it forward of the plate."""
+        return head_pt(c, side * ue * t, v, wr - dw * t + dz)
 
-    def quad(side):
-        return [pt(0, 0, side), pt(drop, 1, side), pt(1 - chin, 1, side), pt(1, 0, side)]
-    # the panels end at the helmet's outline: over the dome at the top, round the chin below
-    fp = F.helmet_footprint(c, fit, grow=0.5)
-    if not fp:
-        return
-    # the near panel only from the side; from the front the lit panel (the pawn's right) and the
-    # shaded one, two plates joined along the ridge
-    for side in ((1,) if c.dir == 'east' else (1, -1)):
-        q = quad(side)
-        ring = clip_convex(fp[0], G.poly(q))
-        if len(ring) < 3:
-            continue
-        shaded = c.dir == 'south' and side < 0
-        p = vplate(K, c, f'panel{side}', G.simplify_ring(ring, 0.3 * k), 2, tone='shade' if shaded else None, bevel=1.2)
+    def top(t):
+        return vt + (vbt - vt) * t
+
+    def bot(t):
+        return vb + (vbb - vb) * t
+
+    def band(side, t0, t1, va, vb_, n=4):
+        """Strip of the plate between heights va(t) and vb_(t) from t0 to t1."""
+        ts = np.linspace(t0, t1, n)
+        return G.poly([pt(t, va(t), side) for t in ts] + [pt(t, vb_(t), side) for t in ts[::-1]])
+    lip = 0.12                       # the lower lip's height (head units)
+    for side in ((1,) if east else (1, -1)):
+        shaded = not east and side < 0
+        hi, lo = ('shade', 'deep') if shaded else ('base', 'shade')
+        p = vplate(K, c, f'plate{side}', band(side, 0, 1, top, bot, 2), 2, tone=hi, bevel=1.3)
         if p is None:
             continue
-        # the plate's thickness along its lower edge
-        lo = [q[2], q[3]]
-        p.fill(G.poly(lo + [(x, y - 2.2 * k) for x, y in lo[::-1]]), 'deep' if shaded else 'shade')
-        # triangular studs, each with a rivet: (latitude v, share of the way out t)
-        for i, (v_, t_) in enumerate(o['studs']):
-            s_ = (v0 - v_) / (v0 - v1)
-            ds = 0.09 / (v0 - v1)
-            tri = [pt(s_ - ds, t_, side), pt(s_ + ds * 0.7, t_ + 0.09, side), pt(s_ + ds * 0.7, t_ - 0.09, side)]
-            p.fill(G.poly(tri), 'deep' if shaded else 'shade')
-            xm, ym = sum(x for x, _ in tri) / 3, sum(y for _, y in tri) / 3
-            p.fill(G.circle(xm, ym + 0.2 * k, 0.55 * k), f'{DARK.name}.base', mask=None)
+        # the top edge's thickness, lit from above, and the lower lip with its breathing slots
+        p.fill(band(side, 0, 1, top, lambda t: top(t) - 0.035), 'light' if not shaded else 'base')
+        p.fill(band(side, 0, 1, lambda t: bot(t) + lip, bot), lo)
+        p.line([pt(t, bot(t) + lip, side) for t in np.linspace(0, 1, 4)], 0.8 * k, 'deep')
+        for t in np.linspace(0.16, 0.84, 5 if east else 4):
+            x, y = pt(t, bot(t) + lip * 0.5, side)
+            p.fill(G.rounded(G.rect(x - 0.55 * k, y - lip * 0.3 * c.form.ry, x + 0.55 * k, y + lip * 0.3 * c.form.ry), 0.4 * k),
+                   f'{DARK.name}.base', mask=None)
+        # the inset panel
+        K.panel(p, band(side, 0.2, 0.86, lambda t: top(t) - 0.16, lambda t: bot(t) + lip + 0.1), hi, w=0.8)
+        # triangular rivet studs down the plate in two staggered rows
+        for t, v in o['studs']:
+            tri = [pt(t, v + 0.11, side), pt(t + 0.08, v - 0.06, side), pt(t - 0.08, v - 0.06, side)]
+            p.fill(G.poly(tri), f'{FRAME.name}.shade', mask=None)
+            xm, ym = sum(q[0] for q in tri) / 3, sum(q[1] for q in tri) / 3
+            p.fill(G.circle(xm, ym, 0.6 * k), f'{STEEL.name}.base', mask=None)
+        # the pivot: round from the side, a barrel edge-on from the front
+        x, y = pt(1.0, o['pivot'], side)
+        if east:
+            K.hinge(f'pivot{side}', x - 0.6 * k, y, 3.2 * k, 3, FRAME)
+        else:
+            K.knuckle(f'pivot{side}', x - side * 0.6 * k, y, 2.2 * k, 1.8 * k, 3, FRAME)
+    # the keel, standing forward of the joint
+    kw = o['keel']
+    if east:
+        ring = G.poly([pt(0, vt - 0.02, 1), pt(0, vt - 0.02, 1, kw), pt(0, vb + 0.02, 1, kw), pt(0, vb + 0.02, 1)])
+    else:
+        ring = G.poly([head_pt(c, 0.0, vt + 0.02, wr + kw), head_pt(c, -0.07, vt - 0.06, wr + kw), head_pt(c, -0.07, vb + 0.02, wr + kw),
+                       head_pt(c, 0.07, vb + 0.02, wr + kw), head_pt(c, 0.07, vt - 0.06, wr + kw)])
+    keel = vplate(K, c, 'keel', ring, 2.5, tone='base', bevel=0.9)
+    if keel is not None and not east:
+        x0, y0 = head_pt(c, 0.0, vb + 0.02, wr + kw)
+        keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -0.07, vt - 0.06, wr + kw), head_pt(c, -0.07, vb + 0.02, wr + kw),
+                          (x0, y0)]), 'light')
+    # the gunmetal cap over the point, riveted
+    if east:
+        cap = [pt(0, vt + 0.03, 1, kw), pt(0, vt - 0.34, 1, kw), pt(0.3, top(0.3) - 0.04, 1)]
+    else:
+        cap = [head_pt(c, 0.0, vt + 0.05, wr + kw), pt(0.28, top(0.28) - 0.05, -1), head_pt(c, 0.0, vt - 0.3, wr + kw), pt(0.28, top(0.28) - 0.05, 1)]
+    cp = K.block('cap', G.poly(cap), 3.5, FRAME, bevel=0.6)
+    if cp is not None:
+        xm, ym = sum(q[0] for q in cap) / len(cap), sum(q[1] for q in cap) / len(cap)
+        K.bolt(cp, xm, ym, 0.9 * k)
 
 
 @register('Plating', 'head', dirs=('south', 'east'), layer=0.2)
 def helm_plating(K, c, fit):
     """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
-    helmets, a gabled faceplate over the whole front."""
-    if hopts(fit, 'Plating', style='brow')['style'] == 'gable':
-        _gable_visor(K, c, fit, hopts(fit, 'Plating', v=(1.6, -1.05), ridge=(1.2, 1.22), reach=0.85, slope=0.75, drop=0.0, chin=0.16,
-                                      studs=((0.28, 0.42), (-0.15, 0.28), (-0.15, 0.6))))
+    helmets, a great-helm faceplate over the whole front."""
+    if hopts(fit, 'Plating', style='brow')['style'] == 'helm':
+        _great_helm(K, c, fit, hopts(fit, 'Plating', v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), pivot=0.0,
+                                     keel=0.07, studs=((0.32, 0.5), (0.64, 0.28), (0.32, 0.06), (0.64, -0.16), (0.32, -0.38))))
     else:
         _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
 
