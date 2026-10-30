@@ -177,7 +177,7 @@ Modifications with a visual are drawn on the pawn through RimWorld's render tree
 | Body | Rigidity matrix | A braced plate over each thigh: a cross strut in a lattice window, with a lock bar across the top |
 | Body | Thermal regulation unit | A radiator plate with vent slits across the lower back |
 | Body | Longjump hydraulics | A heavy ram down the back of each leg, from under the lower back to a pivot at the heel |
-| Helmet | Additional plating | A brow guard: a thick visor hood across the upper face |
+| Helmet | Additional plating | A brow guard: a thick visor hood across the upper face. On cataphract helmets, a gabled faceplate like a great helm's instead: two flat, studded panels over the front that meet at a hard ridge down the middle |
 | Helmet | Uranium composite plating | A heavier, dark brow guard in dyed trim |
 | Helmet | Targeting uplink | A rangefinder housing with a whip antenna high on one side |
 | Helmet | Multispectral sensor array | A pod built out of the side of the helmet under the uplink, three cameras stacked in its window: thermal, visible and ultraviolet |

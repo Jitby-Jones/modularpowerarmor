@@ -35,6 +35,7 @@ import mpa_fit as F
 from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
 from rwtex import geom as G
 from rwtex.archetypes.apparel import armor, helmet
+from rwtex.form import TILT
 from rwtex.render import Line
 
 PI = math.pi
@@ -107,7 +108,10 @@ HELMS = {
     'Recon': {'TargetingUplink': {'mast': False}},
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
-    'PrestigeCataphract': {'StressDampener': {'at': 'back'}},
+    # cataphract helmets take a gabled faceplate over the whole front; on the prestige helmet it
+    # starts under the crest, which runs down into its ridge
+    'Cataphract': {'Plating': {'style': 'gable'}},
+    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'gable', 'v': (0.5, -1.05), 'drop': -0.15}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalTrooper': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
@@ -1046,6 +1050,45 @@ def _phi_at(c, y):
     return math.asin(max(-1.0, min(1.0, (hf.cy - y) / (hf.ry * 0.92))))
 
 
+def head_pt(c, u, v, w):
+    """Screen point of a 3D point near the head, in head units: u toward the pawn's right, v up,
+    w forward (the head form's rx, 0.92 ry and rx), projected the way HeadForm.P projects."""
+    hf = c.form
+    x, z = {'south': (-u, w), 'north': (u, -w)}.get(c.dir, (w, u))
+    return hf.cx + x * hf.rx, hf.cy - v * hf.ry * 0.92 + z * hf.ry * TILT * 0.55
+
+
+def clip_convex(ring, clip):
+    """``ring`` clipped to the convex polygon ``clip`` (Sutherland-Hodgman)."""
+    clip = np.asarray(clip, float)
+    if G.signed_area(clip) < 0:
+        clip = clip[::-1]
+    out = [tuple(q) for q in np.asarray(ring, float)]
+    for i in range(len(clip)):
+        a, b = clip[i], clip[(i + 1) % len(clip)]
+
+        def inside(q):
+            return (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) >= 0
+
+        def cut(p, q):
+            d1 = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
+            d2 = (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0])
+            t = d1 / (d1 - d2)
+            return (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+        src, out = out, []
+        for j in range(len(src)):
+            p, q = src[j - 1], src[j]
+            if inside(q):
+                if not inside(p):
+                    out.append(cut(p, q))
+                out.append(q)
+            elif inside(p):
+                out.append(cut(p, q))
+        if len(out) < 3:
+            return np.zeros((0, 2))
+    return G.poly(out)
+
+
 # ============================================================================= helmet: plating
 
 def _brow_guard(K, c, fit, o):
@@ -1090,10 +1133,61 @@ def _brow_guard(K, c, fit, o):
         K.notch(p, xn - 1.4 * k, yn - 0.6 * k, xn + 1.4 * k, yn + 0.6 * k)
 
 
+def _gable_visor(K, c, fit, o):
+    """Gabled faceplate: two flat panels over the front of the helmet that slope back from a hard
+    ridge down the middle of the face, like the prow of a great helm. Built in 3D: from the front
+    the lit panel and the shaded one meet at the ridge; from the side the near panel shows, the
+    ridge its prow."""
+    k = c.k
+    v0, v1 = o['v']                  # the ridge's top and bottom (head units)
+    w0, w1 = o['ridge']              # its forward reach at the top and at the bottom
+    ue, dw = o['reach'], o['slope']  # the panels' outer edges: how far out and how far back
+    drop, chin = o['drop'], o['chin']
+
+    def pt(s, t, side):
+        """Panel point: s from the ridge's top (0) to its bottom (1), t from the ridge (0) to the
+        outer edge (1), on the pawn's right (side 1) or left (-1)."""
+        return head_pt(c, side * ue * t, v0 + (v1 - v0) * s, w0 + (w1 - w0) * s - dw * t)
+
+    def quad(side):
+        return [pt(0, 0, side), pt(drop, 1, side), pt(1 - chin, 1, side), pt(1, 0, side)]
+    # the panels end at the helmet's outline: over the dome at the top, round the chin below
+    fp = F.helmet_footprint(c, fit, grow=0.5)
+    if not fp:
+        return
+    # the near panel only from the side; from the front the lit panel (the pawn's right) and the
+    # shaded one, two plates joined along the ridge
+    for side in ((1,) if c.dir == 'east' else (1, -1)):
+        q = quad(side)
+        ring = clip_convex(fp[0], G.poly(q))
+        if len(ring) < 3:
+            continue
+        shaded = c.dir == 'south' and side < 0
+        p = vplate(K, c, f'panel{side}', G.simplify_ring(ring, 0.3 * k), 2, tone='shade' if shaded else None, bevel=1.2)
+        if p is None:
+            continue
+        # the plate's thickness along its lower edge
+        lo = [q[2], q[3]]
+        p.fill(G.poly(lo + [(x, y - 2.2 * k) for x, y in lo[::-1]]), 'deep' if shaded else 'shade')
+        # triangular studs, each with a rivet: (latitude v, share of the way out t)
+        for i, (v_, t_) in enumerate(o['studs']):
+            s_ = (v0 - v_) / (v0 - v1)
+            ds = 0.09 / (v0 - v1)
+            tri = [pt(s_ - ds, t_, side), pt(s_ + ds * 0.7, t_ + 0.09, side), pt(s_ + ds * 0.7, t_ - 0.09, side)]
+            p.fill(G.poly(tri), 'deep' if shaded else 'shade')
+            xm, ym = sum(x for x, _ in tri) / 3, sum(y for _, y in tri) / 3
+            p.fill(G.circle(xm, ym + 0.2 * k, 0.55 * k), f'{DARK.name}.base', mask=None)
+
+
 @register('Plating', 'head', dirs=('south', 'east'), layer=0.2)
 def helm_plating(K, c, fit):
-    """Brow guard: a thick composite visor hood bolted across the upper face."""
-    _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
+    """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
+    helmets, a gabled faceplate over the whole front."""
+    if hopts(fit, 'Plating', style='brow')['style'] == 'gable':
+        _gable_visor(K, c, fit, hopts(fit, 'Plating', v=(1.6, -1.05), ridge=(1.2, 1.22), reach=0.85, slope=0.75, drop=0.0, chin=0.16,
+                                      studs=((0.28, 0.42), (-0.15, 0.28), (-0.15, 0.6))))
+    else:
+        _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
 
 
 @register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2)
