@@ -109,9 +109,9 @@ HELMS = {
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
     # cataphract helmets take a great-helm faceplate over the whole front (its 'variant' picks one
-    # of HELM_VARIANTS); on the prestige helmet its point stops under the crest
+    # of HELM_VARIANTS)
     'Cataphract': {'Plating': {'style': 'helm'}},
-    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm', 'v': (0.66, -1.0), 'back': (0.12, -0.95)}},
+    'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm'}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalSiegebreaker': {'TargetingUplink': {'mast': False}},
     'RoyalTrooper': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
