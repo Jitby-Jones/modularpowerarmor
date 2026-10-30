@@ -101,10 +101,9 @@ FITS = {
 
 # The great-helm faceplate fitted to the siegebreaker helmets, smaller and flatter-faced than the
 # cataphract's: the joint closer to the face, narrower plates, a shorter chin (see HELM). Like the
-# helmet's own face it carries camera lenses, a cluster of three on the left plate seen from the
-# front, so the uranium trefoil goes on the other plate.
-SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88),
-                  lenses=((0.38, -0.05, 0.21), (0.72, 0.12, 0.1), (0.7, -0.22, 0.09)), trefoil_side=-1)
+# helmet's own face it carries forward-facing cameras, a cluster of three on the left side of the
+# face ('cams', one of CAMS).
+SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88), cams='block')
 
 # Per-helmet adjustments, {fit: {module: {option: value}}}. The targeting uplink and the sensor
 # array share one side of the helmet ('side', the pawn's right by default), the second mind and
@@ -1149,8 +1148,25 @@ def _brow_guard(K, c, fit, o):
 # (ceramic tiles) or 'hex' (hexagonal tiles); None (plain uranium plates); or 'inlay' (dark
 # uranium inlays set into composite plates).
 HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
-            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, trefoil_side=1, skin=None,
-            lenses=())
+            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, skin=None, cams=None)
+
+# Camera clusters for the great helm ('cams'), on the pawn's left side of the face, their lenses
+# facing forward with the face whatever the plate's slope: round from the front, edge-on from the
+# side. Head units: u toward the pawn's right, v up; each lens (u, v, radius); 'front' is the
+# depth of the lenses' faces (the joint of the plates stands at 'ridge').
+CAMS = {
+    # three lenses on gunmetal tubes standing out through the plate
+    'tubes': dict(lenses=((-0.24, -0.08, 0.15), (-0.53, 0.17, 0.08), (-0.53, -0.31, 0.08)), front=1.32),
+    # a dyed housing built out of the plate, its flat front facing forward with the lenses in it
+    'block': dict(box=(-0.12, -0.68, 0.16, -0.36), lenses=((-0.3, -0.1, 0.15), (-0.57, 0.04, 0.075), (-0.57, -0.23, 0.075)),
+                  front=1.32),
+    # a narrow dyed column with three lenses stacked, like the multispectral sensor's
+    'column': dict(box=(-0.24, -0.52, 0.38, -0.56), lenses=((-0.38, 0.21, 0.105), (-0.38, -0.08, 0.105), (-0.38, -0.37, 0.105)),
+                   front=1.32),
+    # a port cut into the plate, the helmet's own cameras looking out of it from behind the plate
+    'port': dict(box=(-0.12, -0.68, 0.16, -0.36), lenses=((-0.3, -0.1, 0.15), (-0.57, 0.04, 0.075), (-0.57, -0.23, 0.075)),
+                 front=0.45),
+}
 HELM_VARIANTS = {
     'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
     'keel': {},
@@ -1268,12 +1284,8 @@ def _great_helm(K, c, fit, o):
         p.fill(disc(side, t0, v0, R * 0.42), f'{AMBER.name}.shade', mask=None)
         p.fill(disc(side, t0, v0, R * 0.26), f'{DARK.name}.base', mask=None)
 
-    def plate_lens(p, side, t0, v0, r):
-        """A camera lens set into the plate: a dark bezel, dark grey glass, a soft glint."""
-        p.fill(disc(side, t0, v0, r * 1.22), f'{DARK.name}.deep', mask=None)
-        p.fill(disc(side, t0, v0, r), f'{GREY.name}.deep', mask=None)
-        p.fill(disc(side, t0 + 0.3 * r / L, v0 + 0.32 * r, r * 0.3), f'{GREY.name}.base', mask=None)
     split = o['split']
+    plates = {}
     for side in ((1,) if east else (1, -1)):
         shaded = not east and side < 0
         tones = ('shade', 'deep') if shaded else ('base', 'shade')
@@ -1285,6 +1297,7 @@ def _great_helm(K, c, fit, o):
             p = plate(f'plate{side}', side, top, lambda t: split, 2, tones, inset=o['inset'])
         if p is None:
             continue
+        plates[side] = p
         lo_edge = (lambda t: split) if split is not None else bot
         for t, f in o['bolts']:
             v = top(t) + (lo_edge(t) + lip - top(t)) * f
@@ -1292,12 +1305,8 @@ def _great_helm(K, c, fit, o):
         if o['stencil'] and not shaded:
             x, y = pt(0.42, top(0.42) - 0.3, side)
             K.stencil(p, x - 2.5 * k, y, 5.0 * k, 3)
-        if o['trefoil'] and side == o['trefoil_side']:
+        if o['trefoil'] and side > 0:
             plate_trefoil(p, side, 0.5, (top(0.5) + lo_edge(0.5)) / 2 - 0.04, 0.12)
-        # a camera cluster, (t, v, radius) per lens, on the pawn's right plate (the left one seen
-        # from the front)
-        for t, v, r in (o['lenses'] if side > 0 else ()):
-            plate_lens(p, side, t, v, r)
     # a raised keel along the joint
     kw, kh = o['keel'], o['keel_w']
     if kw:
@@ -1310,6 +1319,99 @@ def _great_helm(K, c, fit, o):
         if keel is not None and not east:
             keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
                               head_pt(c, 0.0, vb + 0.02, wr + kw)]), 'light')
+    if o['cams']:
+        _face_cams(K, c, CAMS[o['cams']], lambda u: wr - dw * min(abs(u), ue) / ue, plates.get(-1))
+
+
+LENS_GLASS = '#5a5a5a'                # mid-grey, like the siegebreaker helmet's own lenses
+
+
+def _hull(pts):
+    """Convex hull of screen points, as a ring."""
+    pts = sorted(set((round(float(x), 3), round(float(y), 3)) for x, y in pts))
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    lower, upper = [], []
+    for q in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], q) <= 0:
+            lower.pop()
+        lower.append(q)
+    for q in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], q) <= 0:
+            upper.pop()
+        upper.append(q)
+    return G.poly(lower[:-1] + upper[:-1])
+
+
+def _face_cams(K, c, spec, surface, plate):
+    """A camera cluster on the pawn's left side of the face (see CAMS), its lenses facing forward
+    with the face: on tubes standing out through the plate, in a housing built out of it, or
+    looking out of a port in it. ``surface(u)`` is the plate's depth at u. From the side the tubes
+    or the housing stand out in front of the faceplate and the near plate hides the rest; the
+    port's cameras stay hidden behind it."""
+    k = c.k
+    hf = c.form
+    east = c.dir == 'east'
+    wf = spec['front']
+
+    def lens(p, u, v, r):
+        x, y = head_pt(c, u, v, wf)
+        rx, ry = r * hf.rx, r * hf.ry * 0.92
+        p.fill(G.ellipse(x, y, rx, ry), f'{DARK.name}.deep', mask=None)
+        p.fill(G.ellipse(x, y, rx * 0.74, ry * 0.74), LENS_GLASS, mask=None)
+        p.fill(G.ellipse(x - rx * 0.24, y - ry * 0.26, rx * 0.2, ry * 0.18), f'{GREY.name}.base', mask=None)
+
+    def ell(u, v, w, r, n=16):
+        x, y = head_pt(c, u, v, w)
+        return [(x + r * hf.rx * math.cos(a), y + r * hf.ry * 0.92 * math.sin(a)) for a in np.linspace(0, 2 * PI, n, endpoint=False)]
+    if 'box' not in spec:
+        # tubes: from the front a lens with its tube's top showing above it (we look down on it);
+        # from the side the tube's end standing out in front of the faceplate
+        for i, (u, v, r) in enumerate(spec['lenses']):
+            if east:
+                (xb, yb), (xf, yf) = head_pt(c, u, v, surface(u)), head_pt(c, u, v, wf)
+                rr = r * hf.ry * 0.92
+                tube = K.cylinder(f'tube{i}', (xb, yb), (xf, yf), rr, 1.9 + i * 0.01, FRAME)
+                if tube is not None:
+                    tube.fill(G.rect(xf - 1.0 * k, yf - rr, xf + 1, yf + rr), f'{DARK.name}.deep', mask=None)
+                continue
+            tube = K.flat(f'tube{i}', _hull(ell(u, v, surface(u), r * 1.1) + ell(u, v, wf, r * 1.1)), 2.6 + i * 0.01, FRAME)
+            if tube is not None:
+                lens(tube, u, v, r)
+        return
+    ui, uo, vt, vb = spec['box']
+    if wf < surface(ui):
+        # a port: the plate's opening, dark inside, the helmet's cameras behind it
+        if east or plate is None:
+            return
+        opening = [head_pt(c, u, v, surface(u)) for u, v in ((ui, vt), (uo, vt), (uo, vb), (ui, vb))]
+        port = K.part('port', G.rounded(G.poly(opening), 1.6 * k), 2.05, DARK, tone='base', shading=[])
+        if port is None:
+            return
+        port.fill(G.poly([opening[0], opening[1], (opening[1][0], opening[1][1] + 2.0 * k), (opening[0][0], opening[0][1] + 2.0 * k)]),
+                  'deep')
+        for u, v, r in spec['lenses']:
+            lens(port, u, v, r)
+        return
+    if east:
+        # the housing's inner side, standing out in front of the faceplate
+        side = [head_pt(c, ui, vt, surface(ui)), head_pt(c, ui, vt, wf), head_pt(c, ui, vb, wf), head_pt(c, ui, vb, surface(ui))]
+        box = vplate(K, c, 'cams', G.chamfer(G.poly(side), [0.6 * k, 1.2 * k, 1.2 * k, 0.6 * k]), 1.9, bevel=0.9)
+        if box is not None:
+            box.fill(G.poly([side[3], side[2], (side[2][0], side[2][1] - 2.0 * k), (side[3][0], side[3][1] - 2.0 * k)]), 'shade')
+            box.fill(G.rect(side[1][0] - 1.0 * k, side[1][1], side[1][0] + 1, side[2][1]), f'{DARK.name}.deep', mask=None)
+        return
+    # the housing's flat front with its top face above it (we look down on it)
+    front = [head_pt(c, ui, vt, wf), head_pt(c, uo, vt, wf), head_pt(c, uo, vb, wf), head_pt(c, ui, vb, wf)]
+    top_face = [head_pt(c, ui, vt, surface(ui)), head_pt(c, uo, vt, surface(uo)), front[1], front[0]]
+    box = vplate(K, c, 'cams', G.chamfer(_hull(front + top_face), 1.0 * k), 2.6, bevel=0.9)
+    if box is None:
+        return
+    box.fill(G.poly(top_face), 'light')
+    box.fill(G.poly([front[3], front[2], (front[2][0], front[2][1] - 2.0 * k), (front[3][0], front[3][1] - 2.0 * k)]), 'shade')
+    for u, v, r in spec['lenses']:
+        lens(box, u, v, r)
 
 
 @register('Plating', 'head', dirs=('south', 'east'), layer=0.2)
