@@ -108,8 +108,8 @@ HELMS = {
     'Recon': {'TargetingUplink': {'mast': False}},
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
-    # cataphract helmets take a great-helm faceplate over the whole front; on the prestige helmet
-    # its point stops under the crest, which runs on up from its keel
+    # cataphract helmets take a great-helm faceplate over the whole front (its 'variant' picks one
+    # of HELM_VARIANTS); on the prestige helmet its point stops under the crest
     'Cataphract': {'Plating': {'style': 'helm'}},
     'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm', 'v': (0.66, -1.0), 'back': (0.12, -0.95)}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}},
@@ -1133,23 +1133,39 @@ def _brow_guard(K, c, fit, o):
         K.notch(p, xn - 1.4 * k, yn - 0.6 * k, xn + 1.4 * k, yn + 0.6 * k)
 
 
+# The great helm's shape (head units; see _great_helm) and its variations, picked per helmet with
+# the 'variant' option: 'visor' (a visor over a chin plate, the plates meeting at a hard fold),
+# 'keel' (one plate a side, a raised keel along the joint), 'wedge' (broad plates over the ear
+# pieces under a lower point) and 'prow' (narrow plates under a tall point).
+HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
+            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False)
+HELM_VARIANTS = {
+    'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
+    'keel': {},
+    'wedge': dict(v=(0.95, -1.0), back=(0.2, -0.95), reach=0.95, slope=1.1, keel=0.05, keel_w=0.05,
+                  bolts=((0.88, 0.18), (0.88, 0.5), (0.88, 0.82))),
+    'prow': dict(v=(1.3, -1.0), back=(0.35, -0.95), reach=0.78, keel=0.09, keel_w=0.08, stencil=True, bolts=((0.82, 0.12), (0.82, 0.86))),
+}
+
+
 def _great_helm(K, c, fit, o):
-    """Great-helm faceplate: two thick composite plates joined along a raised keel down the
-    middle of the face. The keel stands upright in front of the helmet and rises to a capped
-    point over the brow; each plate slopes back from it to a pivot bolt at the temple, with an
-    inset panel and a row of breathing slots along its lower lip. Built
-    in 3D: from the front the lit plate and the shaded one meet at the keel under the point,
-    the pivots edge-on at the sides; from the side the near plate shows, the keel its upright
-    front edge and the pivot round at the back."""
+    """Great-helm faceplate: two thick composite plates over the front of the helmet, joined
+    at a hard edge down the middle of the face that stands upright in front of the helmet and
+    rises to a point over the brow; each plate slopes back from it to the side of the helmet.
+    Built in 3D: from the front the lit plate and the shaded one meet under the point; from the
+    side the near plate shows, the joint its upright front edge. Detailed like the body
+    plating: the plates' thickness and lower lip show, with an inset panel and bolts, and as
+    options a raised keel along the joint and a split into a visor over a chin plate."""
     k = c.k
-    vt, vb = o['v']                  # the keel's top (the point) and bottom (head units)
-    wr = o['ridge']                  # how far forward the keel stands
+    vt, vb = o['v']                  # the joint's top (the point) and bottom (head units)
+    wr = o['ridge']                  # how far forward the joint stands
     ue, dw = o['reach'], o['slope']  # the plates' back edges: how far out and how far back
     vbt, vbb = o['back']             # the back edges' top and bottom
+    lip = o['lip']                   # the lower lip's height (head units)
     east = c.dir == 'east'
 
     def pt(t, v, side, dz=0.0):
-        """A point on a plate: t from the keel (0) to the back edge (1), at height v, on the
+        """A point on a plate: t from the joint (0) to the back edge (1), at height v, on the
         pawn's right (side 1) or left (-1); dz stands it forward of the plate."""
         return head_pt(c, side * ue * t, v, wr - dw * t + dz)
 
@@ -1159,63 +1175,66 @@ def _great_helm(K, c, fit, o):
     def bot(t):
         return vb + (vbb - vb) * t
 
-    def band(side, t0, t1, va, vb_, n=4):
+    def band(side, t0, t1, va, vb_, n=4, dz=0.0):
         """Strip of the plate between heights va(t) and vb_(t) from t0 to t1."""
         ts = np.linspace(t0, t1, n)
-        return G.poly([pt(t, va(t), side) for t in ts] + [pt(t, vb_(t), side) for t in ts[::-1]])
-    lip = 0.12                       # the lower lip's height (head units)
+        return G.poly([pt(t, va(t), side, dz) for t in ts] + [pt(t, vb_(t), side, dz) for t in ts[::-1]])
+
+    def plate(name, side, va, vb_, z, tones, t1=1.0, dz=0.0, inset=True):
+        hi, lo = tones
+        p = vplate(K, c, name, band(side, 0, t1, va, vb_, 2, dz), z, tone=hi, bevel=1.3)
+        if p is None:
+            return None
+        # the top edge's thickness, lit from above, and the lower lip
+        p.fill(band(side, 0, t1, va, lambda t: va(t) - 0.035, dz=dz), 'light' if hi == 'base' else 'base')
+        if lip:
+            p.fill(band(side, 0, t1, lambda t: vb_(t) + lip, vb_, dz=dz), lo)
+            p.line([pt(t, vb_(t) + lip, side, dz) for t in np.linspace(0, t1, 4)], 0.8 * k, 'deep')
+        if inset:
+            K.panel(p, band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz), hi, w=0.8)
+        return p
+    split = o['split']
     for side in ((1,) if east else (1, -1)):
         shaded = not east and side < 0
-        hi, lo = ('shade', 'deep') if shaded else ('base', 'shade')
-        p = vplate(K, c, f'plate{side}', band(side, 0, 1, top, bot, 2), 2, tone=hi, bevel=1.3)
+        tones = ('shade', 'deep') if shaded else ('base', 'shade')
+        if split is None:
+            p = plate(f'plate{side}', side, top, bot, 2, tones, inset=o['inset'])
+        else:
+            # a visor over a chin plate set back under its lip
+            plate(f'chin{side}', side, lambda t: split - 0.1, bot, 1.9, (tones[1], 'deep'), t1=0.94, dz=-0.05, inset=False)
+            p = plate(f'plate{side}', side, top, lambda t: split, 2, tones, inset=o['inset'])
         if p is None:
             continue
-        # the top edge's thickness, lit from above, and the lower lip with its breathing slots
-        p.fill(band(side, 0, 1, top, lambda t: top(t) - 0.035), 'light' if not shaded else 'base')
-        p.fill(band(side, 0, 1, lambda t: bot(t) + lip, bot), lo)
-        p.line([pt(t, bot(t) + lip, side) for t in np.linspace(0, 1, 4)], 0.8 * k, 'deep')
-        for t in np.linspace(0.16, 0.84, 5 if east else 4):
-            x, y = pt(t, bot(t) + lip * 0.5, side)
-            p.fill(G.rounded(G.rect(x - 0.55 * k, y - lip * 0.3 * c.form.ry, x + 0.55 * k, y + lip * 0.3 * c.form.ry), 0.4 * k),
-                   f'{DARK.name}.base', mask=None)
-        # the inset panel
-        K.panel(p, band(side, 0.2, 0.86, lambda t: top(t) - 0.16, lambda t: bot(t) + lip + 0.1), hi, w=0.8)
-        # the pivot: round from the side, a barrel edge-on from the front
-        x, y = pt(1.0, o['pivot'], side)
+        lo_edge = (lambda t: split) if split is not None else bot
+        for t, f in o['bolts']:
+            v = top(t) + (lo_edge(t) + lip - top(t)) * f
+            K.bolt(p, *pt(t, v, side), 1.0 * k)
+        if o['stencil'] and not shaded:
+            x, y = pt(0.42, top(0.42) - 0.3, side)
+            K.stencil(p, x - 2.5 * k, y, 5.0 * k, 3)
+    # a raised keel along the joint
+    kw, kh = o['keel'], o['keel_w']
+    if kw:
         if east:
-            K.hinge(f'pivot{side}', x - 0.6 * k, y, 3.2 * k, 3, FRAME)
+            ring = G.poly([pt(0, vt - 0.02, 1), pt(0, vt - 0.02, 1, kw), pt(0, vb + 0.02, 1, kw), pt(0, vb + 0.02, 1)])
         else:
-            K.knuckle(f'pivot{side}', x - side * 0.6 * k, y, 2.2 * k, 1.8 * k, 3, FRAME)
-    # the keel, standing forward of the joint
-    kw = o['keel']
-    if east:
-        ring = G.poly([pt(0, vt - 0.02, 1), pt(0, vt - 0.02, 1, kw), pt(0, vb + 0.02, 1, kw), pt(0, vb + 0.02, 1)])
-    else:
-        ring = G.poly([head_pt(c, 0.0, vt + 0.02, wr + kw), head_pt(c, -0.07, vt - 0.06, wr + kw), head_pt(c, -0.07, vb + 0.02, wr + kw),
-                       head_pt(c, 0.07, vb + 0.02, wr + kw), head_pt(c, 0.07, vt - 0.06, wr + kw)])
-    keel = vplate(K, c, 'keel', ring, 2.5, tone='base', bevel=0.9)
-    if keel is not None and not east:
-        x0, y0 = head_pt(c, 0.0, vb + 0.02, wr + kw)
-        keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -0.07, vt - 0.06, wr + kw), head_pt(c, -0.07, vb + 0.02, wr + kw),
-                          (x0, y0)]), 'light')
-    # the gunmetal cap over the point, riveted
-    if east:
-        cap = [pt(0, vt + 0.03, 1, kw), pt(0, vt - 0.34, 1, kw), pt(0.3, top(0.3) - 0.04, 1)]
-    else:
-        cap = [head_pt(c, 0.0, vt + 0.05, wr + kw), pt(0.28, top(0.28) - 0.05, -1), head_pt(c, 0.0, vt - 0.3, wr + kw), pt(0.28, top(0.28) - 0.05, 1)]
-    cp = K.block('cap', G.poly(cap), 3.5, FRAME, bevel=0.6)
-    if cp is not None:
-        xm, ym = sum(q[0] for q in cap) / len(cap), sum(q[1] for q in cap) / len(cap)
-        K.bolt(cp, xm, ym, 0.9 * k)
+            ring = G.poly([head_pt(c, 0.0, vt + 0.02, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
+                           head_pt(c, kh, vb + 0.02, wr + kw), head_pt(c, kh, vt - 0.06, wr + kw)])
+        keel = vplate(K, c, 'keel', ring, 2.5, tone='base', bevel=0.9)
+        if keel is not None and not east:
+            keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
+                              head_pt(c, 0.0, vb + 0.02, wr + kw)]), 'light')
 
 
 @register('Plating', 'head', dirs=('south', 'east'), layer=0.2)
 def helm_plating(K, c, fit):
     """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
     helmets, a great-helm faceplate over the whole front."""
-    if hopts(fit, 'Plating', style='brow')['style'] == 'helm':
-        _great_helm(K, c, fit, hopts(fit, 'Plating', v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), pivot=0.0,
-                                     keel=0.07))
+    o = hopts(fit, 'Plating', style='brow', variant='visor')
+    if o['style'] == 'helm':
+        h = dict(HELM, **HELM_VARIANTS[o['variant']])
+        h.update({key: val for key, val in o.items() if key in HELM})
+        _great_helm(K, c, fit, h)
     else:
         _brow_guard(K, c, fit, hopts(fit, 'Plating', phi=(0.3, 0.62), w=0.66))
 
