@@ -30,6 +30,7 @@ are round caps only from the side, and housings or barrels from the front and ba
 import math
 
 import numpy as np
+from PIL import Image
 
 import mpa_fit as F
 from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
@@ -48,16 +49,18 @@ URAN = _mat('mpa_uranium', '#5a5e57', light='#7c8178', shade='#43473f', deep='#2
 # ============================================================================= registry and options
 
 class Module:
-    def __init__(self, name, slot, fn, dirs, layer):
-        self.name, self.slot, self.fn, self.dirs, self.layer = name, slot, fn, dirs, layer
+    def __init__(self, name, slot, fn, dirs, layer, west):
+        self.name, self.slot, self.fn, self.dirs, self.layer, self.west = name, slot, fn, dirs, layer, west
 
 
 REGISTRY = {}
 
 
-def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5):
+def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5, west=None):
+    """``west(fit)``, for a helmet module, says whether it has art of its own facing west on that
+    helmet, where it is lopsided enough that the mirrored east view would show the wrong side."""
     def deco(fn):
-        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer)
+        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer, west)
         return fn
     return deco
 
@@ -103,7 +106,7 @@ FITS = {
 # cataphract's: the joint closer to the face, narrower plates, a shorter chin (see HELM). Like the
 # helmet's own face it carries forward-facing cameras, a cluster of three on the left side of the
 # face ('cams', one of CAMS).
-SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88), cams='block')
+SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88), cams='port')
 
 # Per-helmet adjustments, {fit: {module: {option: value}}}. The targeting uplink and the sensor
 # array share one side of the helmet ('side', the pawn's right by default), the second mind and
@@ -163,12 +166,15 @@ def body_scene(name, fit, bt, d):
     return s.scenes[f'{bt}_{d}'], out['fp']
 
 
-def head_scene(name, fit, d):
+def head_scene(name, fit, d, mirror=False):
+    """``mirror`` turns the pawn round left for right (head_pt), so the east view shows its left
+    side: mirrored, that is the west view."""
     mod = module('head', name)
     out = {}
 
     def design(c):
         setup(c.scene, c.k)
+        c.mirror = mirror
         out['fp'] = F.helmet_footprint(c, fit)
         if d in hopts(fit, name, skip=()).get('skip', ()):
             return
@@ -178,8 +184,18 @@ def head_scene(name, fit, d):
 
 
 def render_module(slot, name, fit, d, bt='Male'):
-    """(rgba, mask) images, or (None, None) when the module shows nothing in this view."""
-    if d not in module(slot, name).dirs:
+    """(rgba, mask) images, or (None, None) when the module shows nothing in this view. 'west' is
+    drawn only for helmet modules with west art of their own on this helmet (Module.west): the
+    east view of the pawn's left side, mirrored."""
+    mod = module(slot, name)
+    if d == 'west':
+        if slot != 'head' or mod.west is None or not mod.west(fit):
+            return None, None
+        sc, fp = head_scene(name, fit, 'east', mirror=True)
+        if not sc.parts:
+            return None, None
+        return render(sc, fp).transpose(Image.FLIP_LEFT_RIGHT), render_mask(sc).transpose(Image.FLIP_LEFT_RIGHT)
+    if d not in mod.dirs:
         return None, None
     sc, fp = body_scene(name, fit, bt, d) if slot == 'body' else head_scene(name, fit, d)
     if not sc.parts:
@@ -1058,8 +1074,11 @@ def _phi_at(c, y):
 
 def head_pt(c, u, v, w):
     """Screen point of a 3D point near the head, in head units: u toward the pawn's right, v up,
-    w forward (the head form's rx, 0.92 ry and rx), projected the way HeadForm.P projects."""
+    w forward (the head form's rx, 0.92 ry and rx), projected the way HeadForm.P projects. In a
+    mirrored scene (head_scene) the pawn's left side faces the east view's camera."""
     hf = c.form
+    if getattr(c, 'mirror', False):
+        u = -u
     x, z = {'south': (-u, w), 'north': (u, -w)}.get(c.dir, (w, u))
     return hf.cx + x * hf.rx, hf.cy - v * hf.ry * 0.92 + z * hf.ry * TILT * 0.55
 
@@ -1286,7 +1305,8 @@ def _great_helm(K, c, fit, o):
 
     split = o['split']
     plates = {}
-    for side in ((1,) if east else (1, -1)):
+    near = -1 if getattr(c, 'mirror', False) else 1
+    for side in ((near,) if east else (1, -1)):
         shaded = not east and side < 0
         tones = ('shade', 'deep') if shaded else ('base', 'shade')
         if split is None:
@@ -1347,12 +1367,13 @@ def _hull(pts):
 def _face_cams(K, c, spec, surface, plate):
     """A camera cluster on the pawn's left side of the face (see CAMS), its lenses facing forward
     with the face: on tubes standing out through the plate, in a housing built out of it, or
-    looking out of a port in it. ``surface(u)`` is the plate's depth at u. From the side the tubes
-    or the housing stand out in front of the faceplate and the near plate hides the rest; the
-    port's cameras stay hidden behind it."""
+    looking out of a port in it. ``surface(u)`` is the plate's depth at u. Seen from the pawn's
+    left (the mirrored east view, which is the west art) the cluster is on the near plate; seen
+    from its right the tubes or the housing stand out in front of the faceplate and the near plate
+    hides the rest, the port's cameras staying hidden."""
     k = c.k
     hf = c.form
-    east = c.dir == 'east'
+    view = 'front' if c.dir == 'south' else ('near' if getattr(c, 'mirror', False) else 'far')
     wf = spec['front']
 
     def lens(p, u, v, r):
@@ -1362,45 +1383,71 @@ def _face_cams(K, c, spec, surface, plate):
         p.fill(G.ellipse(x, y, rx * 0.74, ry * 0.74), LENS_GLASS, mask=None)
         p.fill(G.ellipse(x - rx * 0.24, y - ry * 0.26, rx * 0.2, ry * 0.18), f'{GREY.name}.base', mask=None)
 
+    def barrel(p, u, v, w0, r):
+        """A camera seen from the side, filled into p: its barrel from depth w0 to its lens."""
+        (x0, y0), (x1, y1) = head_pt(c, u, v, w0), head_pt(c, u, v, wf)
+        rr = r * hf.ry * 0.92
+        p.fill(G.rect(x0, y0 - rr, x1, y0 + rr), f'{FRAME.name}.base', mask=None)
+        p.fill(G.rect(x0, y0 - rr, x1, y0 - rr * 0.4), f'{FRAME.name}.light', mask=None)
+        p.fill(G.rect(x0, y0 + rr * 0.45, x1, y0 + rr), f'{FRAME.name}.shade', mask=None)
+        p.fill(G.rect(x1 - 1.2 * k, y1 - rr, x1, y1 + rr), LENS_GLASS, mask=None)
+        p.fill(G.rect(x1 - 0.5 * k, y1 - rr, x1 + 0.4 * k, y1 + rr), f'{DARK.name}.deep', mask=None)
+
     def ell(u, v, w, r, n=16):
         x, y = head_pt(c, u, v, w)
         return [(x + r * hf.rx * math.cos(a), y + r * hf.ry * 0.92 * math.sin(a)) for a in np.linspace(0, 2 * PI, n, endpoint=False)]
     if 'box' not in spec:
         # tubes: from the front a lens with its tube's top showing above it (we look down on it);
-        # from the side the tube's end standing out in front of the faceplate
+        # from the side the tubes standing out of the plate, the near side's whole
         for i, (u, v, r) in enumerate(spec['lenses']):
-            if east:
-                (xb, yb), (xf, yf) = head_pt(c, u, v, surface(u)), head_pt(c, u, v, wf)
-                rr = r * hf.ry * 0.92
-                tube = K.cylinder(f'tube{i}', (xb, yb), (xf, yf), rr, 1.9 + i * 0.01, FRAME)
+            if view == 'front':
+                tube = K.flat(f'tube{i}', _hull(ell(u, v, surface(u), r * 1.1) + ell(u, v, wf, r * 1.1)), 2.6 + i * 0.01, FRAME)
                 if tube is not None:
-                    tube.fill(G.rect(xf - 1.0 * k, yf - rr, xf + 1, yf + rr), f'{DARK.name}.deep', mask=None)
+                    lens(tube, u, v, r)
                 continue
-            tube = K.flat(f'tube{i}', _hull(ell(u, v, surface(u), r * 1.1) + ell(u, v, wf, r * 1.1)), 2.6 + i * 0.01, FRAME)
+            (xb, yb), (xf, yf) = head_pt(c, u, v, surface(u)), head_pt(c, u, v, wf)
+            rr = r * hf.ry * 0.92
+            z = 2.6 + abs(u) * 0.1 if view == 'near' else 1.9 + i * 0.01
+            tube = K.cylinder(f'tube{i}', (xb, yb), (xf, yf), rr, z, FRAME)
             if tube is not None:
-                lens(tube, u, v, r)
+                tube.fill(G.rect(xf - 1.0 * k, yf - rr, xf + 1, yf + rr), f'{DARK.name}.deep', mask=None)
         return
     ui, uo, vt, vb = spec['box']
     if wf < surface(ui):
         # a port: the plate's opening, dark inside, the helmet's cameras behind it
-        if east or plate is None:
+        if view == 'far' or plate is None:
             return
         opening = [head_pt(c, u, v, surface(u)) for u, v in ((ui, vt), (uo, vt), (uo, vb), (ui, vb))]
         port = K.part('port', G.rounded(G.poly(opening), 1.6 * k), 2.05, DARK, tone='base', shading=[])
         if port is None:
             return
+        # the opening's top edge: the plate's thickness, in shadow
         port.fill(G.poly([opening[0], opening[1], (opening[1][0], opening[1][1] + 2.0 * k), (opening[0][0], opening[0][1] + 2.0 * k)]),
                   'deep')
         for u, v, r in spec['lenses']:
-            lens(port, u, v, r)
+            if view == 'front':
+                lens(port, u, v, r)
+            else:
+                barrel(port, u, v, wf - 0.3, r)
         return
-    if east:
+    if view == 'far':
         # the housing's inner side, standing out in front of the faceplate
         side = [head_pt(c, ui, vt, surface(ui)), head_pt(c, ui, vt, wf), head_pt(c, ui, vb, wf), head_pt(c, ui, vb, surface(ui))]
         box = vplate(K, c, 'cams', G.chamfer(G.poly(side), [0.6 * k, 1.2 * k, 1.2 * k, 0.6 * k]), 1.9, bevel=0.9)
         if box is not None:
             box.fill(G.poly([side[3], side[2], (side[2][0], side[2][1] - 2.0 * k), (side[3][0], side[3][1] - 2.0 * k)]), 'shade')
             box.fill(G.rect(side[1][0] - 1.0 * k, side[1][1], side[1][0] + 1, side[2][1]), f'{DARK.name}.deep', mask=None)
+        return
+    if view == 'near':
+        # the housing's outer side with its top above it, out of the plate to the lenses
+        side = [head_pt(c, uo, vt, surface(uo)), head_pt(c, uo, vt, wf), head_pt(c, uo, vb, wf), head_pt(c, uo, vb, surface(uo))]
+        top_face = [head_pt(c, ui, vt, surface(ui)), head_pt(c, ui, vt, wf), side[1], side[0]]
+        box = vplate(K, c, 'cams', G.chamfer(_hull(side + top_face), 1.0 * k), 2.6, bevel=0.9)
+        if box is not None:
+            box.fill(G.poly(top_face), 'light')
+            box.fill(G.poly([side[3], side[2], (side[2][0], side[2][1] - 2.0 * k), (side[3][0], side[3][1] - 2.0 * k)]), 'shade')
+            box.fill(G.rect(side[1][0] - 1.0 * k, min(side[1][1], top_face[1][1]), side[1][0] + 1, side[2][1]), f'{DARK.name}.deep',
+                     mask=None)
         return
     # the housing's flat front with its top face above it (we look down on it)
     front = [head_pt(c, ui, vt, wf), head_pt(c, uo, vt, wf), head_pt(c, uo, vb, wf), head_pt(c, ui, vb, wf)]
@@ -1414,7 +1461,12 @@ def _face_cams(K, c, spec, surface, plate):
         lens(box, u, v, r)
 
 
-@register('Plating', 'head', dirs=('south', 'east'), layer=0.2)
+def _helm_west(name):
+    """Module.west for the platings: the great helm's camera cluster is on the pawn's left."""
+    return lambda fit: bool(hopts(fit, name).get('cams'))
+
+
+@register('Plating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('Plating'))
 def helm_plating(K, c, fit):
     """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
     helmets, a great-helm faceplate over the whole front."""
@@ -1469,7 +1521,7 @@ def _uranium_brow(K, c, fit, o):
         p.line([hf.P(sd * 0.3, ph, r) for ph in np.linspace(p0 + 0.04, p1 - 0.05, 4)], 1.2 * k, 'deep')
 
 
-@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2)
+@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('UraniumPlating'))
 def helm_uranium(K, c, fit):
     """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil; on
     cataphract helmets, the great-helm faceplate in laminated uranium plates."""

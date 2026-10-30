@@ -17,6 +17,9 @@ namespace ModularPowerArmor
         // The tree is rebuilt, module nodes included, whenever apparel changes, so this stays valid.
         private PawnRenderNode hostNode;
 
+        // The last graphic GraphicFor made, so GetMesh can tell whether it has its own west texture.
+        private Graphic_Multi moduleGraphic;
+
         public PawnRenderNode_ArmorModule(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree)
             : base(pawn, props, tree)
         {
@@ -103,7 +106,21 @@ namespace ModularPowerArmor
             Color color = tinted ? apparel.DrawColor : Color.white;
             Color colorTwo = tinted ? apparel.DrawColorTwo : Color.white;
             Shader shader = Props.shaderTypeDef?.Shader ?? ShaderDatabase.CutoutComplex;
-            return GraphicDatabase.Get<Graphic_Multi>(path, shader, Vector2.one, color, colorTwo);
+            moduleGraphic = GraphicDatabase.Get<Graphic_Multi>(path, shader, Vector2.one, color, colorTwo) as Graphic_Multi;
+            return moduleGraphic;
+        }
+
+        public override Mesh GetMesh(PawnDrawParms parms)
+        {
+            // The humanlike mesh sets draw the west facing mirrored, which turns the east texture
+            // Graphic_Multi stands in for a missing west one into the west view. Art with its own
+            // west texture (a module on one side of the pawn, shown from that side) is drawn facing
+            // west already, so it takes the unmirrored mesh.
+            if (parms.facing == Rot4.West && moduleGraphic != null && !moduleGraphic.WestFlipped)
+            {
+                return MeshSetFor(parms.pawn)?.MeshAt(Rot4.East);
+            }
+            return base.GetMesh(parms);
         }
 
         protected override IEnumerable<Graphic> GraphicsFor(Pawn pawn)
