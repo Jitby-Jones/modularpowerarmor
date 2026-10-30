@@ -100,8 +100,11 @@ FITS = {
 }
 
 # The great-helm faceplate fitted to the siegebreaker helmets, smaller and flatter-faced than the
-# cataphract's: the joint closer to the face, narrower plates, a shorter chin (see HELM).
-SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88))
+# cataphract's: the joint closer to the face, narrower plates, a shorter chin (see HELM). Like the
+# helmet's own face it carries camera lenses, a cluster of three on the left plate seen from the
+# front, so the uranium trefoil goes on the other plate.
+SIEGE_HELM = dict(style='helm', ridge=1.0, reach=0.85, slope=1.0, v=(0.95, -0.92), back=(0.2, -0.88),
+                  lenses=((0.38, -0.05, 0.21), (0.72, 0.12, 0.1), (0.7, -0.22, 0.09)), trefoil_side=-1)
 
 # Per-helmet adjustments, {fit: {module: {option: value}}}. The targeting uplink and the sensor
 # array share one side of the helmet ('side', the pawn's right by default), the second mind and
@@ -1146,7 +1149,8 @@ def _brow_guard(K, c, fit, o):
 # (ceramic tiles) or 'hex' (hexagonal tiles); None (plain uranium plates); or 'inlay' (dark
 # uranium inlays set into composite plates).
 HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
-            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, skin=None)
+            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, trefoil_side=1, skin=None,
+            lenses=())
 HELM_VARIANTS = {
     'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
     'keel': {},
@@ -1250,19 +1254,25 @@ def _great_helm(K, c, fit, o):
                 v -= 0.1
                 i += 1
 
-    def plate_trefoil(p, side, t0, v0, R):
-        """A radiation trefoil on an amber disc, drawn on the plate so it foreshortens with it."""
-        def q(d, v):
-            return pt(t0 + d / L, v0 + v, side)
+    def disc(side, t0, v0, r, a0=0.0, a1=2 * PI, n=20):
+        """A circle of radius r (head units) laid on a plate round (t0, v0), so it foreshortens
+        with the plate; a0..a1 gives a sector of it instead."""
+        pts = [pt(t0 + r * math.cos(a) / L, v0 + r * math.sin(a), side) for a in np.linspace(a0, a1, n, endpoint=a1 - a0 < 2 * PI)]
+        return G.poly(pts if a1 - a0 >= 2 * PI else [pt(t0, v0, side)] + pts)
 
-        def disc(r):
-            return G.poly([q(r * math.cos(a), r * math.sin(a)) for a in np.linspace(0, 2 * PI, 20, endpoint=False)])
-        p.fill(disc(R * 1.25), f'{AMBER.name}.shade', mask=None)
+    def plate_trefoil(p, side, t0, v0, R):
+        """A radiation trefoil on an amber disc."""
+        p.fill(disc(side, t0, v0, R * 1.25), f'{AMBER.name}.shade', mask=None)
         for i in range(3):
-            a = np.linspace(math.radians(60 + 120 * i), math.radians(120 + 120 * i), 6)
-            p.fill(G.poly([q(0, 0)] + [q(R * math.cos(x), R * math.sin(x)) for x in a]), f'{DARK.name}.base', mask=None)
-        p.fill(disc(R * 0.42), f'{AMBER.name}.shade', mask=None)
-        p.fill(disc(R * 0.26), f'{DARK.name}.base', mask=None)
+            p.fill(disc(side, t0, v0, R, math.radians(60 + 120 * i), math.radians(120 + 120 * i), 6), f'{DARK.name}.base', mask=None)
+        p.fill(disc(side, t0, v0, R * 0.42), f'{AMBER.name}.shade', mask=None)
+        p.fill(disc(side, t0, v0, R * 0.26), f'{DARK.name}.base', mask=None)
+
+    def plate_lens(p, side, t0, v0, r):
+        """A camera lens set into the plate: a dark bezel, dark grey glass, a soft glint."""
+        p.fill(disc(side, t0, v0, r * 1.22), f'{DARK.name}.deep', mask=None)
+        p.fill(disc(side, t0, v0, r), f'{GREY.name}.deep', mask=None)
+        p.fill(disc(side, t0 + 0.3 * r / L, v0 + 0.32 * r, r * 0.3), f'{GREY.name}.base', mask=None)
     split = o['split']
     for side in ((1,) if east else (1, -1)):
         shaded = not east and side < 0
@@ -1282,8 +1292,12 @@ def _great_helm(K, c, fit, o):
         if o['stencil'] and not shaded:
             x, y = pt(0.42, top(0.42) - 0.3, side)
             K.stencil(p, x - 2.5 * k, y, 5.0 * k, 3)
-        if o['trefoil'] and side > 0:
+        if o['trefoil'] and side == o['trefoil_side']:
             plate_trefoil(p, side, 0.5, (top(0.5) + lo_edge(0.5)) / 2 - 0.04, 0.12)
+        # a camera cluster, (t, v, radius) per lens, on the pawn's right plate (the left one seen
+        # from the front)
+        for t, v, r in (o['lenses'] if side > 0 else ()):
+            plate_lens(p, side, t, v, r)
     # a raised keel along the joint
     kw, kh = o['keel'], o['keel_w']
     if kw:
