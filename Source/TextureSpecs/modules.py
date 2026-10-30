@@ -1137,9 +1137,12 @@ def _brow_guard(K, c, fit, o):
 # the 'variant' option: 'wedge' (broad plates over the ear pieces under a lower point, used on
 # both cataphract helmets), 'visor' (a visor over a chin plate, the plates meeting at a hard fold),
 # 'keel' (one plate a side, a raised keel along the joint) and 'prow' (narrow plates under a tall
-# point).
+# point). In uranium, 'skin' picks the plates' look: a composite texture over the dark uranium
+# plates in their dyed trim, 'laminate' (bonded layers, used on both cataphract helmets), 'tiles'
+# (ceramic tiles) or 'hex' (hexagonal tiles); None (plain uranium plates); or 'inlay' (dark
+# uranium inlays set into composite plates).
 HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
-            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False)
+            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, skin=None)
 HELM_VARIANTS = {
     'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
     'keel': {},
@@ -1157,16 +1160,19 @@ def _great_helm(K, c, fit, o):
     side the near plate shows, the joint its upright front edge. Detailed like the body
     plating: the plates' thickness and lower lip show, with an inset panel and bolts, and as
     options a raised keel along the joint and a split into a visor over a chin plate. In
-    uranium (mat URAN) the plates are dark, framed in dyed trim, with a trefoil on the pawn's
-    right plate."""
+    uranium (mat URAN) the plates carry a trefoil on the pawn's right plate and take one of the
+    skins (see HELM)."""
     k = c.k
     vt, vb = o['v']                  # the joint's top (the point) and bottom (head units)
     wr = o['ridge']                  # how far forward the joint stands
     ue, dw = o['reach'], o['slope']  # the plates' back edges: how far out and how far back
     vbt, vbb = o['back']             # the back edges' top and bottom
     lip = o['lip']                   # the lower lip's height (head units)
-    mat = o['mat']
+    skin = o['skin'] if o['mat'] is URAN else None
+    # 'inlay': uranium set into composite plates; the other skins texture the uranium itself
+    mat = SHELL if skin == 'inlay' else o['mat']
     east = c.dir == 'east'
+    L = math.hypot(ue, dw)           # a plate's true width (head units)
 
     def pt(t, v, side, dz=0.0):
         """A point on a plate: t from the joint (0) to the back edge (1), at height v, on the
@@ -1195,17 +1201,53 @@ def _great_helm(K, c, fit, o):
         if lip:
             p.fill(band(side, 0, t1, lambda t: vb_(t) + lip, vb_, dz=dz), lo)
             p.line([pt(t, vb_(t) + lip, side, dz) for t in np.linspace(0, t1, 4)], 0.8 * k, 'deep')
-        if inset:
+        if skin == 'inlay' and inset:
+            # a dark uranium inlay where the composite plate's inset panel would be
+            inlay = band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz)
+            p.fill(inlay, f'{URAN.name}.{"base" if hi == "base" else "shade"}', mask=None)
+            p.details.append(Line(inlay, 1.0 * k, f'{URAN.name}.line', closed=True, mask=None))
+        elif skin and inset:
+            texture(p, side, va, vb_, t1, dz, hi)
+        elif inset:
             K.panel(p, band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz), hi, w=0.8)
         if mat is URAN:
             # the dyed trim frame round the uranium plate
             p.details.append(Line(outline, 2.4 * k, f'{SHELL.name}.{"shade" if hi == "base" else "deep"}', closed=True, mask='r'))
         return p
 
+    def texture(p, side, va, vb_, t1, dz, hi):
+        """Composite texture over a uranium plate, laid out on the plate so it foreshortens
+        with it: ceramic tiles in staggered rows, hexagonal tiles, or bonded layers."""
+        seam = 'deep' if hi == 'base' else 'line'
+        vmax, vmin = max(va(0), va(t1)), min(vb_(0), vb_(t1)) + lip
+        if skin == 'tiles':
+            rows = np.arange(vmax - 0.2, vmin, -0.21)
+            edges = [vmax] + list(rows) + [vmin]
+            for r, (ya, yb) in enumerate(zip(edges[:-1], edges[1:])):
+                if r:
+                    p.line([pt(0, ya, side, dz), pt(t1, ya, side, dz)], 0.9 * k, seam)
+                    p.line([pt(0, ya - 0.025, side, dz), pt(t1, ya - 0.025, side, dz)], 0.5 * k, 'light' if hi == 'base' else 'base')
+                for t in (np.arange(0.3, t1, 0.3) if r % 2 else np.arange(0.15, t1, 0.3)):
+                    p.line([pt(t, ya, side, dz), pt(t, yb, side, dz)], 0.9 * k, seam)
+        elif skin == 'hex':
+            r = 0.1
+            for i in range(-1, int(L / (1.5 * r)) + 2):
+                for j in range(-1, int((vmax - vmin) / (math.sqrt(3) * r)) + 2):
+                    d0 = i * 1.5 * r
+                    v0_ = vmin + j * math.sqrt(3) * r + (i % 2) * math.sqrt(3) / 2 * r
+                    ring_ = [pt((d0 + r * math.cos(a)) / L, v0_ + r * math.sin(a), side, dz) for a in np.radians(np.arange(0, 360, 60))]
+                    p.details.append(Line(G.poly(ring_), 0.8 * k, seam, closed=True))
+        elif skin == 'laminate':
+            v = vmax - 0.08
+            i = 0
+            while v > vmin:
+                p.fill(G.poly([pt(0, v, side, dz), pt(t1, v, side, dz), pt(t1, v - 0.045, side, dz), pt(0, v - 0.045, side, dz)]),
+                       'shade' if hi == 'base' else 'deep')
+                v -= 0.1
+                i += 1
+
     def plate_trefoil(p, side, t0, v0, R):
         """A radiation trefoil on an amber disc, drawn on the plate so it foreshortens with it."""
-        L = math.hypot(ue, dw)
-
         def q(d, v):
             return pt(t0 + d / L, v0 + v, side)
 
@@ -1310,8 +1352,8 @@ def _uranium_brow(K, c, fit, o):
 @register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2)
 def helm_uranium(K, c, fit):
     """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil; on
-    cataphract helmets, the great-helm faceplate in uranium."""
-    o = hopts(fit, 'UraniumPlating', style='brow', variant='wedge')
+    cataphract helmets, the great-helm faceplate in laminated uranium plates."""
+    o = hopts(fit, 'UraniumPlating', style='brow', variant='wedge', skin='laminate')
     if o['style'] == 'helm':
         h = dict(HELM, **HELM_VARIANTS[o['variant']], mat=URAN, trefoil=True)
         h.update({key: val for key, val in o.items() if key in HELM})
