@@ -18,6 +18,7 @@ TEX = os.path.join(MOD, 'Textures')
 BODY = ['Exoframe', 'RigidityMatrix', 'LongjumpHydraulics', 'BiogelServos', 'ThermalFins', 'Plating', 'Regenerators', 'SecondHeart',
         'Subpersona']
 HEAD = ['Plating', 'NeuralLink', 'StressDampener', 'Subpersona', 'SecondMind', 'Regenerators', 'SensorArray', 'TargetingUplink']
+OVER_HEAD = ['PlatingPad']
 ICONS = ['AdditionalPlating', 'UraniumPlating', 'BiogelServos', 'NeuromemeticRegenerators', 'Exoframe', 'AuxiliarySubpersona',
          'ThermalRegulator', 'RigidityMatrix', 'SecondHeart', 'LongjumpHydraulics', 'TargetingUplink', 'SensorArray', 'SecondMind',
          'BionicSynchronization', 'StressDampener', 'AblativeShielding']
@@ -67,7 +68,13 @@ def pawn(d, col):
         if lay is not None:
             hm.alpha_composite(lay)
     head = PV.head_scene(d, SIZE).render()
-    return PV.worn(body, ap, head, hm, d, SIZE)
+    out = PV.worn(body, ap, head, hm, d, SIZE)
+    # from the side the near shoulder plate is drawn over the head (aboveHead in the defs)
+    for m in OVER_HEAD:
+        lay = module_layer(f'{TEX}/ModularPowerArmor/Worn/Body/{m}_Marine/{m}_Marine_Male_{d}', col)
+        if lay is not None:
+            out.alpha_composite(lay, (0, int(SIZE * 0.3)))
+    return out
 
 
 W, H = 1280, 720

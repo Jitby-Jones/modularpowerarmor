@@ -22,7 +22,14 @@ draws them in a fixed order, low to high:
             regenerators, sensor array, targeting uplink
 
 except where a module takes another place on some armors (Module.fit_layer, mirrored in the defs'
-layerFractionByFit): the great-helm faceplate goes in front of every other helmet module.
+layerFractionByFit): the great-helm faceplate goes in front of every other helmet module but the
+sensor array, whose cameras look out past it. Seen from the side, the platings' shoulder plates
+stand out past the helmet, so the near one is drawn over the head: those are separate art sets
+(PlatingPad, UraniumPlatingPad) whose render nodes set aboveHead in the defs.
+
+The west view is normally the east view mirrored. A module that differs from side to side (a
+housing on one side of the helmet, a shoulder plate on one shoulder) has west art of its own
+instead (Module.west): the pawn's left side seen from the side, mirrored.
 
 Apart from the plating, every module is built like the vanilla armor itself (see vanilla-style
 parts below): a few big plates with flat faces, chamfers, dark recesses and black outlines.
@@ -52,9 +59,9 @@ URAN = _mat('mpa_uranium', '#5a5e57', light='#7c8178', shade='#43473f', deep='#2
 # ============================================================================= registry and options
 
 class Module:
-    def __init__(self, name, slot, fn, dirs, layer, west, fit_layer):
+    def __init__(self, name, slot, fn, dirs, layer, west, fit_layer, over_head):
         self.name, self.slot, self.fn, self.dirs, self.layer, self.west = name, slot, fn, dirs, layer, west
-        self.fit_layer = fit_layer
+        self.fit_layer, self.over_head = fit_layer, over_head
 
     def layer_for(self, fit):
         """The module's draw layer on armor of this fit."""
@@ -65,14 +72,21 @@ class Module:
 REGISTRY = {}
 
 
-def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5, west=None, fit_layer=None):
-    """``west(fit)``, for a helmet module, says whether it has art of its own facing west on that
-    helmet, where it is lopsided enough that the mirrored east view would show the wrong side.
-    ``fit_layer(fit)`` gives the module another draw layer on some armors (None elsewhere)."""
+def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5, west=None, fit_layer=None, over_head=False):
+    """``west(fit)`` says whether the module has art of its own facing west on that armor, where it
+    is lopsided enough that the mirrored east view would show the wrong side. ``fit_layer(fit)``
+    gives the module another draw layer on some armors (None elsewhere). ``over_head``: a body
+    module drawn over the head (aboveHead in the defs), so its thick outline goes all the way round
+    instead of stopping at the armor's silhouette."""
     def deco(fn):
-        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer, west, fit_layer)
+        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer, west, fit_layer, over_head)
         return fn
     return deco
+
+
+def ONE_SIDED(fit):
+    """Module.west for a module on one side of the pawn on every armor."""
+    return True
 
 
 def module(slot, name):
@@ -164,13 +178,15 @@ def column_side(fit, name):
 
 # ============================================================================= scene building
 
-def body_scene(name, fit, bt, d):
-    """(scene, footprint) of a body module on one armor fit, body type and view."""
+def body_scene(name, fit, bt, d, mirror=False):
+    """(scene, footprint) of a body module on one armor fit, body type and view; ``mirror`` as
+    for head_scene."""
     mod = module('body', name)
     out = {}
 
     def design(c):
         setup(c.scene, c.k)
+        c.mirror = mirror
         out['fp'] = F.body_footprint(c, fit)
         if d in opts(fit, name, skip=()).get('skip', ()):
             return
@@ -199,22 +215,23 @@ def head_scene(name, fit, d, mirror=False):
 
 def render_module(slot, name, fit, d, bt='Male'):
     """(rgba, mask) images, or (None, None) when the module shows nothing in this view. 'west' is
-    drawn only for helmet modules with west art of their own on this helmet (Module.west): the
-    east view of the pawn's left side, mirrored."""
+    drawn only for modules with west art of their own on this armor (Module.west): the east view
+    of the pawn's left side, mirrored."""
     mod = module(slot, name)
     if d == 'west':
-        if slot != 'head' or mod.west is None or not mod.west(fit):
+        if mod.west is None or not mod.west(fit):
             return None, None
-        sc, fp = head_scene(name, fit, 'east', mirror=True)
+        sc, fp = body_scene(name, fit, bt, 'east', mirror=True) if slot == 'body' else head_scene(name, fit, 'east', mirror=True)
         if not sc.parts:
             return None, None
-        return render(sc, fp).transpose(Image.FLIP_LEFT_RIGHT), render_mask(sc).transpose(Image.FLIP_LEFT_RIGHT)
+        img = render(sc, None if mod.over_head else fp)
+        return img.transpose(Image.FLIP_LEFT_RIGHT), render_mask(sc).transpose(Image.FLIP_LEFT_RIGHT)
     if d not in mod.dirs:
         return None, None
     sc, fp = body_scene(name, fit, bt, d) if slot == 'body' else head_scene(name, fit, d)
     if not sc.parts:
         return None, None
-    return render(sc, fp), render_mask(sc)
+    return render(sc, None if mod.over_head else fp), render_mask(sc)
 
 
 # ============================================================================= body helpers
@@ -235,6 +252,23 @@ def surf(K, c, name, poly_tv, r, z, mat=SHELL, bevel=1.1, tol=0.35, **kw):
 
 def sP(c, theta, v, r=1.0):
     return c.form.P(c.dir, theta, v, r(v) if callable(r) else r)
+
+
+def _cap_ring(x0, x1, y0, y1, cut, open_bottom=False):
+    """A shoulder plate seen from the side, chamfered like the plate seen from the front: a flat
+    top with its corners cut ``cut`` px, the sides straight down to y1 (with ``open_bottom``, a
+    band y1 - y0 deep along the top and the cut corners)."""
+    top = [(x0, y0 + cut), (x0 + cut, y0), (x1 - cut, y0), (x1, y0 + cut)]
+    if open_bottom:
+        depth = y1 - y0
+        return G.poly(top + [(x, y + depth) for x, y in top[::-1]])
+    return G.chamfer(G.poly(top + [(x1, y1), (x0, y1)]), [0.0, 0.0, 0.0, 0.0, cut * 0.25, cut * 0.25])
+
+
+def near_side(c):
+    """The pawn side (+1 right, -1 left) facing the camera in a side view: the right in the east
+    view, the left in the mirrored east view that makes a module's west art."""
+    return -1 if getattr(c, 'mirror', False) else 1
 
 
 def front_sides(c):
@@ -376,7 +410,7 @@ def simple_canister(K, c, name, base, tip, r, z, window=True):
 
 # ============================================================================= body: exoframe
 
-@register('Exoframe', 'body', layer=0.08)
+@register('Exoframe', 'body', layer=0.08, west=lambda fit: _one_sided(opts(fit, 'Exoframe', under={})['under']))
 def exoframe(K, c, fit):
     """Load-bearing exoframe, built like the armor: a frame on the back with a yoke over the
     shoulders and a hip belt, big actuators on the hips, and struts down the outside of the
@@ -490,7 +524,7 @@ def _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot):
     path_strip(K, c, 'hipbelt', [(xb1, y_hip), (xhp, y_hip)], 4.4 * k, 2)
     path_strip(K, c, 'strut', [(xhp, y_hip), (xkn, y_knee), (xft, y_bot - 1.0 * k)], 4.2 * k, 2)
     vplate(K, c, 'foot', G.chamfer(G.rect(xft - 4.0 * k, y_bot - 1.6 * k, xft + 5.0 * k, y_bot + 1.6 * k), 0.8 * k), 2.2, GREY)
-    if 1 not in under:
+    if near_side(c) not in under:
         yt = max(F.shoulder_top(c, fit), yoke_y(c) - 6.0 * k)
         cx_sh, dd = f.d(F.vy(c, yt + 6.0 * k))
         path_strip(K, c, 'yoke', [(xb0, y_sh), (cx_sh - dd * 0.3, yt + 4.0 * k)], 4.4 * k, 2.4)
@@ -508,7 +542,13 @@ def _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot):
 # The platings' options (per armor in FITS): 'chest', 'caps' (the pawn sides with a shoulder plate,
 # 'caps_back' from behind if different), 'cap_scale' and 'cap_dy' ({view: px at 128} down), and
 # 'follow' / 'follow_lift' (see _pad_edge).
+PAD_LAME = 0.3
 PAD_OPTS = dict(chest=True, caps=(1, -1), caps_back=None, cap_scale=1.0, cap_dy={}, follow=None, follow_lift=1.5)
+
+
+def _one_sided(sides):
+    """Whether a per-side option ({pawn side: ...} or a tuple of sides) holds for one side only."""
+    return (1 in sides) != (-1 in sides)
 
 
 def _narrow(c, fit):
@@ -673,23 +713,30 @@ def _pauldrons(K, c, fit, o):
     sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
-        if 1 not in o['caps']:
+        # the near shoulder's plate (the pawn's right, or its left in the mirrored view that
+        # makes the west art), seen from the side: as tall as from the front, from the shoulder's
+        # top to the lame's lower edge, and as deep as the shoulder with a little overhang
+        if near_side(c) not in o['caps']:
             return
-        y0 = F.shoulder_top(c, fit) + 4.0 * k + o['cap_dy'].get('east', 0.0) * k
-        h = 16.0 * k * sq
-        cx, dd = f.d(F.vy(c, y0 + h / 2))
-        x0, x1 = cx - 0.66 * dd, cx + 0.46 * dd
-        y1 = y0 + h
-        lame = K.block('lame', G.chamfer(G.rect(x0 + 1.0 * k, y0 + h * 0.45, x1 - 1.0 * k, y1), [1.0 * k, 1.0 * k, 3.0 * k, 3.0 * k]), 5,
+        yt = F.shoulder_top(c, fit) - 1.0 * k + o['cap_dy'].get('east', 0.0) * k
+        h = 17.0 * k * sq
+        ym = yt + h * 0.56
+        y1 = yt + h * (1.0 + PAD_LAME)
+        drop = 3.5 * k
+        # as deep as the plate is wide from the front, a little behind the torso's middle
+        cx = f.d(F.vy(c, yt + h * 0.5))[0]
+        depth = 15.0 * k * sq * 1.3
+        x0, x1 = cx - 0.6 * depth, cx + 0.4 * depth
+        lame = K.block('lame', G.chamfer(G.rect(x0 + 1.5 * k, ym - 2.0 * k, x1 - 1.5 * k, y1 + drop), [1.0 * k, 1.0 * k, 3.0 * k, 3.0 * k]), 5,
                        SHELL, bevel=1.0, tone='shade')
         if lame is not None:
-            lame.fill(G.rect(x0, y1 - 2.6 * k, x1, y1), 'deep')
-            K.bolts(lame, [(x0 + 4.0 * k, y1 - 6.0 * k), (x1 - 4.0 * k, y1 - 6.0 * k)])
-        top = K.block('plate', G.chamfer(G.rect(x0, y0, x1, y0 + h * 0.58), [4.0 * k, 4.0 * k, 1.5 * k, 1.5 * k]), 5.5, SHELL, bevel=1.3)
+            lame.fill(G.rect(x0, y1 + drop - 2.6 * k, x1, y1 + drop + 1), 'deep')
+        yb = ym + drop * 0.6
+        top = K.block('plate', _cap_ring(x0, x1, yt, yb, 6.0 * k), 5.5, SHELL, bevel=1.3)
         if top is not None:
-            top.fill(G.rect(x0, y0 - 1, x1, y0 + 3.0 * k), 'light')
-            top.fill(G.rect(x0, y0 + h * 0.58 - 2.6 * k, x1, y0 + h * 0.58), 'shade')
-            K.stencil(top, x0 + 4.0 * k, y0 + 7.0 * k, 8.0 * k, 3)
+            top.fill(_cap_ring(x0, x1, yt, yt + 3.0 * k, 6.0 * k, open_bottom=True), 'light')
+            top.fill(G.rect(x0, yb - 2.6 * k, x1, yb + 1), 'shade')
+            K.bolts(top, [(x0 + (x1 - x0) * t, yb - 4.4 * k) for t in (0.18, 0.39, 0.61, 0.82)], 0.8 * k)
         return
     for side, s in _pad_sides(c, o):
         sgn = -1 if side == 'l' else 1
@@ -698,7 +745,7 @@ def _pauldrons(K, c, fit, o):
         E = _pad_edge(c, fit, o, side, sgn, yt + h * 0.5, 3.2, 17.0)
         w = 15.0 * k * sq
         xi = E(yt + h * 0.5) - sgn * w
-        y1 = yt + h
+        y1 = yt + h * (1.0 + PAD_LAME)
         ym = yt + h * 0.56
         drop = 3.5 * k
         # lower lame (behind), then the main plate; their outer sides follow E
@@ -723,11 +770,22 @@ def _pauldrons(K, c, fit, o):
 @register('Plating', 'body', layer=0.44)
 def plating(K, c, fit):
     """Bolt-on composite plates: a thick appliqué slab with a raised keel over the chest,
-    clamped on with brackets, and layered pauldrons on both shoulders."""
+    clamped on with brackets, and layered pauldrons on both shoulders (from the side, see
+    PlatingPad)."""
     o = opts(fit, 'Plating', **PAD_OPTS)
     if o['chest']:
         _chest_slab(K, c, fit)
-    _pauldrons(K, c, fit, o)
+    if c.dir != 'east':
+        _pauldrons(K, c, fit, o)
+
+
+@register('PlatingPad', 'body', dirs=('east',), layer=0.44, west=lambda fit: _one_sided(opts(fit, 'Plating', **PAD_OPTS)['caps']),
+          over_head=True)
+def plating_pad(K, c, fit):
+    """Additional plating's near shoulder plate seen from the side. The plates stand out past
+    the helmet (see them from the front), so from the side the near one is in front of the
+    helmet's lower edge: its render node draws over the head (aboveHead in the defs)."""
+    _pauldrons(K, c, fit, opts(fit, 'Plating', **PAD_OPTS))
 
 
 # ============================================================================= body: uranium plating
@@ -795,18 +853,24 @@ def _uranium_pauldrons(K, c, fit, o):
     sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
-        if 1 not in o['caps']:
+        # the near shoulder's plate seen from the side, as tall and as far down as from the front
+        if near_side(c) not in o['caps']:
             return
-        y0 = F.shoulder_top(c, fit) + 4.0 * k + o['cap_dy'].get('east', 0.0) * k
-        h = 19.0 * k * sq
-        cx, dd = f.d(F.vy(c, y0 + h / 2))
-        x0, x1 = cx - 0.68 * dd, cx + 0.48 * dd
-        p = K.block('plate', G.chamfer(G.rect(x0, y0, x1, y0 + h), [4.0 * k, 4.0 * k, 2.0 * k, 2.0 * k]), 5.5, URAN, bevel=1.3)
+        yt = F.shoulder_top(c, fit) - 1.0 * k + o['cap_dy'].get('east', 0.0) * k
+        h = 21.0 * k * sq
+        y1 = yt + h * (1.0 + PAD_LAME) + 3.5 * k
+        cx = f.d(F.vy(c, yt + h * 0.5))[0]
+        depth = 17.0 * k * sq * 1.3
+        x0, x1 = cx - 0.6 * depth, cx + 0.4 * depth
+        ring = _cap_ring(x0, x1, yt, y1, 6.5 * k)
+        p = K.block('plate', ring, 5.5, URAN, bevel=1.3)
         if p is not None:
-            p.fill(G.rect(x0, y0 - 1, x1, y0 + 2.6 * k), f'{SHELL.name}.base', mask='r')
-            p.fill(G.rect(x0, y0 + h - 3.0 * k, x1, y0 + h + 1), 'deep')
-            K.seam(p, [(x0 + 1.0 * k, y0 + h * 0.5), (x1 - 1.0 * k, y0 + h * 0.5)], 1.2)
-            K.bolts(p, [(x0 + 4.0 * k, y0 + 6.0 * k), (x1 - 4.0 * k, y0 + 6.0 * k)])
+            p.details.append(Line(ring, 2.4 * k, f'{SHELL.name}.shade', closed=True, mask='r'))
+            p.fill(_cap_ring(x0, x1, yt, yt + 2.6 * k, 6.5 * k, open_bottom=True), f'{SHELL.name}.base', mask='r')
+            p.fill(G.rect(x0, y1 - 3.0 * k, x1, y1 + 1), 'deep')
+            ys = yt + (y1 - yt) * 0.55
+            K.seam(p, [(x0 + 1.0 * k, ys), (x1 - 1.0 * k, ys)], 1.2)
+            K.bolts(p, [(x0 + (x1 - x0) * t, ys - 2.6 * k) for t in (0.18, 0.39, 0.61, 0.82)], 0.8 * k)
         return
     for side, s in _pad_sides(c, o):
         sgn = -1 if side == 'l' else 1
@@ -815,7 +879,7 @@ def _uranium_pauldrons(K, c, fit, o):
         E = _pad_edge(c, fit, o, side, sgn, yt + h * 0.5, 4.2, 21.0)
         w = 17.0 * k * sq
         xi = E(yt + h * 0.5) - sgn * w
-        y1 = yt + h
+        y1 = yt + h * (1.0 + PAD_LAME)
         drop = 3.5 * k
         ring = [(xi, yt + 3.0 * k), (E(yt) - sgn * 6.0 * k, yt), (E(yt + 6.0 * k), yt + 6.0 * k), (E(y1 + drop), y1 + drop), (xi, y1)]
         p = K.block(f'plate{side}', G.chamfer(G.poly(ring), 1.4 * k), 5.5, URAN, bevel=1.3, tone='shade' if back else 'base')
@@ -839,7 +903,16 @@ def uranium_plating(K, c, fit):
     o = opts(fit, 'UraniumPlating', **PAD_OPTS)
     if o['chest']:
         _uranium_chest(K, c, fit)
-    _uranium_pauldrons(K, c, fit, o)
+    if c.dir != 'east':
+        _uranium_pauldrons(K, c, fit, o)
+
+
+@register('UraniumPlatingPad', 'body', dirs=('east',), layer=0.44,
+          west=lambda fit: _one_sided(opts(fit, 'UraniumPlating', **PAD_OPTS)['caps']), over_head=True)
+def uranium_plating_pad(K, c, fit):
+    """Uranium plating's near shoulder plate seen from the side, drawn over the head like
+    PlatingPad."""
+    _uranium_pauldrons(K, c, fit, opts(fit, 'UraniumPlating', **PAD_OPTS))
 
 @register('BiogelServos', 'body', layer=0.28)
 def biogel_servos(K, c, fit):
@@ -1139,15 +1212,16 @@ def edge_curve(c, fit, s, ph0, ph1, n=7, out=0.0):
 def side_pod(K, c, fit, s, ph0, ph1, inner, outer, z, name, chamfer=2.2, east_x=(-4.0, 14.0)):
     """A housing built out of the helmet's side (pawn's right s=1 / left s=-1) between two
     latitudes: its inner side follows the helmet's edge ``inner`` px at 128 inside it, its outer
-    side stands ``outer`` px out (south/north). East view (right side only): a housing on the
-    side of the head over ``east_x`` (px at 128 from the head's centre). Built like the helmet:
+    side stands ``outer`` px out (south/north). Side view (only of the near side, see near_side):
+    a housing on the side of the head over ``east_x`` (px at 128 from the head's centre). Built
+    like the helmet:
     a flat face, its outer side face and underside in shade. Returns a dict (part, sgn, x_out,
     x_in, x_side, x0, x1, y0, y1) or None."""
     k = c.k
     hf = c.form
     y0, y1 = F.head_y(c, ph1), F.head_y(c, ph0)
     if c.dir == 'east':
-        if s < 0:
+        if s != near_side(c):
             return None
         x0, x1 = hf.cx + east_x[0] * k, hf.cx + east_x[1] * k
         p = vplate(K, c, name, G.chamfer(G.rect(x0, y0, x1, y1), [chamfer * k, chamfer * 1.4 * k, chamfer * 0.8 * k, chamfer * 0.8 * k]), z)
@@ -1168,6 +1242,16 @@ def side_pod(K, c, fit, s, ph0, ph1, inner, outer, z, name, chamfer=2.2, east_x=
     xin = min(x for x, _ in pts_in) if sgn > 0 else max(x for x, _ in pts_in)
     p.fill(G.rect(min(xo, xin) - 1, y1 - 2.4 * k, max(xo, xin) + 1, y1 + 1), 'deep' if back else 'shade')
     return dict(part=p, sgn=sgn, x_out=xo, x_in=xin, x_side=xs, y0=y0, y1=y1, x0=min(xo, xin), x1=max(xo, xin))
+
+
+def _helm_top_at(c, fit, x):
+    """Screen row of the top of the helmet's outline at column x, or None."""
+    ys = []
+    for ring in F.helmet_footprint(c, fit, grow=0.0):
+        for (xa, ya), (xb, yb) in zip(ring, np.roll(ring, -1, axis=0)):
+            if min(xa, xb) <= x <= max(xa, xb) and xa != xb:
+                ys.append(ya + (yb - ya) * (x - xa) / (xb - xa))
+    return min(ys) if ys else None
 
 
 def _phi_at(c, y):
@@ -1422,9 +1506,16 @@ def _helm_west(name):
     return lambda fit: bool(hopts(fit, name).get('port'))
 
 
-# The great-helm faceplate covers the whole front of the helmet, so it goes in front of every other
-# helmet module (the uplink's 0.8 is the highest).
+# The great-helm faceplate covers the whole front of the helmet, so it goes in front of the other
+# helmet modules (the uplink's 0.8 is the highest), all but the sensor array, which goes in front
+# of it: its cameras look out past the faceplate.
 FACEPLATE_LAYER = 0.9
+SENSOR_LAYER = 0.95
+
+
+def _faceplate(fit):
+    """Whether this helmet's platings are the great-helm faceplate."""
+    return hopts(fit, 'Plating', style='brow')['style'] == 'helm'
 
 
 def _helm_layer(name):
@@ -1503,7 +1594,7 @@ def helm_uranium(K, c, fit):
 
 # ============================================================================= helmet: targeting uplink
 
-@register('TargetingUplink', 'head', layer=0.8)
+@register('TargetingUplink', 'head', layer=0.8, west=ONE_SIDED)
 def targeting_uplink(K, c, fit):
     """Targeting uplink: a rangefinder housing high on the side of the helmet above the sensor
     array, its lens looking forward, an antenna rising from its back."""
@@ -1511,6 +1602,16 @@ def targeting_uplink(K, c, fit):
     o = hopts(fit, 'TargetingUplink', phi=(0.5, 0.86), mast=True)
     s = column_side(fit, 'TargetingUplink')
     ph0, ph1 = o['phi']
+    if c.dir == 'east' and s != near_side(c):
+        # from the other side the housing is behind the head; the antenna rises above it
+        if o['mast']:
+            xa = c.form.cx - 3.5 * k
+            y0 = F.head_y(c, ph1)
+            top = _helm_top_at(c, fit, xa)
+            y_end = min(y0 + 1.0 * k, top if top is not None else y0 + 1.0 * k)
+            if y_end > y0 - 12.0 * k:
+                K.flat('mast', G.rect(xa - 0.8 * k, y0 - 13.0 * k, xa + 0.8 * k, y_end), 1.7, DARK)
+        return
     pod = side_pod(K, c, fit, s, ph0, ph1, 3.0, 4.0, 2, 'housing', chamfer=1.8, east_x=(-6.0, 7.0))
     if pod is None:
         return
@@ -1535,7 +1636,7 @@ def targeting_uplink(K, c, fit):
 
 # ============================================================================= helmet: sensor array
 
-@register('SensorArray', 'head', layer=0.7)
+@register('SensorArray', 'head', layer=0.7, west=ONE_SIDED, fit_layer=lambda fit: SENSOR_LAYER if _faceplate(fit) else None)
 def sensor_array(K, c, fit):
     """Multispectral sensor array: a pod built out of the side of the helmet under the uplink,
     with three cameras stacked in its dark front window - thermal, visible and ultraviolet; from
@@ -1547,7 +1648,7 @@ def sensor_array(K, c, fit):
     ph0, ph1 = o['phi']
     lenses = ((0.2, 1.6, AMBER), (0.5, 2.1, CYAN), (0.8, 1.6, VIOLET))
     if c.dir == 'east':
-        if s < 0:
+        if s != near_side(c):
             return
         y0, y1 = F.head_y(c, ph1), F.head_y(c, ph0)
         x0, x1 = hf.cx - 3.0 * k, hf.cx + 8.0 * k
@@ -1585,17 +1686,25 @@ def sensor_array(K, c, fit):
 
 # ============================================================================= helmet: subpersona
 
-@register('Subpersona', 'head', dirs=('south', 'north'), layer=0.5)
+@register('Subpersona', 'head', dirs=('south', 'north'), layer=0.5, west=ONE_SIDED)
 def helm_subpersona(K, c, fit):
     """Subcore housing low on the side of the helmet opposite the sensors, three subcore
     cartridges slotted into its front."""
     k = c.k
     o = hopts(fit, 'Subpersona', phi=(-0.4, 0.06))
-    pod = side_pod(K, c, fit, column_side(fit, 'Subpersona'), o['phi'][0], o['phi'][1], 3.5, 3.5, 2, 'housing', chamfer=1.6)
+    pod = side_pod(K, c, fit, column_side(fit, 'Subpersona'), o['phi'][0], o['phi'][1], 3.5, 3.5, 2, 'housing', chamfer=1.6,
+                   east_x=(-3.0, 7.0))
     if pod is None:
         return
     p = pod['part']
     y0, y1 = pod['y0'], pod['y1']
+    if c.dir == 'east':
+        # from the side: the three cartridges' ends in the housing's front edge
+        h = (y1 - y0 - 5.0 * k) / 3
+        for i in range(3):
+            yy = y0 + 2.0 * k + h * i
+            recess(p, G.rect(pod['x1'] - 3.2 * k, yy, pod['x1'] + 1, yy + h - 1.0 * k))
+        return
     xa, xb = sorted((pod['x_side'], pod['x_in']))
     if c.dir == 'north':
         recess(p, G.rect(xa + 1.4 * k, (y0 + y1) / 2 - 0.6 * k, xb - 1.4 * k, (y0 + y1) / 2 + 0.6 * k))
@@ -1609,18 +1718,26 @@ def helm_subpersona(K, c, fit):
 
 # ============================================================================= helmet: second mind
 
-@register('SecondMind', 'head', dirs=('south', 'north'), layer=0.55)
+@register('SecondMind', 'head', dirs=('south', 'north'), layer=0.55, west=ONE_SIDED)
 def second_mind(K, c, fit):
     """Second mind: an armored persona core housing at the helmet's temple opposite the
     sensors, the core showing dimly through a round port in its front."""
     k = c.k
     o = hopts(fit, 'SecondMind', phi=(0.32, 0.86))
     ph0, ph1 = o['phi']
-    pod = side_pod(K, c, fit, column_side(fit, 'SecondMind'), ph0, ph1, 4.5, 4.0, 2, 'housing', chamfer=2.4)
+    pod = side_pod(K, c, fit, column_side(fit, 'SecondMind'), ph0, ph1, 4.5, 4.0, 2, 'housing', chamfer=2.4, east_x=(-6.0, 7.0))
     if pod is None:
         return
     p = pod['part']
     y0, y1 = pod['y0'], pod['y1']
+    if c.dir == 'east':
+        # from the side: a seam along the housing, the core's port seen edge-on at its front
+        ym = y0 + (y1 - y0) * 0.5
+        R = (y1 - y0) * 0.24
+        recess(p, G.rect(pod['x0'] + 2.0 * k, ym - 0.6 * k, pod['x1'] - 3.4 * k, ym + 0.6 * k))
+        p.fill(G.rect(pod['x1'] - 1.6 * k, ym - R, pod['x1'] + 1, ym + R), f'{DARK.name}.deep', mask=None)
+        p.fill(G.rect(pod['x1'] - 0.9 * k, ym - R * 0.5, pod['x1'] + 1, ym + R * 0.5), f'{CYAN.name}.deep', mask=None)
+        return
     xa, xb = sorted((pod['x_side'], pod['x_in']))
     if c.dir == 'north':
         for t in (0.35, 0.6):

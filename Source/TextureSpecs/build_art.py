@@ -7,8 +7,9 @@
 
 Writes <Module>_<Fit>_<BodyType>_<dir>.png (body) or <Module>_<Fit>_<dir>.png (helmet), 256 px,
 with the CutoutComplex mask next to it (..._<dir>m.png). The west view is normally the east one
-mirrored, so _west is written only for helmet art lopsided enough to need its own (modules.py,
-Module.west). Masks are written at half size: they
+mirrored, so _west is written only for art that differs from side to side (modules.py,
+Module.west), even when the module doesn't show from the pawn's left at all. Masks are written at
+half size: they
 only say which parts take the armor's colour, and those parts are separated by outlines, so a
 128 px mask tints exactly the same pixels for a quarter of the memory. A module that shows
 nothing in one of its views on an armor (it would sit on one of the armor's own features) gets a
@@ -42,8 +43,11 @@ def jobs(slots, names, fits):
             for fit in (F.BODY_FITS if slot == 'body' else F.HELMET_FITS):
                 if fits and fit not in fits:
                     continue
+                # a module with west art but no east view gets a blank east texture, so neither
+                # facing falls back on the other
+                extra = ('west',) + (('east',) if 'east' not in mod.dirs else ()) if mod.west is not None else ()
                 for bt in (F.BODY_TYPES if slot == 'body' else [None]):
-                    for d in mod.dirs + (('west',) if mod.west is not None else ()):
+                    for d in mod.dirs + extra:
                         out.append((slot, mod.name, fit, bt, d))
     return out
 
@@ -55,15 +59,15 @@ def half(mask):
 
 def run(job):
     slot, name, fit, bt, d = job
-    img, mask = MD.render_module(slot, name, fit, d, bt or 'Male')
     folder = os.path.join(TEX, FOLDER[slot], f'{name}_{fit}')
     base = f'{name}_{fit}_{bt}_{d}' if bt else f'{name}_{fit}_{d}'
-    if d == 'west' and (img is None or img.getbbox() is None):
+    if d == 'west' and not MD.module(slot, name).west(fit):
         # no west art of its own here: the game mirrors the east texture (drop any old one)
         for suffix in ('.png', 'm.png'):
             if os.path.exists(os.path.join(folder, base + suffix)):
                 os.remove(os.path.join(folder, base + suffix))
         return base
+    img, mask = MD.render_module(slot, name, fit, d, bt or 'Male')
     if img is None or img.getbbox() is None:
         img = Image.new('RGBA', (4, 4), (0, 0, 0, 0))
         mask = Image.new('RGB', (4, 4), (0, 0, 0))

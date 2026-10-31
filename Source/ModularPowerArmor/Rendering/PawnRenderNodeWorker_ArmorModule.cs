@@ -59,6 +59,10 @@ namespace ModularPowerArmor
             {
                 return base.LayerFor(node, parms);
             }
+            if (moduleNode.ModuleProps != null && moduleNode.ModuleProps.aboveHead && moduleNode.HeadNode != null)
+            {
+                return TopLayer(moduleNode.HeadNode, parms) + 1f;
+            }
             float hostLayer = hostNode.Worker.LayerFor(hostNode, parms);
             float nextLayer = float.MaxValue;
             PawnRenderNode[] siblings = hostNode.parent?.children ?? node.parent.children;
@@ -78,6 +82,25 @@ namespace ModularPowerArmor
             float gap = nextLayer == float.MaxValue ? 1f : nextLayer - hostLayer;
             float fraction = Mathf.Clamp(moduleNode.ModuleProps?.LayerFractionFor(moduleNode.host?.Fit) ?? 0.5f, 0.01f, 0.99f);
             return hostLayer + gap * fraction;
+        }
+
+        /// <summary>The highest layer in a node's subtree (the head, its headgear and their modules).</summary>
+        private static float TopLayer(PawnRenderNode node, PawnDrawParms parms)
+        {
+            float top = node.Worker != null ? node.Worker.LayerFor(node, parms) : float.MinValue;
+            if (node.children != null)
+            {
+                for (int i = 0; i < node.children.Length; i++)
+                {
+                    PawnRenderNode child = node.children[i];
+                    if (child is PawnRenderNode_ArmorModule module && module.ModuleProps != null && module.ModuleProps.aboveHead)
+                    {
+                        continue;
+                    }
+                    top = Mathf.Max(top, TopLayer(child, parms));
+                }
+            }
+            return top;
         }
 
         public override Vector3 OffsetFor(PawnRenderNode node, PawnDrawParms parms, out Vector3 pivot)

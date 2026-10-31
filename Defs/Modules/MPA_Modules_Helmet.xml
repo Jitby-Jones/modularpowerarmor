@@ -81,6 +81,13 @@
 						<debugLabel>MPA sensor array (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SensorArray_{fit}/SensorArray_{fit}</texPath>
 						<layerFraction>0.7</layerFraction>
+						<!-- in front of the faceplate these helmets' plating becomes, so the cameras look out past it -->
+						<layerFractionByFit>
+							<li><fit>Cataphract</fit><layerFraction>0.95</layerFraction></li>
+							<li><fit>PrestigeCataphract</fit><layerFraction>0.95</layerFraction></li>
+							<li><fit>Siegebreaker</fit><layerFraction>0.95</layerFraction></li>
+							<li><fit>RoyalSiegebreaker</fit><layerFraction>0.95</layerFraction></li>
+						</layerFractionByFit>
 					</li>
 				</helmetRenderNodes>
 			</li>
@@ -131,8 +138,10 @@
 						<debugLabel>MPA second mind (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/SecondMind_{fit}/SecondMind_{fit}</texPath>
 						<layerFraction>0.55</layerFraction>
+						<!-- on the helmet's left: seen from the left (west), hidden from the right -->
 						<visibleFacing>
 							<li>South</li>
+							<li>West</li>
 							<li>North</li>
 						</visibleFacing>
 					</li>

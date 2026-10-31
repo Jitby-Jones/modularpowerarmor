@@ -43,6 +43,18 @@
 						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.44</layerFraction>
 					</li>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA additional plating (shoulder plate, from the side)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/PlatingPad_{fit}/PlatingPad_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.44</layerFraction>
+						<!-- the shoulder plates stand out past the helmet, so from the side the near one is in front of it -->
+						<aboveHead>true</aboveHead>
+						<visibleFacing>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
+					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>
 					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
@@ -313,8 +325,10 @@
 						<debugLabel>MPA subpersona (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/Subpersona_{fit}/Subpersona_{fit}</texPath>
 						<layerFraction>0.5</layerFraction>
+						<!-- on the helmet's left: seen from the left (west), hidden from the right -->
 						<visibleFacing>
 							<li>South</li>
+							<li>West</li>
 							<li>North</li>
 						</visibleFacing>
 					</li>
@@ -413,6 +427,18 @@
 						<texPath>ModularPowerArmor/Worn/Body/UraniumPlating_{fit}/UraniumPlating_{fit}</texPath>
 						<bodyTypeTextures>true</bodyTypeTextures>
 						<layerFraction>0.44</layerFraction>
+					</li>
+					<li Class="ModularPowerArmor.PawnRenderNodeProperties_ArmorModule">
+						<debugLabel>MPA uranium plating (shoulder plate, from the side)</debugLabel>
+						<texPath>ModularPowerArmor/Worn/Body/UraniumPlatingPad_{fit}/UraniumPlatingPad_{fit}</texPath>
+						<bodyTypeTextures>true</bodyTypeTextures>
+						<layerFraction>0.44</layerFraction>
+						<!-- the shoulder plates stand out past the helmet, so from the side the near one is in front of it -->
+						<aboveHead>true</aboveHead>
+						<visibleFacing>
+							<li>East</li>
+							<li>West</li>
+						</visibleFacing>
 					</li>
 				</bodyRenderNodes>
 				<helmetRenderNodes>

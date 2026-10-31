@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -19,6 +20,8 @@ namespace ModularPowerArmor
 
         // The last graphic GraphicFor made, so GetMesh can tell whether it has its own west texture.
         private Graphic_Multi moduleGraphic;
+
+        private PawnRenderNode headNode;
 
         public PawnRenderNode_ArmorModule(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree)
             : base(pawn, props, tree)
@@ -42,6 +45,44 @@ namespace ModularPowerArmor
                 }
                 return hostNode;
             }
+        }
+
+        /// <summary>The pawn's head node (the one tagged Head), or null.</summary>
+        public PawnRenderNode HeadNode
+        {
+            get
+            {
+                if (headNode == null)
+                {
+                    headNode = FindTagged(tree?.rootNode, PawnRenderNodeTagDefOf.Head);
+                }
+                return headNode;
+            }
+        }
+
+        private static PawnRenderNode FindTagged(PawnRenderNode node, PawnRenderNodeTagDef tag)
+        {
+            if (node == null)
+            {
+                return null;
+            }
+            if (node.Props?.tagDef == tag)
+            {
+                return node;
+            }
+            if (node.children == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < node.children.Length; i++)
+            {
+                PawnRenderNode found = FindTagged(node.children[i], tag);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
         }
 
         private PawnRenderNode FindHost(PawnRenderNode[] nodes)

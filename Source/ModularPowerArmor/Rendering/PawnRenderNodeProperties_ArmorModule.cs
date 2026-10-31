@@ -36,6 +36,14 @@ namespace ModularPowerArmor
         /// </summary>
         public List<FitLayerFraction> layerFractionByFit;
 
+        /// <summary>
+        /// Draw just above the pawn's head and everything on it, in the facings the node is visible
+        /// in (visibleFacing), instead of between the armor piece and the next apparel layer: for a
+        /// part of a body module that stands out past the head, such as a shoulder plate seen from
+        /// the side.
+        /// </summary>
+        public bool aboveHead;
+
         public float LayerFractionFor(string fit)
         {
             if (layerFractionByFit != null && fit != null)
