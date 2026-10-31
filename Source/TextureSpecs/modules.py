@@ -490,6 +490,47 @@ def _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot):
 
 # ============================================================================= body: plating
 
+def _narrow(c, fit):
+    """How much narrower than a male's this body's armor is (0 for male, hulk and fat bodies).
+    The platings widen by it on female and thin bodies: their shoulders sit inside the helmet's
+    outline, so shoulder plates sized and placed like the male's would hide under it."""
+    return max(0.0, 1.0 - F.layout(c, fit)['sq'])
+
+
+_REACH = {}
+
+
+def _male_reach(fit, d, side, lift, h):
+    """Screen offset from the body's centre line to the outer edge of a male's shoulder plate on
+    this armor (south and north views), for a plate ``h`` px at 128 tall standing ``lift`` px
+    past the shoulder."""
+    key = (fit, d, side, lift, h)
+    if key not in _REACH:
+        out = {}
+
+        def design(c):
+            y = F.shoulder_top(c, fit, side) - 1.0 * c.k + h * c.k * F.layout(c, fit)['sq'] * 0.5
+            out['reach'] = X(c, fit, y, side, lift=lift) - F.body_ext(c, F.vy(c, y))[0]
+        armor('spacer', size=SIZE, name='reach', ground=False, mask_roles=(), design_fn=design, body_types=['Male'], dirs=(d,))
+        _REACH[key] = out['reach']
+    return _REACH[key]
+
+
+def _plate_reach(c, fit, side, sgn, y, xo, lift, h):
+    """The outer edge of a shoulder plate: ``xo`` on a male, out to a male's reach on a narrower
+    body so the plate shows past the helmet."""
+    if not _narrow(c, fit):
+        return xo
+    target = F.body_ext(c, F.vy(c, y))[0] + _male_reach(fit, c.dir, side, lift, h)
+    return min(xo, target) if sgn < 0 else max(xo, target)
+
+
+def _chest_bottom(c, fit, y1, lay):
+    """The chest slab's bottom row: a narrow body's slab reaches a little further down."""
+    return max(y1, lay['y_belt'] - 8.0 * c.k) if _narrow(c, fit) else y1
+
+
+
 def _chest_slab(K, c, fit):
     """Front appliqué slab: a thick plate with its edge thickness showing, a raised keel,
     inset side panels, bracket clamps at the top and big bolts."""
@@ -497,6 +538,7 @@ def _chest_slab(K, c, fit):
     f = c.form
     y0, y1, lay = chest_rows(c, fit)
     y0 += 1.0 * k
+    y1 = _chest_bottom(c, fit, y1, lay)
     v0, v1 = F.vy(c, y0), F.vy(c, y1)
     if c.dir == 'east':
         lift, thick = 2.8, 5.0 * k
@@ -517,7 +559,7 @@ def _chest_slab(K, c, fit):
         return
     if c.dir != 'south':
         return
-    w = 0.6 if fit not in F.RECON_BUILT else 0.52
+    w = (0.6 if fit not in F.RECON_BUILT else 0.52) + _narrow(c, fit)
     lift = 2.4
     r = F.radius(c, lift)
     fv = v1 - 3.0 * k / f.H
@@ -553,11 +595,12 @@ def _chest_slab(K, c, fit):
 
 def _pauldrons(K, c, fit, caps):
     """Layered shoulder plates standing out past the shoulder: an upper plate with a lit top face
-    over a lower lame, bolted, with the lower edge's thickness showing."""
+    over a lower lame, bolted, with the lower edge's thickness showing. Male-sized on narrower
+    bodies, and out as far, so they show past the helmet."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    sq = lay['sq']
+    sq = max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']
     back = c.dir == 'north'
     if c.dir == 'east':
         if 1 not in caps:
@@ -584,7 +627,7 @@ def _pauldrons(K, c, fit, caps):
         sgn = -1 if side == 'l' else 1
         yt = F.shoulder_top(c, fit, side) - 1.0 * k
         h = 17.0 * k * sq
-        xo = X(c, fit, yt + h * 0.5, side, lift=3.2)
+        xo = _plate_reach(c, fit, side, sgn, yt + h * 0.5, X(c, fit, yt + h * 0.5, side, lift=3.2), 3.2, 17.0)
         w = 15.0 * k * sq
         xi = xo - sgn * w
         x0, x1 = min(xo, xi), max(xo, xi)
@@ -629,6 +672,7 @@ def _uranium_chest(K, c, fit):
     f = c.form
     y0, y1, lay = chest_rows(c, fit)
     y0 += 1.0 * k
+    y1 = _chest_bottom(c, fit, y1, lay)
     v0, v1 = F.vy(c, y0), F.vy(c, y1)
     if c.dir == 'east':
         thick = 7.5 * k
@@ -647,7 +691,7 @@ def _uranium_chest(K, c, fit):
         return
     if c.dir != 'south':
         return
-    w = 0.68 if fit not in F.RECON_BUILT else 0.6
+    w = (0.68 if fit not in F.RECON_BUILT else 0.6) + _narrow(c, fit)
     lift = 3.4
     r = F.radius(c, lift)
     fv = v1 - 3.8 * k / f.H
@@ -679,11 +723,11 @@ def _uranium_chest(K, c, fit):
 
 
 def _uranium_pauldrons(K, c, fit, caps):
-    """Heavy dark pauldrons with dyed trim."""
+    """Heavy dark pauldrons with dyed trim, male-sized and as far out on narrower bodies."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    sq = lay['sq']
+    sq = max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']
     back = c.dir == 'north'
     if c.dir == 'east':
         if 1 not in caps:
@@ -705,7 +749,7 @@ def _uranium_pauldrons(K, c, fit, caps):
         sgn = -1 if side == 'l' else 1
         yt = F.shoulder_top(c, fit, side) - 1.0 * k
         h = 21.0 * k * sq
-        xo = X(c, fit, yt + h * 0.5, side, lift=4.2)
+        xo = _plate_reach(c, fit, side, sgn, yt + h * 0.5, X(c, fit, yt + h * 0.5, side, lift=4.2), 4.2, 21.0)
         w = 17.0 * k * sq
         xi = xo - sgn * w
         x0, x1 = min(xo, xi), max(xo, xi)
