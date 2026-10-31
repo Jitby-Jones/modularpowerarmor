@@ -53,7 +53,8 @@ namespace ModularPowerArmor
 
         public override float LayerFor(PawnRenderNode node, PawnDrawParms parms)
         {
-            PawnRenderNode hostNode = (node as PawnRenderNode_ArmorModule)?.HostNode;
+            PawnRenderNode_ArmorModule moduleNode = node as PawnRenderNode_ArmorModule;
+            PawnRenderNode hostNode = moduleNode?.HostNode;
             if (hostNode == null)
             {
                 return base.LayerFor(node, parms);
@@ -75,7 +76,7 @@ namespace ModularPowerArmor
                 }
             }
             float gap = nextLayer == float.MaxValue ? 1f : nextLayer - hostLayer;
-            float fraction = Mathf.Clamp((node.Props as PawnRenderNodeProperties_ArmorModule)?.layerFraction ?? 0.5f, 0.01f, 0.99f);
+            float fraction = Mathf.Clamp(moduleNode.ModuleProps?.LayerFractionFor(moduleNode.host?.Fit) ?? 0.5f, 0.01f, 0.99f);
             return hostLayer + gap * fraction;
         }
 

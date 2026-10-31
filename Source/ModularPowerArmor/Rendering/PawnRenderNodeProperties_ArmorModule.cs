@@ -29,6 +29,28 @@ namespace ModularPowerArmor
         /// </summary>
         public float layerFraction = 0.5f;
 
+        /// <summary>
+        /// layerFraction on armor of particular fits (see ModularArmorTarget.fit), for art that has
+        /// a different shape there, such as plating that covers the whole face on some helmets and
+        /// so goes in front of the other modules.
+        /// </summary>
+        public List<FitLayerFraction> layerFractionByFit;
+
+        public float LayerFractionFor(string fit)
+        {
+            if (layerFractionByFit != null && fit != null)
+            {
+                for (int i = 0; i < layerFractionByFit.Count; i++)
+                {
+                    if (layerFractionByFit[i].fit == fit)
+                    {
+                        return layerFractionByFit[i].layerFraction;
+                    }
+                }
+            }
+            return layerFraction;
+        }
+
         /// <summary>Per-body-type nudges for overlays that are drawn once and reused for every body type.</summary>
         public List<BodyTypeAdjustment> bodyTypeAdjustments;
 
@@ -47,6 +69,13 @@ namespace ModularPowerArmor
             }
             return null;
         }
+    }
+
+    public class FitLayerFraction
+    {
+        public string fit;
+
+        public float layerFraction = 0.5f;
     }
 
     public class BodyTypeAdjustment

@@ -49,6 +49,13 @@
 						<debugLabel>MPA additional plating (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/Plating_{fit}/Plating_{fit}</texPath>
 						<layerFraction>0.2</layerFraction>
+						<!-- on these helmets the plating is a faceplate over the whole front, in front of the other modules -->
+						<layerFractionByFit>
+							<li><fit>Cataphract</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>PrestigeCataphract</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>Siegebreaker</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>RoyalSiegebreaker</fit><layerFraction>0.9</layerFraction></li>
+						</layerFractionByFit>
 						<visibleFacing>
 							<li>South</li>
 							<li>East</li>
@@ -413,6 +420,13 @@
 						<debugLabel>MPA uranium plating (helmet)</debugLabel>
 						<texPath>ModularPowerArmor/Worn/Head/UraniumPlating_{fit}/UraniumPlating_{fit}</texPath>
 						<layerFraction>0.2</layerFraction>
+						<!-- on these helmets the plating is a faceplate over the whole front, in front of the other modules -->
+						<layerFractionByFit>
+							<li><fit>Cataphract</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>PrestigeCataphract</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>Siegebreaker</fit><layerFraction>0.9</layerFraction></li>
+							<li><fit>RoyalSiegebreaker</fit><layerFraction>0.9</layerFraction></li>
+						</layerFractionByFit>
 						<visibleFacing>
 							<li>South</li>
 							<li>East</li>

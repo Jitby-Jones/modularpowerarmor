@@ -21,6 +21,9 @@ draws them in a fixed order, low to high:
     helmet  plating / uranium plating, neural link, stress dampener, subpersona, second mind,
             regenerators, sensor array, targeting uplink
 
+except where a module takes another place on some armors (Module.fit_layer, mirrored in the defs'
+layerFractionByFit): the great-helm faceplate goes in front of every other helmet module.
+
 Apart from the plating, every module is built like the vanilla armor itself (see vanilla-style
 parts below): a few big plates with flat faces, chamfers, dark recesses and black outlines.
 Joints are drawn the way their axis faces each view: the exoframe's hip and knee pivots, the
@@ -49,18 +52,25 @@ URAN = _mat('mpa_uranium', '#5a5e57', light='#7c8178', shade='#43473f', deep='#2
 # ============================================================================= registry and options
 
 class Module:
-    def __init__(self, name, slot, fn, dirs, layer, west):
+    def __init__(self, name, slot, fn, dirs, layer, west, fit_layer):
         self.name, self.slot, self.fn, self.dirs, self.layer, self.west = name, slot, fn, dirs, layer, west
+        self.fit_layer = fit_layer
+
+    def layer_for(self, fit):
+        """The module's draw layer on armor of this fit."""
+        layer = self.fit_layer(fit) if self.fit_layer is not None else None
+        return self.layer if layer is None else layer
 
 
 REGISTRY = {}
 
 
-def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5, west=None):
+def register(name, slot, dirs=('south', 'east', 'north'), layer=0.5, west=None, fit_layer=None):
     """``west(fit)``, for a helmet module, says whether it has art of its own facing west on that
-    helmet, where it is lopsided enough that the mirrored east view would show the wrong side."""
+    helmet, where it is lopsided enough that the mirrored east view would show the wrong side.
+    ``fit_layer(fit)`` gives the module another draw layer on some armors (None elsewhere)."""
     def deco(fn):
-        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer, west)
+        REGISTRY[(slot, name)] = Module(name, slot, fn, tuple(dirs), layer, west, fit_layer)
         return fn
     return deco
 
@@ -1412,7 +1422,17 @@ def _helm_west(name):
     return lambda fit: bool(hopts(fit, name).get('port'))
 
 
-@register('Plating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('Plating'))
+# The great-helm faceplate covers the whole front of the helmet, so it goes in front of every other
+# helmet module (the uplink's 0.8 is the highest).
+FACEPLATE_LAYER = 0.9
+
+
+def _helm_layer(name):
+    """Module.fit_layer for the platings: the great-helm faceplate goes on top."""
+    return lambda fit: FACEPLATE_LAYER if hopts(fit, name, style='brow')['style'] == 'helm' else None
+
+
+@register('Plating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('Plating'), fit_layer=_helm_layer('Plating'))
 def helm_plating(K, c, fit):
     """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract and
     siegebreaker helmets, a great-helm faceplate over the whole front."""
@@ -1467,7 +1487,8 @@ def _uranium_brow(K, c, fit, o):
         p.line([hf.P(sd * 0.3, ph, r) for ph in np.linspace(p0 + 0.04, p1 - 0.05, 4)], 1.2 * k, 'deep')
 
 
-@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('UraniumPlating'))
+@register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('UraniumPlating'),
+          fit_layer=_helm_layer('UraniumPlating'))
 def helm_uranium(K, c, fit):
     """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil; on
     cataphract and siegebreaker helmets, the great-helm faceplate in laminated uranium plates."""
