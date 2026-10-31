@@ -167,7 +167,7 @@ Modifications with a visual are drawn on the pawn through RimWorld's render tree
 
 | Piece | Modification | What it looks like |
 |---|---|---|
-| Body | Additional plating | A thick appliqué slab with a raised keel clamped over the chest, and layered pauldrons over the shoulders where the armor's own features leave room. On female and thin bodies the pauldrons keep their full size and reach so they show past the helmet, and the slab is wider |
+| Body | Additional plating | A thick appliqué slab with a raised keel clamped over the chest, and layered pauldrons over the shoulders where the armor's own features leave room. On the siegebreaker the pauldrons lie on its own sloping shoulder blocks; on the phoenix they sit over the wing roots, and from behind the jump pack hides the left one. On female and thin bodies the pauldrons keep their full size and reach so they show past the helmet, and the slab is wider |
 | Body | Uranium composite plating | The same places, heavier: dark uranium-ceramic slabs in dyed trim, a trefoil on the chest |
 | Body | Biogel servo replacement | Rounded servo housings over the outside of both elbows, with a window onto the biogel |
 | Body | Neuromemetic regenerators | Two canisters out of the upper back, angled down and outwards, with a window onto the gel |

@@ -75,8 +75,9 @@ def modules(slot):
 
 # Per-armor adjustments, {fit: {module: {option: value}}}; 'skip' lists the views a module is left
 # out of on an armor (where it would sit on one of the armor's own features). Shoulder plates
-# only go on plain shoulders, so wings, gold trim, pauldrons and the grenadier's launcher stay
-# visible; armors with something on the upper back show the regenerator tanks from behind only.
+# go on plain shoulders, so gold trim, horns and the grenadier's launcher stay visible; on the
+# siegebreaker they lie on its own shoulder blocks, on the phoenix over its wing roots (see
+# PAD_OPTS). Armors with something on the upper back show the regenerator tanks from behind only.
 FITS = {
     # bulky armors: the frame and the elbow servos follow the armor's real edge (edge_hi, px at
     # 128 past the body)
@@ -88,12 +89,16 @@ FITS = {
     # them and its arm strut comes out below them ('under': {pawn side: surface height})
     'Grenadier': {'Plating': {'caps': (1,)}, 'UraniumPlating': {'caps': (1,)}, 'Regenerators': {'skip': ('east',)},
                   'Exoframe': {'under': {-1: 0.42}}},
-    'Phoenix': {'Plating': {'caps': ()}, 'UraniumPlating': {'caps': ()}, 'Regenerators': {'skip': ('east',)},
+    # the jump pack, behind the pawn's left shoulder, hides that shoulder's plate from behind
+    'Phoenix': {'Plating': {'caps_back': (1,)}, 'UraniumPlating': {'caps_back': (1,)}, 'Regenerators': {'skip': ('east',)},
                 'Exoframe': {'under': {1: 0.52, -1: 0.52}}},
     'PrestigeRecon': {'Plating': {'caps': ()}, 'UraniumPlating': {'caps': ()}},
     'PrestigeCataphract': {'edge_hi': 14.0, 'Plating': {'caps': ()}, 'UraniumPlating': {'caps': ()}, 'Regenerators': {'skip': ('east',)},
                            'Exoframe': {'under': {1: 0.52, -1: 0.52}}},
-    'Siegebreaker': {'edge_hi': 8.0, 'Plating': {'caps': ()}, 'UraniumPlating': {'caps': ()}, 'Regenerators': {'skip': ('east',)},
+    # the shoulder plates lie on the armor's own sloping shoulder blocks, which from behind start
+    # lower
+    'Siegebreaker': {'edge_hi': 8.0, 'Plating': {'follow': 20.0, 'cap_dy': {'north': 4.0}},
+                     'UraniumPlating': {'follow': 20.0, 'cap_dy': {'north': 4.0}}, 'Regenerators': {'skip': ('east',)},
                      'Exoframe': {'under': {1: 0.46, -1: 0.46}}},
     'RoyalSiegebreaker': {'edge_hi': 12.0, 'Plating': {'caps': ()}, 'UraniumPlating': {'caps': ()}, 'Regenerators': {'skip': ('east',)},
                           'Exoframe': {'under': {1: 0.44, -1: 0.44}}},
@@ -490,6 +495,12 @@ def _exoframe_side(K, c, fit, lay, y_hip, y_knee, y_bot):
 
 # ============================================================================= body: plating
 
+# The platings' options (per armor in FITS): 'chest', 'caps' (the pawn sides with a shoulder plate,
+# 'caps_back' from behind if different), 'cap_scale' and 'cap_dy' ({view: px at 128} down), and
+# 'follow' / 'follow_lift' (see _pad_edge).
+PAD_OPTS = dict(chest=True, caps=(1, -1), caps_back=None, cap_scale=1.0, cap_dy={}, follow=None, follow_lift=1.5)
+
+
 def _narrow(c, fit):
     """How much narrower than a male's this body's armor is (0 for male, hulk and fat bodies).
     The platings widen by it on female and thin bodies: their shoulders sit inside the helmet's
@@ -523,6 +534,22 @@ def _plate_reach(c, fit, side, sgn, y, xo, lift, h):
         return xo
     target = F.body_ext(c, F.vy(c, y))[0] + _male_reach(fit, c.dir, side, lift, h)
     return min(xo, target) if sgn < 0 else max(xo, target)
+
+
+def _pad_edge(c, fit, o, side, sgn, y_mid, lift, h):
+    """The outer edge of a shoulder plate as a function of the screen row: straight down at the
+    usual reach, or (option 'follow', px at 128) along the armor's own edge out to that far past
+    the body, so the plate lies on an armor's own shoulder piece, slant and all."""
+    if o['follow']:
+        return lambda y: X(c, fit, y, side, lift=o['follow_lift'], hi=o['follow'])
+    xo = _plate_reach(c, fit, side, sgn, y_mid, X(c, fit, y_mid, side, lift=lift), lift, h)
+    return lambda y: xo
+
+
+def _pad_sides(c, o):
+    """The (screen side, pawn side) pairs that get a shoulder plate in this view."""
+    caps = o['caps_back'] if c.dir == 'north' and o['caps_back'] is not None else o['caps']
+    return [(side, s) for side, s in front_sides(c) if s in caps]
 
 
 def _chest_bottom(c, fit, y1, lay):
@@ -593,19 +620,19 @@ def _chest_slab(K, c, fit):
         bracket_over(K, c, f'clamp{s}', xc, yc, 7.0, 6.6)
 
 
-def _pauldrons(K, c, fit, caps):
+def _pauldrons(K, c, fit, o):
     """Layered shoulder plates standing out past the shoulder: an upper plate with a lit top face
     over a lower lame, bolted, with the lower edge's thickness showing. Male-sized on narrower
     bodies, and out as far, so they show past the helmet."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    sq = max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']
+    sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
-        if 1 not in caps:
+        if 1 not in o['caps']:
             return
-        y0 = F.shoulder_top(c, fit) + 4.0 * k
+        y0 = F.shoulder_top(c, fit) + 4.0 * k + o['cap_dy'].get('east', 0.0) * k
         h = 16.0 * k * sq
         cx, dd = f.d(F.vy(c, y0 + h / 2))
         x0, x1 = cx - 0.66 * dd, cx + 0.46 * dd
@@ -621,48 +648,43 @@ def _pauldrons(K, c, fit, caps):
             top.fill(G.rect(x0, y0 + h * 0.58 - 2.6 * k, x1, y0 + h * 0.58), 'shade')
             K.stencil(top, x0 + 4.0 * k, y0 + 7.0 * k, 8.0 * k, 3)
         return
-    for side, s in front_sides(c):
-        if s not in caps:
-            continue
+    for side, s in _pad_sides(c, o):
         sgn = -1 if side == 'l' else 1
-        yt = F.shoulder_top(c, fit, side) - 1.0 * k
+        yt = F.shoulder_top(c, fit, side) - 1.0 * k + o['cap_dy'].get(c.dir, 0.0) * k
         h = 17.0 * k * sq
-        xo = _plate_reach(c, fit, side, sgn, yt + h * 0.5, X(c, fit, yt + h * 0.5, side, lift=3.2), 3.2, 17.0)
+        E = _pad_edge(c, fit, o, side, sgn, yt + h * 0.5, 3.2, 17.0)
         w = 15.0 * k * sq
-        xi = xo - sgn * w
-        x0, x1 = min(xo, xi), max(xo, xi)
+        xi = E(yt + h * 0.5) - sgn * w
         y1 = yt + h
         ym = yt + h * 0.56
         drop = 3.5 * k
-        # lower lame (behind), then the main plate
-        if sgn < 0:
-            lring = [(x0 + 1.0 * k, ym - 2.0 * k), (x1 - 2.0 * k, ym - 2.0 * k), (x1 - 2.0 * k, y1 - 1.0 * k), (x0 + 1.0 * k, y1 + drop)]
-            mring = [(x1, yt + 3.0 * k), (x0 + 6.0 * k, yt), (x0, yt + 6.0 * k), (x0, ym + drop * 0.6), (x1, ym)]
-        else:
-            lring = [(x1 - 1.0 * k, ym - 2.0 * k), (x0 + 2.0 * k, ym - 2.0 * k), (x0 + 2.0 * k, y1 - 1.0 * k), (x1 - 1.0 * k, y1 + drop)]
-            mring = [(x0, yt + 3.0 * k), (x1 - 6.0 * k, yt), (x1, yt + 6.0 * k), (x1, ym + drop * 0.6), (x0, ym)]
+        # lower lame (behind), then the main plate; their outer sides follow E
+        lring = [(E(ym - 2.0 * k) - sgn * 1.0 * k, ym - 2.0 * k), (xi + sgn * 2.0 * k, ym - 2.0 * k), (xi + sgn * 2.0 * k, y1 - 1.0 * k),
+                 (E(y1 + drop) - sgn * 1.0 * k, y1 + drop)]
+        mring = [(xi, yt + 3.0 * k), (E(yt) - sgn * 6.0 * k, yt), (E(yt + 6.0 * k), yt + 6.0 * k), (E(ym + drop * 0.6), ym + drop * 0.6), (xi, ym)]
         lame = K.block(f'lame{side}', G.chamfer(G.poly(lring), 1.2 * k), 5, SHELL, bevel=1.0, tone='shade' if not back else 'deep')
         if lame is not None:
-            lame.fill(G.poly([(x0 - 1, y1 - 3.0 * k + (drop if sgn < 0 else 0)), (x1 + 1, y1 - 3.0 * k + (drop if sgn > 0 else 0)),
-                              (x1 + 1, y1 + drop + 2), (x0 - 1, y1 + drop + 2)]), 'deep')
-            K.bolt(lame, (x0 + x1) / 2 + sgn * 3.0 * k, (ym + y1) / 2 + 1.0 * k, 0.9 * k)
+            xo_, xi_ = E(y1 + drop) + sgn, xi - sgn
+            lame.fill(G.poly([(xo_, y1 - 3.0 * k + drop), (xi_, y1 - 3.0 * k), (xi_, y1 + drop + 2), (xo_, y1 + drop + 2)]), 'deep')
+            K.bolt(lame, (E((ym + y1) / 2) + xi) / 2 + sgn * 3.0 * k, (ym + y1) / 2 + 1.0 * k, 0.9 * k)
         mp = K.block(f'plate{side}', G.chamfer(G.poly(mring), 1.4 * k), 5.5, SHELL, bevel=1.3, tone='shade' if back else 'base')
         if mp is None:
             continue
-        mp.fill(G.poly([(x0 - 1, ym - 3.0 * k + (drop * 0.6 if sgn < 0 else 0)), (x1 + 1, ym - 3.0 * k + (drop * 0.6 if sgn > 0 else 0)),
-                        (x1 + 1, ym + drop + 1), (x0 - 1, ym + drop + 1)]), 'shade' if not back else 'deep')
-        K.bolts(mp, [(xo - sgn * 3.5 * k, yt + 6.0 * k), (xi + sgn * 4.0 * k, yt + 5.0 * k)])
-        K.chevrons(mp, (x0 + x1) / 2, yt + 8.5 * k, 4.0 * k, 1.5 * k, 2)
+        xo_, xi_ = E(ym + drop * 0.6) + sgn, xi - sgn
+        mp.fill(G.poly([(xo_, ym - 3.0 * k + drop * 0.6), (xi_, ym - 3.0 * k), (xi_, ym + drop + 1), (xo_, ym + drop + 1)]),
+                'shade' if not back else 'deep')
+        K.bolts(mp, [(E(yt + 6.0 * k) - sgn * 3.5 * k, yt + 6.0 * k), (xi + sgn * 4.0 * k, yt + 5.0 * k)])
+        K.chevrons(mp, (E(yt + 8.5 * k) + xi) / 2, yt + 8.5 * k, 4.0 * k, 1.5 * k, 2)
 
 
 @register('Plating', 'body', layer=0.44)
 def plating(K, c, fit):
     """Bolt-on composite plates: a thick appliqué slab with a raised keel over the chest,
     clamped on with brackets, and layered pauldrons on both shoulders."""
-    o = opts(fit, 'Plating', chest=True, caps=(1, -1))
+    o = opts(fit, 'Plating', **PAD_OPTS)
     if o['chest']:
         _chest_slab(K, c, fit)
-    _pauldrons(K, c, fit, o['caps'])
+    _pauldrons(K, c, fit, o)
 
 
 # ============================================================================= body: uranium plating
@@ -722,17 +744,17 @@ def _uranium_chest(K, c, fit):
         bracket_over(K, c, f'clamp{s}', xc, yc, 7.0, 6.6)
 
 
-def _uranium_pauldrons(K, c, fit, caps):
+def _uranium_pauldrons(K, c, fit, o):
     """Heavy dark pauldrons with dyed trim, male-sized and as far out on narrower bodies."""
     k = c.k
     f = c.form
     lay = F.layout(c, fit)
-    sq = max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']
+    sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
-        if 1 not in caps:
+        if 1 not in o['caps']:
             return
-        y0 = F.shoulder_top(c, fit) + 4.0 * k
+        y0 = F.shoulder_top(c, fit) + 4.0 * k + o['cap_dy'].get('east', 0.0) * k
         h = 19.0 * k * sq
         cx, dd = f.d(F.vy(c, y0 + h / 2))
         x0, x1 = cx - 0.68 * dd, cx + 0.48 * dd
@@ -743,31 +765,27 @@ def _uranium_pauldrons(K, c, fit, caps):
             K.seam(p, [(x0 + 1.0 * k, y0 + h * 0.5), (x1 - 1.0 * k, y0 + h * 0.5)], 1.2)
             K.bolts(p, [(x0 + 4.0 * k, y0 + 6.0 * k), (x1 - 4.0 * k, y0 + 6.0 * k)])
         return
-    for side, s in front_sides(c):
-        if s not in caps:
-            continue
+    for side, s in _pad_sides(c, o):
         sgn = -1 if side == 'l' else 1
-        yt = F.shoulder_top(c, fit, side) - 1.0 * k
+        yt = F.shoulder_top(c, fit, side) - 1.0 * k + o['cap_dy'].get(c.dir, 0.0) * k
         h = 21.0 * k * sq
-        xo = _plate_reach(c, fit, side, sgn, yt + h * 0.5, X(c, fit, yt + h * 0.5, side, lift=4.2), 4.2, 21.0)
+        E = _pad_edge(c, fit, o, side, sgn, yt + h * 0.5, 4.2, 21.0)
         w = 17.0 * k * sq
-        xi = xo - sgn * w
-        x0, x1 = min(xo, xi), max(xo, xi)
+        xi = E(yt + h * 0.5) - sgn * w
         y1 = yt + h
         drop = 3.5 * k
-        if sgn < 0:
-            ring = [(x1, yt + 3.0 * k), (x0 + 6.0 * k, yt), (x0, yt + 6.0 * k), (x0, y1 + drop), (x1, y1)]
-        else:
-            ring = [(x0, yt + 3.0 * k), (x1 - 6.0 * k, yt), (x1, yt + 6.0 * k), (x1, y1 + drop), (x0, y1)]
+        ring = [(xi, yt + 3.0 * k), (E(yt) - sgn * 6.0 * k, yt), (E(yt + 6.0 * k), yt + 6.0 * k), (E(y1 + drop), y1 + drop), (xi, y1)]
         p = K.block(f'plate{side}', G.chamfer(G.poly(ring), 1.4 * k), 5.5, URAN, bevel=1.3, tone='shade' if back else 'base')
         if p is None:
             continue
         p.details.append(Line(G.poly(ring), 2.4 * k, f'{SHELL.name}.shade' if not back else f'{SHELL.name}.deep', closed=True, mask='r'))
         ym = yt + h * 0.5
-        K.seam(p, [(x0 + 1.0 * k, ym + (drop * 0.5 if sgn < 0 else 0)), (x1 - 1.0 * k, ym + (drop * 0.5 if sgn > 0 else 0))], 1.2)
-        p.fill(G.poly([(x0 - 1, y1 - 3.0 * k + (drop if sgn < 0 else 0)), (x1 + 1, y1 - 3.0 * k + (drop if sgn > 0 else 0)),
-                       (x1 + 1, y1 + drop + 2), (x0 - 1, y1 + drop + 2)]), 'deep')
-        K.bolts(p, [(xo - sgn * 3.5 * k, yt + 6.0 * k), (xi + sgn * 4.0 * k, yt + 5.0 * k), (xo - sgn * 3.5 * k, ym + 4.0 * k)])
+        seam = [(E(ym + drop * 0.5) - sgn * 1.0 * k, ym + drop * 0.5), (xi + sgn * 1.0 * k, ym)]
+        K.seam(p, seam if sgn < 0 else seam[::-1], 1.2)
+        xo_, xi_ = E(y1 + drop) + sgn, xi - sgn
+        p.fill(G.poly([(xo_, y1 - 3.0 * k + drop), (xi_, y1 - 3.0 * k), (xi_, y1 + drop + 2), (xo_, y1 + drop + 2)]), 'deep')
+        K.bolts(p, [(E(yt + 6.0 * k) - sgn * 3.5 * k, yt + 6.0 * k), (xi + sgn * 4.0 * k, yt + 5.0 * k),
+                    (E(ym + 4.0 * k) - sgn * 3.5 * k, ym + 4.0 * k)])
 
 
 @register('UraniumPlating', 'body', layer=0.44)
@@ -775,10 +793,10 @@ def uranium_plating(K, c, fit):
     """Uranium composite plating: heavy dark uranium-ceramic slabs in dyed trim frames - a chest
     slab with a trefoil on its keel and big pauldrons - in plating's places (the two can't be
     installed together)."""
-    o = opts(fit, 'UraniumPlating', chest=True, caps=(1, -1))
+    o = opts(fit, 'UraniumPlating', **PAD_OPTS)
     if o['chest']:
         _uranium_chest(K, c, fit)
-    _uranium_pauldrons(K, c, fit, o['caps'])
+    _uranium_pauldrons(K, c, fit, o)
 
 @register('BiogelServos', 'body', layer=0.28)
 def biogel_servos(K, c, fit):
