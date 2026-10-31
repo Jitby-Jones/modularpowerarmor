@@ -117,7 +117,7 @@ HELMS = {
     'PrestigeMarine': {'TargetingUplink': {'mast': False}, 'StressDampener': {'at': 'back'}},
     'PrestigeRecon': {'TargetingUplink': {'mast': False}},
     # cataphract and siegebreaker helmets take a great-helm faceplate over the whole front, in
-    # composite or in uranium (its 'variant' picks one of HELM_VARIANTS)
+    # composite or in uranium (HELM)
     'Cataphract': {'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
     'PrestigeCataphract': {'StressDampener': {'at': 'back'}, 'Plating': {'style': 'helm'}, 'UraniumPlating': {'style': 'helm'}},
     'Siegebreaker': {'TargetingUplink': {'mast': False}, 'Plating': SIEGE_HELM, 'UraniumPlating': SIEGE_HELM},
@@ -1157,16 +1157,10 @@ def _brow_guard(K, c, fit, o):
         K.notch(p, xn - 1.4 * k, yn - 0.6 * k, xn + 1.4 * k, yn + 0.6 * k)
 
 
-# The great helm's shape (head units; see _great_helm) and its variations, picked per helmet with
-# the 'variant' option: 'wedge' (broad plates over the ear pieces under a lower point, used on
-# both cataphract helmets), 'visor' (a visor over a chin plate, the plates meeting at a hard fold),
-# 'keel' (one plate a side, a raised keel along the joint) and 'prow' (narrow plates under a tall
-# point). In uranium, 'skin' picks the plates' look: a composite texture over the dark uranium
-# plates in their dyed trim, 'laminate' (bonded layers, used on both cataphract helmets), 'tiles'
-# (ceramic tiles) or 'hex' (hexagonal tiles); None (plain uranium plates); or 'inlay' (dark
-# uranium inlays set into composite plates).
-HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95), lip=0.12, inset=True, keel=0.07, keel_w=0.07,
-            split=None, bolts=((0.86, 0.14), (0.86, 0.86)), stencil=False, mat=SHELL, trefoil=False, skin=None, port=False)
+# The great helm's shape (head units; see _great_helm): broad plates over the ear pieces, a keel
+# down the joint rising to a point over the brow.
+HELM = dict(v=(0.95, -1.0), ridge=1.32, reach=0.95, slope=1.1, back=(0.2, -0.95), lip=0.12, keel=0.05, keel_w=0.05,
+            bolts=((0.88, 0.18), (0.88, 0.5), (0.88, 0.82)), mat=SHELL, trefoil=False, port=False)
 
 # The great helm's camera port ('port'): an opening in the plate on the pawn's left side of the
 # face, the helmet's own cameras behind it looking straight ahead, like the siegebreaker helmet's
@@ -1174,34 +1168,22 @@ HELM = dict(v=(1.08, -1.0), ridge=1.32, reach=0.85, slope=0.95, back=(0.3, -0.95
 # bottom v), each lens (u, v, radius) and the depth of the lenses' faces, behind the plate.
 CAM_PORT = dict(box=(-0.12, -0.68, 0.16, -0.36), lenses=((-0.3, -0.1, 0.15), (-0.57, 0.04, 0.075), (-0.57, -0.23, 0.075)),
                 depth=0.45)
-HELM_VARIANTS = {
-    'visor': dict(keel=0, split=-0.25, bolts=((0.85, 0.22), (0.85, 0.8))),
-    'keel': {},
-    'wedge': dict(v=(0.95, -1.0), back=(0.2, -0.95), reach=0.95, slope=1.1, keel=0.05, keel_w=0.05,
-                  bolts=((0.88, 0.18), (0.88, 0.5), (0.88, 0.82))),
-    'prow': dict(v=(1.3, -1.0), back=(0.35, -0.95), reach=0.78, keel=0.09, keel_w=0.08, stencil=True, bolts=((0.82, 0.12), (0.82, 0.86))),
-}
-
-
 def _great_helm(K, c, fit, o):
     """Great-helm faceplate: two thick composite plates over the front of the helmet, joined
     at a hard edge down the middle of the face that stands upright in front of the helmet and
     rises to a point over the brow; each plate slopes back from it to the side of the helmet.
     Built in 3D: from the front the lit plate and the shaded one meet under the point; from the
     side the near plate shows, the joint its upright front edge. Detailed like the body
-    plating: the plates' thickness and lower lip show, with an inset panel and bolts, and as
-    options a raised keel along the joint and a split into a visor over a chin plate. In
-    uranium (mat URAN) the plates carry a trefoil on the pawn's right plate and take one of the
-    skins (see HELM)."""
+    plating: the plates' thickness and lower lip show, with an inset panel and bolts, a raised
+    keel along the joint. In uranium (mat URAN) the plates are laminated, framed in dyed trim,
+    with a trefoil on the pawn's right plate."""
     k = c.k
     vt, vb = o['v']                  # the joint's top (the point) and bottom (head units)
     wr = o['ridge']                  # how far forward the joint stands
     ue, dw = o['reach'], o['slope']  # the plates' back edges: how far out and how far back
     vbt, vbb = o['back']             # the back edges' top and bottom
     lip = o['lip']                   # the lower lip's height (head units)
-    skin = o['skin'] if o['mat'] is URAN else None
-    # 'inlay': uranium set into composite plates; the other skins texture the uranium itself
-    mat = SHELL if skin == 'inlay' else o['mat']
+    mat = o['mat']
     east = c.dir == 'east'
     L = math.hypot(ue, dw)           # a plate's true width (head units)
 
@@ -1221,7 +1203,7 @@ def _great_helm(K, c, fit, o):
         ts = np.linspace(t0, t1, n)
         return G.poly([pt(t, va(t), side, dz) for t in ts] + [pt(t, vb_(t), side, dz) for t in ts[::-1]])
 
-    def plate(name, side, va, vb_, z, tones, t1=1.0, dz=0.0, inset=True):
+    def plate(name, side, va, vb_, z, tones, t1=1.0, dz=0.0):
         hi, lo = tones
         outline = band(side, 0, t1, va, vb_, 2, dz)
         p = vplate(K, c, name, outline, z, mat, tone=hi, bevel=1.3)
@@ -1232,50 +1214,22 @@ def _great_helm(K, c, fit, o):
         if lip:
             p.fill(band(side, 0, t1, lambda t: vb_(t) + lip, vb_, dz=dz), lo)
             p.line([pt(t, vb_(t) + lip, side, dz) for t in np.linspace(0, t1, 4)], 0.8 * k, 'deep')
-        if skin == 'inlay' and inset:
-            # a dark uranium inlay where the composite plate's inset panel would be
-            inlay = band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz)
-            p.fill(inlay, f'{URAN.name}.{"base" if hi == "base" else "shade"}', mask=None)
-            p.details.append(Line(inlay, 1.0 * k, f'{URAN.name}.line', closed=True, mask=None))
-        elif skin and inset:
-            texture(p, side, va, vb_, t1, dz, hi)
-        elif inset:
-            K.panel(p, band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz), hi, w=0.8)
         if mat is URAN:
+            laminate(p, side, va, vb_, t1, dz, hi)
             # the dyed trim frame round the uranium plate
             p.details.append(Line(outline, 2.4 * k, f'{SHELL.name}.{"shade" if hi == "base" else "deep"}', closed=True, mask='r'))
+        else:
+            K.panel(p, band(side, 0.2, t1 - 0.14, lambda t: va(t) - 0.15, lambda t: vb_(t) + lip + 0.09, dz=dz), hi, w=0.8)
         return p
 
-    def texture(p, side, va, vb_, t1, dz, hi):
-        """Composite texture over a uranium plate, laid out on the plate so it foreshortens
-        with it: ceramic tiles in staggered rows, hexagonal tiles, or bonded layers."""
-        seam = 'deep' if hi == 'base' else 'line'
+    def laminate(p, side, va, vb_, t1, dz, hi):
+        """Bonded layers across a uranium plate, laid out on the plate so they foreshorten with it."""
         vmax, vmin = max(va(0), va(t1)), min(vb_(0), vb_(t1)) + lip
-        if skin == 'tiles':
-            rows = np.arange(vmax - 0.2, vmin, -0.21)
-            edges = [vmax] + list(rows) + [vmin]
-            for r, (ya, yb) in enumerate(zip(edges[:-1], edges[1:])):
-                if r:
-                    p.line([pt(0, ya, side, dz), pt(t1, ya, side, dz)], 0.9 * k, seam)
-                    p.line([pt(0, ya - 0.025, side, dz), pt(t1, ya - 0.025, side, dz)], 0.5 * k, 'light' if hi == 'base' else 'base')
-                for t in (np.arange(0.3, t1, 0.3) if r % 2 else np.arange(0.15, t1, 0.3)):
-                    p.line([pt(t, ya, side, dz), pt(t, yb, side, dz)], 0.9 * k, seam)
-        elif skin == 'hex':
-            r = 0.1
-            for i in range(-1, int(L / (1.5 * r)) + 2):
-                for j in range(-1, int((vmax - vmin) / (math.sqrt(3) * r)) + 2):
-                    d0 = i * 1.5 * r
-                    v0_ = vmin + j * math.sqrt(3) * r + (i % 2) * math.sqrt(3) / 2 * r
-                    ring_ = [pt((d0 + r * math.cos(a)) / L, v0_ + r * math.sin(a), side, dz) for a in np.radians(np.arange(0, 360, 60))]
-                    p.details.append(Line(G.poly(ring_), 0.8 * k, seam, closed=True))
-        elif skin == 'laminate':
-            v = vmax - 0.08
-            i = 0
-            while v > vmin:
-                p.fill(G.poly([pt(0, v, side, dz), pt(t1, v, side, dz), pt(t1, v - 0.045, side, dz), pt(0, v - 0.045, side, dz)]),
-                       'shade' if hi == 'base' else 'deep')
-                v -= 0.1
-                i += 1
+        v = vmax - 0.08
+        while v > vmin:
+            p.fill(G.poly([pt(0, v, side, dz), pt(t1, v, side, dz), pt(t1, v - 0.045, side, dz), pt(0, v - 0.045, side, dz)]),
+                   'shade' if hi == 'base' else 'deep')
+            v -= 0.1
 
     def disc(side, t0, v0, r, a0=0.0, a1=2 * PI, n=20):
         """A circle of radius r (head units) laid on a plate round (t0, v0), so it foreshortens
@@ -1291,42 +1245,30 @@ def _great_helm(K, c, fit, o):
         p.fill(disc(side, t0, v0, R * 0.42), f'{AMBER.name}.shade', mask=None)
         p.fill(disc(side, t0, v0, R * 0.26), f'{DARK.name}.base', mask=None)
 
-    split = o['split']
     plates = {}
     near = -1 if getattr(c, 'mirror', False) else 1
     for side in ((near,) if east else (1, -1)):
         shaded = not east and side < 0
-        tones = ('shade', 'deep') if shaded else ('base', 'shade')
-        if split is None:
-            p = plate(f'plate{side}', side, top, bot, 2, tones, inset=o['inset'])
-        else:
-            # a visor over a chin plate set back under its lip
-            plate(f'chin{side}', side, lambda t: split - 0.1, bot, 1.9, (tones[1], 'deep'), t1=0.94, dz=-0.05, inset=False)
-            p = plate(f'plate{side}', side, top, lambda t: split, 2, tones, inset=o['inset'])
+        p = plate(f'plate{side}', side, top, bot, 2, ('shade', 'deep') if shaded else ('base', 'shade'))
         if p is None:
             continue
         plates[side] = p
-        lo_edge = (lambda t: split) if split is not None else bot
         for t, f in o['bolts']:
-            v = top(t) + (lo_edge(t) + lip - top(t)) * f
+            v = top(t) + (bot(t) + lip - top(t)) * f
             K.bolt(p, *pt(t, v, side), 1.0 * k)
-        if o['stencil'] and not shaded:
-            x, y = pt(0.42, top(0.42) - 0.3, side)
-            K.stencil(p, x - 2.5 * k, y, 5.0 * k, 3)
         if o['trefoil'] and side > 0:
-            plate_trefoil(p, side, 0.5, (top(0.5) + lo_edge(0.5)) / 2 - 0.04, 0.12)
+            plate_trefoil(p, side, 0.5, (top(0.5) + bot(0.5)) / 2 - 0.04, 0.12)
     # a raised keel along the joint
     kw, kh = o['keel'], o['keel_w']
-    if kw:
-        if east:
-            ring = G.poly([pt(0, vt - 0.02, 1), pt(0, vt - 0.02, 1, kw), pt(0, vb + 0.02, 1, kw), pt(0, vb + 0.02, 1)])
-        else:
-            ring = G.poly([head_pt(c, 0.0, vt + 0.02, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
-                           head_pt(c, kh, vb + 0.02, wr + kw), head_pt(c, kh, vt - 0.06, wr + kw)])
-        keel = vplate(K, c, 'keel', ring, 2.5, tone='base', bevel=0.9)
-        if keel is not None and not east:
-            keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
-                              head_pt(c, 0.0, vb + 0.02, wr + kw)]), 'light')
+    if east:
+        ring = G.poly([pt(0, vt - 0.02, 1), pt(0, vt - 0.02, 1, kw), pt(0, vb + 0.02, 1, kw), pt(0, vb + 0.02, 1)])
+    else:
+        ring = G.poly([head_pt(c, 0.0, vt + 0.02, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
+                       head_pt(c, kh, vb + 0.02, wr + kw), head_pt(c, kh, vt - 0.06, wr + kw)])
+    keel = vplate(K, c, 'keel', ring, 2.5, tone='base', bevel=0.9)
+    if keel is not None and not east:
+        keel.fill(G.poly([head_pt(c, 0.0, vt, wr + kw), head_pt(c, -kh, vt - 0.06, wr + kw), head_pt(c, -kh, vb + 0.02, wr + kw),
+                          head_pt(c, 0.0, vb + 0.02, wr + kw)]), 'light')
     if o['port']:
         _cam_port(K, c, lambda u: wr - dw * min(abs(u), ue) / ue, plates.get(-1))
 
@@ -1377,11 +1319,11 @@ def _helm_west(name):
 
 @register('Plating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('Plating'))
 def helm_plating(K, c, fit):
-    """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract
-    helmets, a great-helm faceplate over the whole front."""
-    o = hopts(fit, 'Plating', style='brow', variant='wedge')
+    """Brow guard: a thick composite visor hood bolted across the upper face; on cataphract and
+    siegebreaker helmets, a great-helm faceplate over the whole front."""
+    o = hopts(fit, 'Plating', style='brow')
     if o['style'] == 'helm':
-        h = dict(HELM, **HELM_VARIANTS[o['variant']])
+        h = dict(HELM)
         h.update({key: val for key, val in o.items() if key in HELM})
         _great_helm(K, c, fit, h)
     else:
@@ -1433,10 +1375,10 @@ def _uranium_brow(K, c, fit, o):
 @register('UraniumPlating', 'head', dirs=('south', 'east'), layer=0.2, west=_helm_west('UraniumPlating'))
 def helm_uranium(K, c, fit):
     """Uranium brow guard: a dark, heavy visor hood in a dyed trim frame with a trefoil; on
-    cataphract helmets, the great-helm faceplate in laminated uranium plates."""
-    o = hopts(fit, 'UraniumPlating', style='brow', variant='wedge', skin='laminate')
+    cataphract and siegebreaker helmets, the great-helm faceplate in laminated uranium plates."""
+    o = hopts(fit, 'UraniumPlating', style='brow')
     if o['style'] == 'helm':
-        h = dict(HELM, **HELM_VARIANTS[o['variant']], mat=URAN, trefoil=True)
+        h = dict(HELM, mat=URAN, trefoil=True)
         h.update({key: val for key, val in o.items() if key in HELM})
         _great_helm(K, c, fit, h)
     else:
