@@ -46,7 +46,7 @@ import mpa_fit as F
 from mpa_kit import AMBER, CYAN, DARK, FRAME, GEL, GLASS, RED, SHELL, VIOLET, Kit, _mat, perp, render, render_mask, setup, unit
 from rwtex import geom as G
 from rwtex.archetypes.apparel import armor, helmet
-from rwtex.form import TILT
+from rwtex.form import TILT, HeadForm
 from rwtex.render import Line
 
 PI = math.pi
@@ -252,6 +252,29 @@ def surf(K, c, name, poly_tv, r, z, mat=SHELL, bevel=1.1, tol=0.35, **kw):
 
 def sP(c, theta, v, r=1.0):
     return c.form.P(c.dir, theta, v, r(v) if callable(r) else r)
+
+
+# The side view's shoulder plate, against the plate seen from the front: its top drops to
+# 'overlap' px at 128 above the head's lower edge (from the side the shoulder shows below the
+# head), it is 'width' times as wide as the front plate and 'height' times as tall, and 'fwd' of
+# its width forward of the torso's middle.
+SIDE_PAD = dict(overlap=3.0, width=1.7, height=0.9, fwd=0.0)
+HEAD_DROP = 29.0          # px at 128 the head is drawn above the body's centre (headOffset 0.34)
+
+
+def _side_pad(c, fit, o, w_front, h_front):
+    """(x0, x1, top, bottom) of the near shoulder plate seen from the side, from the plate seen
+    from the front, ``w_front`` wide and ``h_front`` tall to its upper plate's lower edge."""
+    k = c.k
+    f = c.form
+    yt_front = F.shoulder_top(c, fit) - 1.0 * k + o['cap_dy'].get('east', 0.0) * k
+    height = (h_front * (1.0 + PAD_LAME) + 3.5 * k) * SIDE_PAD['height']
+    head_bottom = HeadForm('east', k=k).y1 - HEAD_DROP * k
+    yt = max(yt_front, head_bottom - SIDE_PAD['overlap'] * k)
+    yb = yt + height
+    width = w_front * SIDE_PAD['width']
+    xc = f.d(F.vy(c, yt + height * 0.5))[0] + SIDE_PAD['fwd'] * width
+    return xc - width / 2, xc + width / 2, yt, yb
 
 
 def _cap_ring(x0, x1, y0, y1, cut, open_bottom=False):
@@ -708,35 +731,25 @@ def _pauldrons(K, c, fit, o):
     over a lower lame, bolted, with the lower edge's thickness showing. Male-sized on narrower
     bodies, and out as far, so they show past the helmet."""
     k = c.k
-    f = c.form
     lay = F.layout(c, fit)
     sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
         # the near shoulder's plate (the pawn's right, or its left in the mirrored view that
-        # makes the west art), seen from the side: as tall as from the front, from the shoulder's
-        # top to the lame's lower edge, and as deep as the shoulder with a little overhang
+        # makes the west art), seen from the side (see _side_pad)
         if near_side(c) not in o['caps']:
             return
-        yt = F.shoulder_top(c, fit) - 1.0 * k + o['cap_dy'].get('east', 0.0) * k
-        h = 17.0 * k * sq
-        ym = yt + h * 0.56
-        y1 = yt + h * (1.0 + PAD_LAME)
-        drop = 3.5 * k
-        # as deep as the plate is wide from the front, a little behind the torso's middle
-        cx = f.d(F.vy(c, yt + h * 0.5))[0]
-        depth = 15.0 * k * sq * 1.3
-        x0, x1 = cx - 0.6 * depth, cx + 0.4 * depth
-        lame = K.block('lame', G.chamfer(G.rect(x0 + 1.5 * k, ym - 2.0 * k, x1 - 1.5 * k, y1 + drop), [1.0 * k, 1.0 * k, 3.0 * k, 3.0 * k]), 5,
+        x0, x1, yt, yb = _side_pad(c, fit, o, 15.0 * k * sq, 17.0 * k * sq)
+        ym = yt + (yb - yt) * 0.58
+        lame = K.block('lame', G.chamfer(G.rect(x0 + 1.5 * k, ym - 3.0 * k, x1 - 1.5 * k, yb), [1.0 * k, 1.0 * k, 3.0 * k, 3.0 * k]), 5,
                        SHELL, bevel=1.0, tone='shade')
         if lame is not None:
-            lame.fill(G.rect(x0, y1 + drop - 2.6 * k, x1, y1 + drop + 1), 'deep')
-        yb = ym + drop * 0.6
-        top = K.block('plate', _cap_ring(x0, x1, yt, yb, 6.0 * k), 5.5, SHELL, bevel=1.3)
+            lame.fill(G.rect(x0, yb - 2.6 * k, x1, yb + 1), 'deep')
+        top = K.block('plate', _cap_ring(x0, x1, yt, ym, 6.0 * k), 5.5, SHELL, bevel=1.3)
         if top is not None:
             top.fill(_cap_ring(x0, x1, yt, yt + 3.0 * k, 6.0 * k, open_bottom=True), 'light')
-            top.fill(G.rect(x0, yb - 2.6 * k, x1, yb + 1), 'shade')
-            K.bolts(top, [(x0 + (x1 - x0) * t, yb - 4.4 * k) for t in (0.18, 0.39, 0.61, 0.82)], 0.8 * k)
+            top.fill(G.rect(x0, ym - 2.6 * k, x1, ym + 1), 'shade')
+            K.bolts(top, [(x0 + (x1 - x0) * t, ym - 4.4 * k) for t in (0.15, 0.38, 0.62, 0.85)], 0.8 * k)
         return
     for side, s in _pad_sides(c, o):
         sgn = -1 if side == 'l' else 1
@@ -848,20 +861,14 @@ def _uranium_chest(K, c, fit):
 def _uranium_pauldrons(K, c, fit, o):
     """Heavy dark pauldrons with dyed trim, male-sized and as far out on narrower bodies."""
     k = c.k
-    f = c.form
     lay = F.layout(c, fit)
     sq = (max(lay['sq'], 1.0) if _narrow(c, fit) else lay['sq']) * o['cap_scale']
     back = c.dir == 'north'
     if c.dir == 'east':
-        # the near shoulder's plate seen from the side, as tall and as far down as from the front
+        # the near shoulder's plate seen from the side (see _side_pad)
         if near_side(c) not in o['caps']:
             return
-        yt = F.shoulder_top(c, fit) - 1.0 * k + o['cap_dy'].get('east', 0.0) * k
-        h = 21.0 * k * sq
-        y1 = yt + h * (1.0 + PAD_LAME) + 3.5 * k
-        cx = f.d(F.vy(c, yt + h * 0.5))[0]
-        depth = 17.0 * k * sq * 1.3
-        x0, x1 = cx - 0.6 * depth, cx + 0.4 * depth
+        x0, x1, yt, y1 = _side_pad(c, fit, o, 17.0 * k * sq, 21.0 * k * sq)
         ring = _cap_ring(x0, x1, yt, y1, 6.5 * k)
         p = K.block('plate', ring, 5.5, URAN, bevel=1.3)
         if p is not None:
