@@ -552,6 +552,40 @@ def _pad_sides(c, o):
     return [(side, s) for side, s in front_sides(c) if s in caps]
 
 
+def _slab_profile(c, fit, y0, y1, lift, thick):
+    """The chest slab seen from the side, as a rigid plate standing ``lift`` px at 128 off the
+    armor's front: rows, its front face and its back face (screen x). The front face rests on the
+    armor's most prominent points and bridges the dips between them (the front's convex hull), so
+    the plate doesn't follow every bump; its back face is ``thick`` px behind, and drops onto the
+    armor where a dip is deeper than that, so the plate never floats off the body."""
+    k = c.k
+    ys = np.linspace(y0, y1, max(int((y1 - y0) / (1.5 * k)), 4) + 1)
+    edge = np.array([X(c, fit, y, 'r', lift=0.0) for y in ys])
+    # the front face: the hull of the lifted edge seen from the front
+    chain = []
+    for q in zip(ys, edge + lift * k):
+        while len(chain) >= 2:
+            (ya, xa), (yb, xb) = chain[-2], chain[-1]
+            if (yb - ya) * (q[1] - xa) - (xb - xa) * (q[0] - ya) >= 0:
+                chain.pop()
+            else:
+                break
+        chain.append(q)
+    cy, cx = zip(*chain)
+    front = np.interp(ys, cy, cx)
+    back = np.minimum(front - thick, edge - 0.5 * k)
+    # round the back face where it drops into a dip: a sliding minimum, then a blur no wider
+    # than its window (each blurred row then stays at or behind every row it averages)
+    step = ys[1] - ys[0]
+    half = max(1, int(round(6.0 * k / step)))
+    padded = np.pad(back, half, mode='edge')
+    low = np.array([padded[i:i + 2 * half + 1].min() for i in range(len(back))])
+    sig = half / 3.0
+    ker = np.exp(-0.5 * (np.arange(-half, half + 1) / sig) ** 2)
+    back = np.convolve(np.pad(low, half, mode='edge'), ker / ker.sum(), mode='valid')
+    return ys, front, back
+
+
 def _chest_bottom(c, fit, y1, lay):
     """The chest slab's bottom row: a narrow body's slab reaches a little further down."""
     return max(y1, lay['y_belt'] - 8.0 * c.k) if _narrow(c, fit) else y1
@@ -568,21 +602,20 @@ def _chest_slab(K, c, fit):
     y1 = _chest_bottom(c, fit, y1, lay)
     v0, v1 = F.vy(c, y0), F.vy(c, y1)
     if c.dir == 'east':
-        lift, thick = 2.8, 5.0 * k
-        pts_o = [(X(c, fit, y, 'r', lift=lift), y) for y in np.linspace(y0, y1, 6)]
-        pts_i = [(x - thick, y) for x, y in pts_o]
-        p = K.block('slab', G.chamfer(G.poly(pts_o + pts_i[::-1]), 1.4 * k), 6, SHELL, bevel=0.0)
+        thick = 5.0 * k
+        ys, front, back = _slab_profile(c, fit, y0, y1, 2.8, thick)
+        pts_o = list(zip(front, ys))
+        p = K.block('slab', G.chamfer(G.poly(pts_o + list(zip(back, ys))[::-1]), 1.4 * k), 6, SHELL, bevel=0.0)
         if p is None:
             return
-        xs = [x for x, _ in pts_o]
         # front face / edge band / underside
         p.fill(G.poly(pts_o + [(x - 2.2 * k, y) for x, y in pts_o[::-1]]), 'base')
-        p.fill(G.poly([(x - 2.2 * k, y) for x, y in pts_o] + [(x - thick, y) for x, y in pts_o[::-1]]), 'shade')
-        p.fill(G.rect(min(xs) - thick - 1, y1 - 2.6 * k, max(xs) + 1, y1 + 1), 'deep')
+        p.fill(G.poly([(x - 2.2 * k, y) for x, y in pts_o] + list(zip(back, ys))[::-1]), 'shade')
+        p.fill(G.rect(float(back.min()) - 1, y1 - 2.6 * k, float(front.max()) + 1, y1 + 1), 'deep')
         for t in (0.2, 0.75):
             y = y0 + (y1 - y0) * t
-            K.bolt(p, X(c, fit, y, 'r', lift=lift) - 1.0 * k, y, 1.0 * k)
-        bracket_over(K, c, 'clamp', xs[0] - thick * 0.5, y0, 6.0, 6.5)
+            K.bolt(p, float(np.interp(y, ys, front)) - 1.0 * k, y, 1.0 * k)
+        bracket_over(K, c, 'clamp', front[0] - thick * 0.5, y0, 6.0, 6.5)
         return
     if c.dir != 'south':
         return
@@ -698,18 +731,18 @@ def _uranium_chest(K, c, fit):
     v0, v1 = F.vy(c, y0), F.vy(c, y1)
     if c.dir == 'east':
         thick = 7.5 * k
-        pts_o = [(X(c, fit, y, 'r', lift=4.0), y) for y in np.linspace(y0, y1, 6)]
-        p = K.block('slab', G.chamfer(G.poly(pts_o + [(x - thick, y) for x, y in pts_o[::-1]]), 1.4 * k), 6, URAN, bevel=0.0)
+        ys, front, back = _slab_profile(c, fit, y0, y1, 4.0, thick)
+        pts_o = list(zip(front, ys))
+        p = K.block('slab', G.chamfer(G.poly(pts_o + list(zip(back, ys))[::-1]), 1.4 * k), 6, URAN, bevel=0.0)
         if p is None:
             return
         p.fill(G.poly(pts_o + [(x - 2.0 * k, y) for x, y in pts_o[::-1]]), f'{SHELL.name}.base', mask='r')
-        p.fill(G.poly([(x - 4.6 * k, y) for x, y in pts_o] + [(x - thick, y) for x, y in pts_o[::-1]]), 'shade')
-        xs = [x for x, _ in pts_o]
-        p.fill(G.rect(min(xs) - thick - 1, y1 - 2.6 * k, max(xs) + 1, y1 + 1), 'deep')
+        p.fill(G.poly([(x - 4.6 * k, y) for x, y in pts_o] + list(zip(back, ys))[::-1]), 'shade')
+        p.fill(G.rect(float(back.min()) - 1, y1 - 2.6 * k, float(front.max()) + 1, y1 + 1), 'deep')
         for t in (0.25, 0.7):
             y = y0 + (y1 - y0) * t
-            K.bolt(p, X(c, fit, y, 'r', lift=4.0) - 3.2 * k, y, 1.0 * k)
-        bracket_over(K, c, 'clamp', xs[0] - thick * 0.5, y0, 6.0, 6.5)
+            K.bolt(p, float(np.interp(y, ys, front)) - 3.2 * k, y, 1.0 * k)
+        bracket_over(K, c, 'clamp', front[0] - thick * 0.5, y0, 6.0, 6.5)
         return
     if c.dir != 'south':
         return
