@@ -6,7 +6,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_AdditionalPlating</defName>
 		<label>additional plating</label>
-		<description>Bolt-on plasteel-ceramic composite plates that thicken the shell of a power armor piece. Adds roughly 4mm RHA of protection to the piece it is mounted on.\n\nCan't share a piece with uranium composite plating.\n\nFits body armor and helmets.</description>
+		<description>Bolt-on plasteel-ceramic composite plates that thicken the armor's shell.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/AdditionalPlating</texPath>
 		</graphicData>
@@ -83,7 +83,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_BionicSynchronization</defName>
 		<label>bionic synchronization</label>
-		<description>A neural handshake suite that lets the armor's control systems talk directly to the wearer's bionic and implanted parts. Every other modification on the same armor piece becomes 2% more effective for each bionic-grade (spacer tech or better) implant or replacement part in the wearer.\n\nDoesn't affect computational load bonuses.\n\nFits body armor and helmets.</description>
+		<description>A neural handshake suite linking the armor's systems to the wearer's implants. The other modifications on the same piece grow stronger for each bionic part the wearer has.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/BionicSynchronization</texPath>
 		</graphicData>
@@ -131,7 +131,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_ThermalRegulator</defName>
 		<label>thermal regulation unit</label>
-		<description>Back-mounted heat exchangers and a micro-coolant loop that keep the wearer comfortable across a much wider range of temperatures.\n\nFits body armor and helmets.</description>
+		<description>Back-mounted heat exchangers and a micro-coolant loop that keep the wearer comfortable across a wider range of temperatures.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/ThermalRegulator</texPath>
 		</graphicData>
@@ -182,7 +182,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_AblativeShielding</defName>
 		<label>ablative heat shielding</label>
-		<description>Heat-resistant ceramic tiles over a layer of fire-retardant gel. Improves the heat armor of the piece it is mounted on and makes it much harder to set alight.\n\nFits body armor and helmets.</description>
+		<description>Heat-resistant ceramic tiles over fire-retardant gel. Improves heat armor and makes the armor much harder to set alight.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/AblativeShielding</texPath>
 		</graphicData>
@@ -217,7 +217,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_TraumaSuite</defName>
 		<label>neuromemetic regenerators</label>
-		<description>Two canisters of neuromemetic regenerative gel, fed into the wearer through ports in the armor's lining. On the body parts the armor piece covers, and the organs inside them, the gel halves pain, slowly heals injuries (old scars included), and tends a random bleeding wound every 15 seconds.\n\nFits body armor and helmets.</description>
+		<description>Neuromemetic gel fed into the wearer through the armor's lining. On the body parts the piece covers, it dulls pain, slowly heals injuries and scars, and tends bleeding wounds.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/NeuromemeticRegenerators</texPath>
 		</graphicData>
@@ -280,7 +280,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_CoProcessor</defName>
 		<label>auxiliary subpersona</label>
-		<description>Three low subcores wired together into a subordinate persona that takes over housekeeping from the armor's main computer. Raises the computational load of the piece it is installed in, and uses none itself.\n\nCan't be removed if the remaining modifications would no longer fit.\n\nFits body armor and helmets.</description>
+		<description>Three low subcores running a subordinate persona that takes housekeeping off the armor's computer, raising the piece's computational load.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/AuxiliarySubpersona</texPath>
 		</graphicData>
@@ -341,7 +341,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_StressDampener</defName>
 		<label>neural stress dampener</label>
-		<description>Monitors the wearer's stress hormones and counters them with micro-doses and targeted neural stimulation. Lowers the wearer's mental break threshold by 8%.\n\nFits body armor and helmets.</description>
+		<description>Counters the wearer's stress hormones with micro-doses and targeted neural stimulation, lowering their mental break threshold.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/StressDampener</texPath>
 		</graphicData>
@@ -380,7 +380,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_UraniumPlating</defName>
 		<label>uranium composite plating</label>
-		<description>Thick depleted-uranium plates bonded to a hyperweave backing. Far more protection than ordinary plating, and far more weight: adds roughly 11mm RHA of protection to the piece it is mounted on, but slows the wearer down. Better quality gives the same protection for less weight.\n\nCan't share a piece with additional plating.\n\nFits body armor and helmets.</description>
+		<description>Thick depleted-uranium plates on a hyperweave backing: far more protection than ordinary plating, but heavy enough to slow the wearer down.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/UraniumPlating</texPath>
 		</graphicData>

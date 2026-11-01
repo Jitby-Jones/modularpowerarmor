@@ -6,7 +6,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_TargetingUplink</defName>
 		<label>targeting uplink</label>
-		<description>A helmet-mounted ballistic computer and laser rangefinder that feeds firing solutions straight to the wearer's visor. Speeds up aiming.\n\nFits helmets only.</description>
+		<description>A ballistic computer and laser rangefinder that feed firing solutions straight to the wearer's visor. Speeds up aiming.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/TargetingUplink</texPath>
 		</graphicData>
@@ -49,7 +49,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_MultispectralVisor</defName>
 		<label>multispectral sensor array</label>
-		<description>A sensor pod for the side of a helmet: thermal, low-light and motion-tracking sensors that feed straight to the wearer's display. Improves the wearer's sight, and lets them see through blindness, darkness, fog and smoke: missing or blinded eyes, the dark, bad weather and smoke no longer hinder them.\n\nFits helmets only.</description>
+		<description>Thermal, low-light and motion sensors feeding the wearer's display. Improves sight, and lets the wearer see through blindness, darkness, fog and smoke.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/SensorArray</texPath>
 		</graphicData>
@@ -98,7 +98,7 @@
 	<ThingDef ParentName="MPA_ModuleBase">
 		<defName>MPA_Module_SecondMind</defName>
 		<label>second mind</label>
-		<description>An AI persona core packed into a helmet housing and run as a co-pilot for the wearer's own mind. Raises the wearer's consciousness, and adds computational load to the helmet and to the body armor worn with it. If the helmet comes off, body armor that needs the extra load goes offline until the helmet is back on.\n\nFits helmets only.</description>
+		<description>An AI persona core run as a co-pilot for the wearer's own mind. Raises consciousness, and lends processing power to the helmet and the body armor worn with it.</description>
 		<graphicData>
 			<texPath>ModularPowerArmor/Items/SecondMind</texPath>
 		</graphicData>

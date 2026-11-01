@@ -61,7 +61,7 @@ Values are at Normal quality.
 | Load-bearing exoframe | Body | 2 | Wearer: x125% carrying capacity, x110% melee damage | Also +25 kg carry weight, +5 bulk |
 | Rigidity matrix | Body | 4 | Wearer: can't be staggered, x75% damage taken | Same (CE's melee stagger too) |
 | Second heart | Body | 4 | Refuses the wearer's death once, when their head is destroyed. No quality | Same |
-| Longjump hydraulics | Body | 3 | The wearer can leap up to 20 cells, over walls and through roofs. Recharges in 3 hours | Same |
+| Longjump hydraulics | Body | 3 | The wearer can leap up to 20 cells, over walls and through roofs. Recharges in 1 hour | Same |
 
 Non-player pawns' armor has a 20% chance per piece to come with one to three modifications, so you can also loot them (never a second heart or a second mind).
 
@@ -122,7 +122,7 @@ Everything they do is limited to the body parts their armor piece covers and the
 
 - The wearer gets a **Longjump** button (drafted or not). Pick a spot within range to leap there.
 - Leaps go over walls and through constructed roofs, but not through mountains: natural rock or an overhead mountain anywhere along the way, including where the leap starts and ends, blocks it. You can't land on a spot that's occupied (by a pawn or anything you couldn't stand on) or that you can't see.
-- Range is 20 cells and the recharge time 3 hours at Normal quality. Better quality leaps farther and recharges faster: 14 cells and 4.3 hours at Awful, 32 cells and 1.9 hours at Legendary. The button shows the recharge.
+- Range is 20 cells and the recharge time 1 hour at Normal quality. Better quality leaps farther and recharges faster: 14 cells and 1.4 hours at Awful, 32 cells and 0.6 hours at Legendary. The button shows the recharge.
 
 ### Rigidity matrix
 

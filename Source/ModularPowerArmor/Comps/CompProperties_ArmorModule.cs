@@ -218,6 +218,6 @@ namespace ModularPowerArmor
         public float range = 20f;
 
         /// <summary>Recharge time at Normal quality.</summary>
-        public int cooldownTicks = 7500;
+        public int cooldownTicks = 2500;
     }
 }
